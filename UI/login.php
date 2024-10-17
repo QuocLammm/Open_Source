@@ -1,13 +1,22 @@
 <?php
-// Đặt biến thông báo lỗi nếu có
-$errorMessage = isset($_SESSION['ErrorMessage']) ? $_SESSION['ErrorMessage'] : null;
-
-// Xóa thông báo lỗi sau khi hiển thị
-if ($errorMessage) {
-    unset($_SESSION['ErrorMessage']);
-}
+session_start();
+error_reporting(0);
+include('connectSQL.php');
+if(isset($_POST['login']))
+  {
+    $adminuser=$_POST['username'];
+    $password=md5($_POST['password']);
+    $query=mysqli_query($con,"select ID from tbladmin where  UserName='$adminuser' && Password='$password' ");
+    $ret=mysqli_fetch_array($query);
+    if($ret>0){
+      $_SESSION['ccmsaid']=$ret['ID'];
+     header('location:index.php');
+    }
+    else{
+    $msg="Invalid Details.";
+    }
+  }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -44,7 +53,7 @@ if ($errorMessage) {
                                     <?php echo $errorMessage; ?>
                                 </div>
                             <?php endif; ?>
-                            <form class="pt-3" method="post" action="your_login_script.php"> <!-- Cập nhật action theo tên file PHP xử lý đăng nhập -->
+                            <form class="pt-3" method="post" action="index.php"> <!-- Cập nhật action theo tên file PHP xử lý đăng nhập -->
                                 <div class="form-group">
                                     <input type="text" class="form-control form-control-lg" id="exampleInputEmail1" placeholder="Tên tài khoản" name="accountName" required>
                                 </div>

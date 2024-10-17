@@ -1,28 +1,21 @@
 <?php
-// Establish the connection to the database
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "qlcoffee"; // Replace with your database name
-
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
-// Define the SQL query to fetch user categories
-$query = "SELECT UserCategoryID, UserCategoryName, UserCategoryDescription FROM UserCategories";
-
-// Execute the query and store the result in $result
-$result = $conn->query($query);
-
-// Check if the query execution was successful
-if ($result === false) {
-    echo "Error: " . $conn->error; // Display error if query fails
-} else {
+session_start();
+error_reporting(0);
+include('includes/connectSQL.php');
+if(isset($_POST['login']))
+  {
+    $adminuser=$_POST['AccountName'];
+    $password=md5($_POST['Password']);
+    $query=mysqli_query($con,"select ID from tbladmin where  UserName='$adminuser' && Password='$password' ");
+    $ret=mysqli_fetch_array($query);
+    if($ret>0){
+      $_SESSION['qlcoffee']=$ret['UserID'];
+     header('location:dashboard.php');
+    }
+    else{
+    $msg="Invalid Details.";
+    }
+  }
 ?>
 
 <!doctype html>
@@ -64,11 +57,11 @@ if ($result === false) {
     </style>
 </head>
 <body>
+<?php include('includes\_layoutAdmin.php'); ?>
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-2">
-                <!-- Include your layout for the sidebar or navigation here -->
-                <?php include('E:\HK1_2025\OpenSource\bt_xampp\Open_Source\_layoutAdmin.php'); ?>
+                <!-- Include your layout for the sidebar or navigation here -->     
             </div>
             <div class="col-md-10">
                 <h3 class="my-4">Danh Sách Loại Người Dùng</h3>
@@ -135,9 +128,3 @@ if ($result === false) {
     <script src="../assets/js/bootstrap.bundle.min.js"></script> <!-- Thay đổi đường dẫn đến tệp JS nếu cần -->
 </body>
 </html>
-
-<?php
-// Close the database connection
-$conn->close();
-}
-?>
