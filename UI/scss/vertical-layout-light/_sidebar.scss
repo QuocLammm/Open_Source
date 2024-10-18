@@ -6,7 +6,7 @@
   font-family: $type1;
   font-weight: 500;
   padding: 0;
-  width: $sidebar-width-lg;
+  width: 200px;
   z-index: 11;
   transition: width $action-transition-duration $action-transition-timing-function, background $action-transition-duration $action-transition-timing-function;
   -webkit-transition: width $action-transition-duration $action-transition-timing-function, background $action-transition-duration $action-transition-timing-function;

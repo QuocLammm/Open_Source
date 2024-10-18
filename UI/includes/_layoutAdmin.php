@@ -4,7 +4,7 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Danh sách loại người dùng</title>
+    <title>@ViewBag.Title</title>
     <link href="https://cdn.materialdesignicons.com/6.5.95/css/materialdesignicons.min.css" rel="stylesheet">
     <!-- plugins:css -->
     <link rel="stylesheet" href="../UI/vendors/feather/feather.css">
@@ -15,13 +15,15 @@
     <!-- endinject -->
     <!-- Plugin css for this page -->
     <link rel="stylesheet" href="../UI/vendors/datatables.net-bs4/dataTables.bootstrap4.css">
-    <link rel="stylesheet" href="../UI/js/select.dataTables.min.css">
+    <link rel="stylesheet" href="../UI/vendors/ti-icons/css/themify-icons.css">
+    <link rel="stylesheet" type="text/css" href="../UI/js/select.dataTables.min.css">
     <!-- End plugin css for this page -->
     <!-- inject:css -->
     <link rel="stylesheet" href="../UI/css/vertical-layout-light/style.css">
     <!-- endinject -->
     <link rel="shortcut icon" href="../UI/images/favicon.png" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
+
 </head>
 <style>
     body {
@@ -37,6 +39,7 @@
         height: 100vh;
         position: fixed;
         min-height: 100vh;
+        width: 200px;
     }
     .main-content {
         margin-left: 220px; /* Width of sidebar */
@@ -63,8 +66,8 @@
                 <!-- Dropdown for Người dùng -->
                 <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Người dùng</a>
                 <ul class="dropdown-menu" aria-labelledby="userDropdown">
-                    <li><a class="dropdown-item" href="#">Người dùng</a></li>
-                    <li><a class="dropdown-item" href="index.php">Loại người dùng</a></li>
+                    <li><a class="dropdown-item" href="index_users">Người dùng</a></li>
+                    <li><a class="dropdown-item" href="index_usercategories.php">Loại người dùng</a></li>
                 </ul>
                 <a class="nav-link" href="#">Phân quyền</a>
             </nav>
