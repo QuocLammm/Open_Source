@@ -34,7 +34,7 @@ if (isset($_POST['delete_id'])) {
 $name = isset($_GET['name']) ? $conn->real_escape_string($_GET['name']) : '';
 $role = isset($_GET['role']) ? $conn->real_escape_string($_GET['role']) : '';
 
-$sql = "SELECT u.UserID, u.FullName, uc.UserCategoryName, u.Gender, u.UserImage, u.PhoneNumber, u.Username
+$sql = "SELECT u.UserID, u.FullName, uc.UserCategoryName, u.Gender, u.UserImage, u.PhoneNumber, u.Username,u.Password
         FROM users u
         JOIN usercategories uc ON u.UserCategoryID = uc.UserCategoryID
         WHERE u.FullName LIKE '%$name%' AND uc.UserCategoryName LIKE '%$role%'"; // Example for search functionality
@@ -50,16 +50,32 @@ $result = $conn->query($sql);
     <title>Danh sách Người Dùng</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+<style>
+    body {
+            overflow-x: hidden;
+        }
+    .container {
+            max-width: 1200px;
+            margin-top: 20px;
+        }
+    .form-section {
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        width: 120%;
+        margin: 120px 0 80px;
+    }
+</style>
 <body>
     <?php include('includes/_layoutAdmin.php'); ?>
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center">
-        <h3>Danh Sách Người Dùng</h3>
-        <a href="create_user.php" class="btn btn-success">Thêm mới</a>
-    </div>
 
-    <form action="" method="GET" class="mt-3">
+    <form action="" method="GET" enctype="multipart/form-data" class="form-section">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3>Danh Sách Người Dùng</h3>
+            <a href="create_users.php" class="btn btn-success">Thêm mới</a>
+        </div>
         <div class="row mb-3">
             <div class="col">
                 <input type="text" name="name" class="form-control" placeholder="Tên người dùng" value="<?php echo htmlspecialchars($name); ?>">
@@ -72,7 +88,7 @@ $result = $conn->query($sql);
                 <button type="button" class="btn btn-secondary" onclick="window.location.reload();">Load</button>
             </div>
         </div>
-    </form>
+    
 
     <table class="table table-bordered">
         <thead>
@@ -85,6 +101,7 @@ $result = $conn->query($sql);
                 <th>Hình ảnh</th>
                 <th>Số điện thoại</th>
                 <th>Tên tài khoản</th>
+                <th>Mật khẩu</th>
                 <th>Hành động</th>
             </tr>
         </thead>
@@ -98,9 +115,12 @@ $result = $conn->query($sql);
                     echo "<td>" . $row['FullName'] . "</td>";
                     echo "<td>" . $row['UserCategoryName'] . "</td>";
                     echo "<td>" . $row['Gender'] . "</td>";
-                    echo "<td><img src='uploads/" . htmlspecialchars($row['UserImage']) . "' alt='image' style='width: 50px;'></td>";
+                    echo "<td><img src='../UI/images/users/" . htmlspecialchars($row['UserImage']) . "' alt='image' style='width: 50px;'></td>";
+
+
                     echo "<td>" . $row['PhoneNumber'] . "</td>";
                     echo "<td>" . $row['Username'] . "</td>";
+                    echo "<td>" . $row['Password'] . "</td>";
                     echo "<td>
                         <a href='edit_users.php?id=" . $row['UserID'] . "' class='btn btn-sm btn-primary'>Sửa</a>
                         <form method='post' style='display:inline;'>
@@ -116,6 +136,7 @@ $result = $conn->query($sql);
             ?>
         </tbody>
     </table>
+    </form>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
