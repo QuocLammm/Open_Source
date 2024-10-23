@@ -66,7 +66,7 @@
                 <!-- Dropdown for Người dùng -->
                 <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Người dùng</a>
                 <ul class="dropdown-menu" aria-labelledby="userDropdown">
-                    <li><a class="dropdown-item" href="index_users">Người dùng</a></li>
+                    <li><a class="dropdown-item" href="index_users.php">Người dùng</a></li>
                     <li><a class="dropdown-item" href="index_usercategories.php">Loại người dùng</a></li>
                 </ul>
                 <a class="nav-link" href="#">Phân quyền</a>
