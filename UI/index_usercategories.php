@@ -122,8 +122,7 @@ $result = $conn->query($query);
             </table>
         </form>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
         // Handle "select all" checkbox functionality
         document.getElementById('select-all').addEventListener('change', function() {

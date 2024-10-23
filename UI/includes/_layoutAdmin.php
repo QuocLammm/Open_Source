@@ -59,12 +59,17 @@
                 </div>
             
                 <a class="nav-link" href="#">Bán hàng</a>
-                <a class="nav-link" href="#">Đồ uống</a>
+                <!-- Dropdown for Người dùng -->
+                <a class="nav-link dropdown-toggle" id="drinkDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Đồ uống</a>
+                <ul class="dropdown-menu" aria-labelledby="drinkDropdown">
+                    <li><a class="dropdown-item" href="index_drink.php">Đồ uống</a></li>
+                    <li><a class="dropdown-item" href="index_drinkcategories.php">Loại đồ uống</a></li>
+                </ul>
                 <a class="nav-link" href="#">Hóa đơn</a>
                 <a class="nav-link" href="#">Báo cáo kết ca</a>
 
                 <!-- Dropdown for Người dùng -->
-                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Người dùng</a>
+                <a class="nav-link dropdown-toggle" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Người dùng</a>
                 <ul class="dropdown-menu" aria-labelledby="userDropdown">
                     <li><a class="dropdown-item" href="index_users.php">Người dùng</a></li>
                     <li><a class="dropdown-item" href="index_usercategories.php">Loại người dùng</a></li>
@@ -111,5 +116,7 @@ function deleteUser(id) {
 <script src="../UI/js/select2.js"></script>
 <!-- End custom js for this page-->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>
