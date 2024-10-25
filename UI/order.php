@@ -1,14 +1,9 @@
 <?php
 include("includes/connectSQL.php");
 
-// Khởi tạo biến $tableName và $check
-// Lấy tên bàn từ URL
-// Lấy tên bàn từ URL
 $tableName = isset($_GET['tableName']) ? $_GET['tableName'] : ""; // Gán giá trị mặc định nếu không có
-
-// Kiểm tra giá trị của $tableName
-$tableName = htmlspecialchars($tableName);
-$check = true; // Hoặc false, tùy thuộc vào logic của bạn
+$tableName = htmlspecialchars($tableName); // Kiểm tra giá trị của $tableName
+$check = true; // Đặt giá trị kiểm tra hóa đơn
 
 // Lấy danh sách các danh mục đồ uống
 $sqlCategories = "SELECT * FROM drinkcategories";
@@ -20,9 +15,8 @@ if ($resultCategories->num_rows > 0) {
     }
 }
 
-// Lấy danh sách các đồ uống theo danh mục (giả sử có một tham số danh mục)
-$categoryId = 1; // Thay đổi giá trị này theo yêu cầu của bạn
-$sqlDrinks = "SELECT * FROM drinks WHERE drinkcategoryid = $categoryId"; // Thay đổi tên bảng nếu cần
+// Lấy danh sách đồ uống theo danh mục
+$sqlDrinks = "SELECT * FROM drinks"; // Lấy toàn bộ đồ uống, có thể thêm điều kiện theo danh mục nếu cần
 $resultDrinks = $conn->query($sqlDrinks);
 $listDrinks = [];
 if ($resultDrinks->num_rows > 0) {
@@ -32,7 +26,7 @@ if ($resultDrinks->num_rows > 0) {
 }
 
 // Lấy thông tin hóa đơn
-$sqlBillInfos = "SELECT * FROM billinfos"; // Thay đổi tên bảng nếu cần
+$sqlBillInfos = "SELECT * FROM billinfos"; 
 $resultBillInfos = $conn->query($sqlBillInfos);
 $billInfos = [];
 if ($resultBillInfos->num_rows > 0) {
@@ -40,11 +34,9 @@ if ($resultBillInfos->num_rows > 0) {
         $billInfos[] = $row;
     }
 }
-
 // Đóng kết nối
 $conn->close();
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -55,6 +47,20 @@ $conn->close();
     <link rel="stylesheet" href="path-to-your-css-file.css"> <!-- Link CSS -->
     <script src="path-to-your-js-file.js"></script> <!-- Link JS -->
     <style>
+        body {
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: auto;
+            margin-top: 20px;
+        }
+        .form-section {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            width: 120%;
+            margin: 120px 0 80px;
+        }
         .square-card {
             width: 100%;
             padding-top: 100%;
@@ -100,91 +106,99 @@ $conn->close();
             border-bottom: 1px solid black;
         }
 
-        .row .col-2 a:last-child {
-            border-bottom: none;
-        }
+            .row .col-2 a:last-child {
+                border-bottom: none;
+            }
     </style>
+
 </head>
 
 <body>
     <?php include("includes/_layoutAdmin.php"); ?>
-    
-    <div class="card p-3 h-100">
-        <div class="row h-100">
-            <div class="col-7">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2><?= htmlspecialchars($tableName) ?></h2>
-                    <a href="dashboard.php" class="btn btn-primary" style="height: fit-content">
-                        <i class="ti-arrow-left"></i>
-                    </a>
-                </div>
-                <div class="row">
-                    <div class="col-2">
-                        <?php foreach ($listDrinkCategories as $category): ?>
-                            <a href="#" data-category-id="<?= $category['DrinkCategoryID'] ?>"
-                               class="py-3 d-block text-center category-link"><?= htmlspecialchars($category['DrinkCategoryName']) ?></a>
-                        <?php endforeach; ?>
-                    </div>
-                    <div class="col-10 row" style="border-radius: 20px">
-                        <?php foreach ($listDrinks as $item): ?>
-                            <div class="col-3 drink-item" data-category-id="<?= $item['DrinkCategoryID'] ?>">
-                                <a class="btn square-card card" href="add_drink_to_bill.php?id=<?= $item['DrinkID'] ?>">
-                                    <img src="/Public/images/drinks/<?= htmlspecialchars($item['DrinkImage']) ?>" class="card-img-top"/>
-                                    <div class="card-body"><?= htmlspecialchars($item['DrinkName']) ?></div>
-                                </a>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
-            <div class="col-5">
-                <?php if ($check && !empty($billInfos)): ?>
-                    <div class="h-75" style="overflow-y: auto; overflow-x: hidden">
-                        <table class="table table-striped table-hover">
-                            <tbody>
-                            <?php foreach ($billInfos as $item): ?>
-                                <tr data-id-drink="<?= $item['DrinkID'] ?>" data-id-bill="<?= $item['BillID'] ?>">
-                                    <td><?= htmlspecialchars($item['Drinks']['DrinkName']) ?></td>
-                                    <td>
-                                        <a href="giam_so_luong.php?idDrink=<?= $item['DrinkID'] ?>&idBill=<?= $item['BillID'] ?>"
-                                           class="bg-info p-1 mr-2" style="color: white; border-radius: 20%">
-                                            <i class="mdi mdi-minus"></i>
-                                        </a>
-                                        <?= $item['DrinkCount'] ?>
-                                        <a href="tang_so_luong.php?idDrink=<?= $item['DrinkID'] ?>&idBill=<?= $item['BillID'] ?>"
-                                           class="bg-info p-1 ml-2" style="color: white; border-radius: 20%">
-                                            <i class="mdi mdi-plus"></i>
-                                        </a>
-                                    </td>
-                                    <td><?= number_format($item['Drinks']['DrinkPrice'], 0, ',', '.') ?>₫</td>
-                                    <td>
-                                        <a href="#" class="delete-item" style="text-decoration: none">
-                                            <i class="mdi mdi-delete" style="font-size: 25px; color: red"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="h-25">
-                        <hr/>
-                        <p class="text-right" style="font-size: 20px">Tổng tiền:
-                            <?= number_format($billInfos[0]['Bills']['TotalAmount'], 0, ',', '.') ?>₫
-                        </p>
-                        <hr/>
-                        <div class="d-flex justify-content-center">
-                            <a class="btn btn-info mr-2" id="btnExportPDF" href="#">
-                                Hóa đơn tạm tính
-                            </a>
-                            <a class="btn btn-primary" id="btnThanhToan" href="#">
-                                Thanh toán
+
+    <div class="container mt-4">
+        <form enctype="multipart/form-data" class="form-section">
+            <div class="card p-3 h-100">
+                <div class="row h-100">
+                    <div class="col-7">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2><?= htmlspecialchars($tableName) ?></h2>
+                            <a href="dashboard.php" class="btn btn-primary" style="height: fit-content">
+                                <i class="ti-arrow-left"></i>
                             </a>
                         </div>
+                        <div class="row">
+                            <div class="col-2">
+                                <?php foreach ($listDrinkCategories as $category): ?>
+                                    <a href="#" data-category-id="<?= $category['DrinkCategoryID'] ?>" class="py-3 d-block text-center category-link">
+                                        <?= htmlspecialchars($category['DrinkCategoryName']) ?>
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
+                            <div class="col-10 row" style="border-radius: 20px">
+                                <?php foreach ($listDrinks as $item): ?>
+                                    <div class="col-3 drink-item" data-category-id="<?= $item['DrinkCategoryID'] ?>">
+                                        <a class="btn square-card card" href="add_drink_to_bill.php?id=<?= $item['DrinkID'] ?>">
+                                            <img src="images/drinks/<?= htmlspecialchars($item['DrinkImage']) ?>" class="card-img-top" />
+                                            <div class="card-body"><?= htmlspecialchars($item['DrinkName']) ?></div>
+                                        </a>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
                     </div>
-                <?php endif; ?>
+
+                    <div class="col-5">
+                        <?php if ($check && !empty($billInfos)): ?>
+                            <div class="h-75" style="overflow-y: auto; overflow-x: hidden">
+                                <table class="table table-striped table-hover">
+                                    <tbody>
+                                        <?php foreach ($billInfos as $item): ?>
+                                            <tr data-id-drink="<?= $item['DrinkID'] ?>" data-id-bill="<?= $item['BillID'] ?>">
+                                                <td><?= htmlspecialchars($item['Drinks']['DrinkName']) ?></td>
+                                                <td>
+                                                    <a href="giam_so_luong.php?idDrink=<?= $item['DrinkID'] ?>&idBill=<?= $item['BillID'] ?>"
+                                                        class="bg-info p-1 mr-2" style="color: white; border-radius: 20%">
+                                                        <i class="mdi mdi-minus"></i>
+                                                    </a>
+                                                    <?= $item['DrinkCount'] ?>
+                                                    <a href="tang_so_luong.php?idDrink=<?= $item['DrinkID'] ?>&idBill=<?= $item['BillID'] ?>"
+                                                        class="bg-info p-1 ml-2" style="color: white; border-radius: 20%">
+                                                        <i class="mdi mdi-plus"></i>
+                                                    </a>
+                                                </td>
+                                                <td><?= number_format($item['Drinks']['DrinkPrice'], 0, ',', '.') ?>₫</td>
+                                                <td>
+                                                    <a href="#" class="delete-item" style="text-decoration: none">
+                                                        <i class="mdi mdi-delete" style="font-size: 25px; color: red"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="h-25">
+                                <hr />
+                                <p class="text-right" style="font-size: 20px">Tổng tiền:
+                                    <?= number_format($billInfos[0]['Bills']['TotalAmount'], 0, ',', '.') ?>₫
+                                </p>
+                                <hr />
+                                <div class="d-flex justify-content-center">
+                                    <a class="btn btn-info mr-2" id="btnExportPDF" href="#">
+                                        Hóa đơn tạm tính
+                                    </a>
+                                    <a class="btn btn-primary" id="btnThanhToan" href="#">
+                                        Thanh toán
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
-        </div>
+        </form>
     </div>
 
     <script>

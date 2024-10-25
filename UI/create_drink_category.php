@@ -68,7 +68,7 @@ $conn->close();
         <form action="" method="POST" enctype="multipart/form-data" class="form-section">
             <h3>Thêm Loại Đồ Uống Mới</h3>
             <a href="index_drinkcategories.php" class="btn btn-primary mb-2">
-                <i class="ti-arrow-right"></i> Quay lại
+                <i class="ti-arrow-left"></i> Quay lại
             </a>
             <div class="row">
                 <div class="col-md-6">

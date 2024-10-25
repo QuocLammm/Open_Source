@@ -57,7 +57,7 @@
                     <img src="../UI/images/lt2p_mini.png" alt="Logo" style="width: 100px;">
                 </div>
             
-                <a class="nav-link" href="#">Bán hàng</a>
+                <a class="nav-link" href="dashboard.php">Bán hàng</a>
                 <!-- Dropdown for Người dùng -->
                 <a class="nav-link dropdown-toggle" id="drinkDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Đồ uống</a>
                 <ul class="dropdown-menu" aria-labelledby="drinkDropdown">

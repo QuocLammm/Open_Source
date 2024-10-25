@@ -1,17 +1,6 @@
 <?php
 // Establish the connection to the database
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "qlcoffee"; // Replace with your database name
-
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+include("includes/connectSQL.php");
 
 // Initialize variables
 $drinkCategoryName = isset($_POST['drinkCategoryName']) ? $_POST['drinkCategoryName'] : '';
@@ -45,6 +34,17 @@ if ($stmt = $conn->prepare($query)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Danh sách loại đồ uống</title>
 </head>
+<style>
+    .container {
+            max-width: 900px;
+            margin-top: 20px;
+        }
+    .form-section {
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+</style>
 <body>
     <?php include("includes/_layoutAdmin.php"); ?>
     <div class="container mt-4">
