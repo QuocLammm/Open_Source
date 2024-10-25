@@ -3,25 +3,34 @@ session_start();
 error_reporting(0);
 include('includes/connectSQL.php');
 
+if(isset($_POST['login'])) {
+    $adminuser = $_POST['username'];
+    $password = $_POST['password'];
+    $query = mysqli_query($conn, "SELECT UserID FROM users WHERE AccountName='$adminuser' AND Password='$password'");
+    $num_rows = mysqli_num_rows($query);
+
+    if ($num_rows > 0) {
+        $ret = mysqli_fetch_array($query);
+        $_SESSION['qlcoffeeid'] = $ret['UserID'];
+        header('location:dashboard.php');
+    } else {
+        $errorMessage = "Thông tin không hợp lệ.";
+    }
+
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Đăng nhập</title>
-    <!-- plugins:css -->
     <link rel="stylesheet" href="vendors/feather/feather.css">
     <link rel="stylesheet" href="vendors/ti-icons/css/themify-icons.css">
     <link rel="stylesheet" href="vendors/css/vendor.bundle.base.css">
-    <!-- endinject -->
-    <!-- Plugin css for this page -->
-    <!-- End plugin css for this page -->
-    <!-- inject:css -->
     <link rel="stylesheet" href="css/vertical-layout-light/style.css">
-    <!-- endinject -->
     <link rel="shortcut icon" href="images/favicon.png" />
 </head>
 
@@ -35,43 +44,34 @@ include('includes/connectSQL.php');
                             <div class="brand-logo d-flex justify-content-center">
                                 <img src="images/lt2p_mini.png" alt="logo" class="w-100">
                             </div>
-                            <?php if ($errorMessage): ?>
+                            <?php if (isset($errorMessage)): ?>
                                 <div class="alert alert-danger" role="alert">
                                     <?php echo $errorMessage; ?>
                                 </div>
                             <?php endif; ?>
-                            <form class="pt-3" method="post" action="index.php"> <!-- Cập nhật action theo tên file PHP xử lý đăng nhập -->
+                            <form class="pt-3" method="POST" name="login">
                                 <div class="form-group">
-                                    <input type="text" class="form-control form-control-lg" id="exampleInputEmail1" placeholder="Tên tài khoản" name="accountName" required>
+                                    <input type="text" class="form-control form-control-lg" placeholder="Tên tài khoản" name="username" required="true">
                                 </div>
                                 <div class="form-group">
-                                    <input type="password" class="form-control form-control-lg" id="exampleInputPassword1" placeholder="Mật khẩu" name="password" required>
+                                    <input type="password" class="form-control form-control-lg"  placeholder="Mật khẩu" name="password" required="true">
                                 </div>
                                 <div class="mt-3">
-                                    <button class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn" type="submit">Đăng nhập</button>
+                                    <button class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn" type="submit" name="login">Đăng nhập</button>
                                 </div>
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- content-wrapper ends -->
         </div>
-        <!-- page-body-wrapper ends -->
     </div>
-    <!-- container-scroller -->
-    <!-- plugins:js -->
     <script src="vendors/js/vendor.bundle.base.js"></script>
-    <!-- endinject -->
-    <!-- Plugin js for this page -->
-    <!-- End plugin js for this page -->
-    <!-- inject:js -->
     <script src="js/off-canvas.js"></script>
     <script src="js/hoverable-collapse.js"></script>
     <script src="js/template.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/todolist.js"></script>
-    <!-- endinject -->
 </body>
 
 </html>
