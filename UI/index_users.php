@@ -1,13 +1,14 @@
 <?php
 include("includes/connectSQL.php");
 
+// Xử lý yêu cầu xóa người dùng
 if (isset($_POST['delete_id'])) {
     $deleteID = $_POST['delete_id'];
 
-    // Debugging to check delete_id value
-    echo "Delete ID: " . $deleteID;
+    // Debugging để kiểm tra giá trị delete_id
+    echo "Delete ID: " . htmlspecialchars($deleteID);
 
-    // Prepare and execute delete query
+    // Chuẩn bị và thực hiện truy vấn xóa
     $deleteQuery = "DELETE FROM usercategories WHERE UserCategoryID = ?";
     $deleteStmt = $conn->prepare($deleteQuery);
     $deleteStmt->bind_param("i", $deleteID);
@@ -15,11 +16,11 @@ if (isset($_POST['delete_id'])) {
     if ($deleteStmt->execute()) {
         echo "<script>alert('Xóa thành công!'); window.location.href='index_users.php';</script>";
     } else {
-        // Catch foreign key constraint errors
+        // Bắt lỗi ràng buộc khóa ngoại
         if (strpos($conn->error, 'foreign key constraint') !== false) {
             echo "<script>alert('Không thể xóa người dùng vì có ràng buộc dữ liệu với bảng khác!'); window.location.href='index_users.php';</script>";
         } else {
-            error_log("Error deleting record: " . $conn->error); // Log the error
+            error_log("Error deleting record: " . $conn->error); // Ghi lại lỗi
             echo "Error deleting record: " . $conn->error;
         }
     }
@@ -27,15 +28,14 @@ if (isset($_POST['delete_id'])) {
     $deleteStmt->close();
 }
 
-
-// Prepare the SQL query based on user input
+// Chuẩn bị truy vấn SQL dựa trên thông tin tìm kiếm
 $name = isset($_GET['name']) ? $conn->real_escape_string($_GET['name']) : '';
 $role = isset($_GET['role']) ? $conn->real_escape_string($_GET['role']) : '';
 
 $sql = "SELECT u.UserID, u.FullName, uc.UserCategoryName, u.Gender, u.UserImage, u.PhoneNumber, u.Username, u.Password
         FROM users u
         JOIN usercategories uc ON u.UserCategoryID = uc.UserCategoryID
-        WHERE u.FullName LIKE '%$name%' AND uc.UserCategoryName LIKE '%$role%'"; // Example for search functionality
+        WHERE u.FullName LIKE '%$name%' AND uc.UserCategoryName LIKE '%$role%'";
 
 $result = $conn->query($sql);
 ?>
@@ -108,13 +108,13 @@ $result = $conn->query($sql);
                             echo "<tr>";
                             echo "<td><input type='checkbox' class='user-checkbox' data-id='{$row['UserID']}'></td>";
                             echo "<td>" . $row['UserID'] . "</td>";
-                            echo "<td>" . $row['FullName'] . "</td>";
-                            echo "<td>" . $row['UserCategoryName'] . "</td>";
-                            echo "<td>" . $row['Gender'] . "</td>";
+                            echo "<td>" . htmlspecialchars($row['FullName']) . "</td>";
+                            echo "<td>" . htmlspecialchars($row['UserCategoryName']) . "</td>";
+                            echo "<td>" . htmlspecialchars($row['Gender']) . "</td>";
                             echo "<td><img src='../UI/images/users/" . htmlspecialchars($row['UserImage']) . "' alt='image' style='width: 50px;'></td>";
-                            echo "<td>" . $row['PhoneNumber'] . "</td>";
-                            echo "<td>" . $row['Username'] . "</td>";
-                            echo "<td>" . $row['Password'] . "</td>";
+                            echo "<td>" . htmlspecialchars($row['PhoneNumber']) . "</td>";
+                            echo "<td>" . htmlspecialchars($row['Username']) . "</td>";
+                            echo "<td>" . htmlspecialchars($row['Password']) . "</td>";
                             echo "<td>
                                     <a href='edit_users.php?id=" . $row['UserID'] . "' class='btn btn-sm btn-primary'>Sửa</a>
                                     <form method='post' style='display:inline;'>
@@ -125,7 +125,7 @@ $result = $conn->query($sql);
                             echo "</tr>";
                         }
                     } else {
-                        echo "<tr><td colspan='9' class='text-center'>Không có dữ liệu</td></tr>";
+                        echo "<tr><td colspan='10' class='text-center'>Không có dữ liệu</td></tr>";
                     }
                     ?>
                 </tbody>

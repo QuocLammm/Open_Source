@@ -11,7 +11,7 @@ if(isset($_POST['login'])) {
 
     if ($num_rows > 0) {
         $ret = mysqli_fetch_array($query);
-        $_SESSION['qlcoffeeid'] = $ret['UserID'];
+        $_SESSION['UserID'] = $ret['UserID'];
         header('location:dashboard.php');
     } else {
         $errorMessage = "Thông tin không hợp lệ.";
