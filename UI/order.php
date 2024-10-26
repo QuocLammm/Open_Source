@@ -1,9 +1,9 @@
 <?php
 include("includes/connectSQL.php");
 
-$tableName = isset($_GET['tableName']) ? $_GET['tableName'] : ""; // Gán giá trị mặc định nếu không có
-$tableName = htmlspecialchars($tableName); // Kiểm tra giá trị của $tableName
-$check = true; // Đặt giá trị kiểm tra hóa đơn
+$tableName = isset($_GET['tableName']) ? $_GET['tableName'] : ""; 
+$tableName = htmlspecialchars($tableName); 
+$check = true; 
 
 // Lấy danh sách các danh mục đồ uống
 $sqlCategories = "SELECT * FROM drinkcategories";
@@ -15,8 +15,8 @@ if ($resultCategories->num_rows > 0) {
     }
 }
 
-// Lấy danh sách đồ uống theo danh mục
-$sqlDrinks = "SELECT * FROM drinks"; // Lấy toàn bộ đồ uống, có thể thêm điều kiện theo danh mục nếu cần
+// Lấy danh sách đồ uống
+$sqlDrinks = "SELECT * FROM drinks"; 
 $resultDrinks = $conn->query($sqlDrinks);
 $listDrinks = [];
 if ($resultDrinks->num_rows > 0) {
@@ -44,8 +44,9 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thêm hóa đơn</title>
-    <link rel="stylesheet" href="path-to-your-css-file.css"> <!-- Link CSS -->
-    <script src="path-to-your-js-file.js"></script> <!-- Link JS -->
+    <link rel="stylesheet" href="path-to-your-css-file.css"> 
+    <link rel="stylesheet" href="path/to/font-awesome/css/font-awesome.min.css">
+    <script src="path-to-your-js-file.js"></script> 
     <style>
         body {
             overflow-x: hidden;
@@ -67,7 +68,6 @@ $conn->close();
             position: relative;
             overflow: hidden;
         }
-
         .card-img-top {
             position: absolute;
             top: 0;
@@ -76,7 +76,6 @@ $conn->close();
             height: 100%;
             object-fit: cover;
         }
-
         .card-body {
             position: absolute;
             bottom: 0;
@@ -88,29 +87,23 @@ $conn->close();
             padding: 10px;
             transition: height 0.5s ease-in-out;
         }
-
         .square-card:hover .card-body {
             height: 100%;
         }
-
         .row .category-link {
             text-decoration: none;
             color: black;
         }
-
         .row .selected-drink {
             color: dodgerblue;
         }
-
         .row .col-2 a {
             border-bottom: 1px solid black;
         }
-
-            .row .col-2 a:last-child {
-                border-bottom: none;
-            }
+        .row .col-2 a:last-child {
+            border-bottom: none;
+        }
     </style>
-
 </head>
 
 <body>
@@ -138,10 +131,10 @@ $conn->close();
                             <div class="col-10 row" style="border-radius: 20px">
                                 <?php foreach ($listDrinks as $item): ?>
                                     <div class="col-3 drink-item" data-category-id="<?= $item['DrinkCategoryID'] ?>">
-                                        <a class="btn square-card card" href="add_drink_to_bill.php?id=<?= $item['DrinkID'] ?>">
+                                        <div class="btn square-card card drink-select" data-drink-id="<?= $item['DrinkID'] ?>" data-drink-name="<?= htmlspecialchars($item['DrinkName']) ?>" data-drink-price="<?= $item['DrinkPrice'] ?>">
                                             <img src="images/drinks/<?= htmlspecialchars($item['DrinkImage']) ?>" class="card-img-top" />
                                             <div class="card-body"><?= htmlspecialchars($item['DrinkName']) ?></div>
-                                        </a>
+                                        </div>
                                     </div>
                                 <?php endforeach; ?>
                             </div>
@@ -149,52 +142,23 @@ $conn->close();
                     </div>
 
                     <div class="col-5">
-                        <?php if ($check && !empty($billInfos)): ?>
-                            <div class="h-75" style="overflow-y: auto; overflow-x: hidden">
-                                <table class="table table-striped table-hover">
-                                    <tbody>
-                                        <?php foreach ($billInfos as $item): ?>
-                                            <tr data-id-drink="<?= $item['DrinkID'] ?>" data-id-bill="<?= $item['BillID'] ?>">
-                                                <td><?= htmlspecialchars($item['Drinks']['DrinkName']) ?></td>
-                                                <td>
-                                                    <a href="giam_so_luong.php?idDrink=<?= $item['DrinkID'] ?>&idBill=<?= $item['BillID'] ?>"
-                                                        class="bg-info p-1 mr-2" style="color: white; border-radius: 20%">
-                                                        <i class="mdi mdi-minus"></i>
-                                                    </a>
-                                                    <?= $item['DrinkCount'] ?>
-                                                    <a href="tang_so_luong.php?idDrink=<?= $item['DrinkID'] ?>&idBill=<?= $item['BillID'] ?>"
-                                                        class="bg-info p-1 ml-2" style="color: white; border-radius: 20%">
-                                                        <i class="mdi mdi-plus"></i>
-                                                    </a>
-                                                </td>
-                                                <td><?= number_format($item['Drinks']['DrinkPrice'], 0, ',', '.') ?>₫</td>
-                                                <td>
-                                                    <a href="#" class="delete-item" style="text-decoration: none">
-                                                        <i class="mdi mdi-delete" style="font-size: 25px; color: red"></i>
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div id="selected-drink-info" class="h-75" style="overflow-y: auto; display: none;">
+                            <table class="table table-striped table-hover" id="bill-table">
+                                <tbody>
+                                    <!-- Thông tin đồ uống sẽ được thêm vào đây -->
+                                </tbody>
+                            </table>
+                        </div>
 
-                            <div class="h-25">
-                                <hr />
-                                <p class="text-right" style="font-size: 20px">Tổng tiền:
-                                    <?= number_format($billInfos[0]['Bills']['TotalAmount'], 0, ',', '.') ?>₫
-                                </p>
-                                <hr />
-                                <div class="d-flex justify-content-center">
-                                    <a class="btn btn-info mr-2" id="btnExportPDF" href="#">
-                                        Hóa đơn tạm tính
-                                    </a>
-                                    <a class="btn btn-primary" id="btnThanhToan" href="#">
-                                        Thanh toán
-                                    </a>
-                                </div>
+                        <div class="h-25" id="payment-section" style="display: none;">
+                            <hr />
+                            <p class="text-right" style="font-size: 20px">Tổng tiền: <span id="total-amount">0</span>₫</p>
+                            <hr />
+                            <div class="d-flex justify-content-center">
+                                <a class="btn btn-info mr-2" id="btnExportPDF" href="#">Hóa đơn tạm tính</a>
+                                <a class="btn btn-primary" id="btnThanhToan" href="#">Thanh toán</a>
                             </div>
-                        <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -226,70 +190,103 @@ $conn->close();
                 categoryLinks[0].click();
             }
 
-            $('#btnExportPDF').on('click', function (e) {
-                e.preventDefault();
-                $.ajax({
-                    url: 'export_pdf.php',
-                    type: 'GET',
-                    success: function (rs) {
-                        if (rs.success) {
-                            location.reload();
-                        }
+            var totalAmount = 0;
+            var selectedDrinks = {};
+
+            document.querySelectorAll('.drink-select').forEach(function (drink) {
+                drink.addEventListener('click', function () {
+                    var drinkID = this.getAttribute('data-drink-id');
+                    var drinkName = this.getAttribute('data-drink-name');
+                    var drinkPrice = parseFloat(this.getAttribute('data-drink-price'));
+
+                    if (selectedDrinks[drinkID]) {
+                        selectedDrinks[drinkID].quantity++;
+                    } else {
+                        selectedDrinks[drinkID] = {
+                            name: drinkName,
+                            price: drinkPrice,
+                            quantity: 1
+                        };
                     }
+
+                    updateBillTable();
                 });
             });
 
-            $('#btnThanhToan').on('click', function (e) {
-                e.preventDefault();
-                Swal.fire({
-                    title: 'Bạn có chắc chắn muốn thanh toán?',
-                    icon: 'info',
-                    showCancelButton: true,
-                    confirmButtonText: 'Xác nhận',
-                    cancelButtonText: 'Hủy',
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: 'thanh_toan.php',
-                            type: 'GET',
-                            success: function (rs) {
-                                if (rs.success) {
-                                    window.location.href = 'index.php';
-                                }
-                            }
-                        });
+            function updateBillTable() {
+                var tableBody = document.querySelector('#bill-table tbody');
+                tableBody.innerHTML = '';
+                totalAmount = 0;
+
+                for (var id in selectedDrinks) {
+                    if (selectedDrinks.hasOwnProperty(id)) {
+                        var drink = selectedDrinks[id];
+                        var row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${drink.name}</td>
+                            <td>
+                                <a href="#" class="bg-info p-2 mr-2 decrease-quantity" data-drink-id="${id}" style="color: white; border-radius: 20%">-
+                                    
+                                </a>
+                                ${drink.quantity}
+                                <a href="#" class="bg-info p-2 ml-2 increase-quantity" data-drink-id="${id}" style="color: white; border-radius: 20%">+
+                                    
+                                </a>
+                            </td>
+                            <td>${numberWithCommas(drink.price)}₫</td>
+                            <td>                                              
+                                <a class="btn btn-danger delete-item" href="#" data-drink-id="${id}">
+                                    <i class="fa fa-trash-o fa-lg"></i> Delete
+                                </a>                            
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                        totalAmount += drink.price * drink.quantity;
                     }
-                });
+                }
+
+                document.getElementById('total-amount').textContent = numberWithCommas(totalAmount);
+
+                // Hiển thị phần thông tin hóa đơn nếu có món uống được chọn
+                if (Object.keys(selectedDrinks).length > 0) {
+                    document.getElementById('selected-drink-info').style.display = 'block';
+                    document.getElementById('payment-section').style.display = 'block';
+                } else {
+                    document.getElementById('selected-drink-info').style.display = 'none';
+                    document.getElementById('payment-section').style.display = 'none';
+                }
+            }
+
+            document.addEventListener('click', function (e) {
+                if (e.target.classList.contains('increase-quantity')) {
+                    e.preventDefault();
+                    var id = e.target.getAttribute('data-drink-id');
+                    selectedDrinks[id].quantity++;
+                    updateBillTable();
+                }
+
+                if (e.target.classList.contains('decrease-quantity')) {
+                    e.preventDefault();
+                    var id = e.target.getAttribute('data-drink-id');
+                    if (selectedDrinks[id].quantity > 1) {
+                        selectedDrinks[id].quantity--;
+                    } else {
+                        delete selectedDrinks[id];
+                    }
+                    updateBillTable();
+                }
+
+                if (e.target.classList.contains('delete-item')) {
+                    e.preventDefault();
+                    var id = e.target.getAttribute('data-drink-id');
+                    delete selectedDrinks[id];
+                    updateBillTable();
+                }
             });
 
-            $(document).on('click', '.delete-item', function (e) {
-                e.preventDefault();
-                var row = $(this).closest('tr');
-                var idDrink = row.data('id-drink');
-                var idBill = row.data('id-bill');
-                Swal.fire({
-                    title: 'Bạn có chắc chắn muốn xóa đồ uống này?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Xóa',
-                    cancelButtonText: 'Hủy',
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: 'delete_drink.php',
-                            type: 'POST',
-                            data: {idDrink: idDrink, idBill: idBill},
-                            success: function (rs) {
-                                if (rs.success) {
-                                    location.reload();
-                                }
-                            }
-                        });
-                    }
-                });
-            });
-
-            $('.js-example-basic-single').select2();
+            function numberWithCommas(x) {
+                return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
         });
     </script>
 </body>

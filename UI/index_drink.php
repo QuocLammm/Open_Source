@@ -55,7 +55,8 @@ $conn->close();
             margin-top: 20px;
         }
         .form-section {
-            padding: 20px;
+            padding: 10px;
+            margin: 70px;
             background-color: #f8f9fa;
             border-radius: 8px;
         }
