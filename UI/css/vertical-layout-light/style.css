@@ -28789,12 +28789,13 @@ div.tagsinput span.tag a {
 }
 
 .navbar .navbar-brand-wrapper {
-  background: #ffffff;
+  background: #FFE7BA;
   transition: width 0.25s ease, background 0.25s ease;
   -webkit-transition: width 0.25s ease, background 0.25s ease;
   -moz-transition: width 0.25s ease, background 0.25s ease;
   -ms-transition: width 0.25s ease, background 0.25s ease;
-  width: 180px;
+  margin-left: 15px;
+  width: 220px;
   height: 60px;
 }
 

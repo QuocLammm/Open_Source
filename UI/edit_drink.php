@@ -46,18 +46,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chỉnh Sửa Đồ Uống</title>
     <style>
-        .container {
-            max-width: 900px;
-            margin-top: 20px;
-        }
-        .form-section {
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
+        
         .form-group label {
             display: block;
             margin-bottom: 5px;
@@ -89,6 +78,50 @@ $conn->close();
         }
         .btn:hover {
             background-color: #0056b3;
+        }
+
+        .container {
+            max-width: 900px;
+            margin-top: 20px;
+        }
+        .form-section {
+            padding: 10px;
+            margin: 70px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .form-label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .btnDelete {
+            cursor: pointer;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center; /* Căn giữa các liên kết */
+            gap: 10px; /* Tạo khoảng cách giữa các liên kết */
+        }
+
+        .pagination a {
+            text-decoration: none; /* Bỏ gạch chân cho liên kết */
+            padding: 8px 12px; /* Thêm padding cho các liên kết */
+            border: 1px solid #007bff; /* Đường viền cho các liên kết */
+            border-radius: 5px; /* Bo góc cho các liên kết */
+            color: #007bff; /* Màu chữ */
+        }
+
+        .pagination a:hover {
+            text-decoration: none; /* Bỏ gạch chân cho liên kết */
+            background-color: #007bff; /* Màu nền khi hover */
+            color: white; /* Màu chữ khi hover */
+        }
+
+        .pagination strong {
+            color: red; /* Màu chữ cho trang hiện tại */
+            border: 1px solid #007bff; /* Đường viền cho trang hiện tại */
+            padding: 8px 12px; /* Padding tương tự như các liên kết khác */
+            border-radius: 5px; /* Bo góc giống nhau */
         }
     </style>
 </head>

@@ -59,8 +59,9 @@ if (isset($_SESSION['UserID'])) {
         .mdi-pencil, .mdi-delete { font-size: 1.2em; cursor: pointer; }
         .mdi-pencil { color: #4CAF50; }
         .mdi-delete { color: #F44336; }
+        
         .sidebar {
-            background: #f8f9fa;
+            
             height: 100vh;
             position: fixed;
             width: 220px; /* Fixed width for sidebar */
@@ -71,6 +72,7 @@ if (isset($_SESSION['UserID'])) {
             padding: 20px;
         }
         .content { padding: 20px; }
+        
     </style>
 </head>
 <body>
@@ -82,7 +84,7 @@ if (isset($_SESSION['UserID'])) {
                 <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
                     <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
                         <div class="navbar-brand brand-logo h-100">
-                            <img src="images/lt2p_mini.png" alt="logo" class="h-100" />
+                            <img src="images/lt.jpg" alt="logo" class="h-100" />
                         </div>
                     </div>
                     <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end" style="background-color: dodgerblue; color: white">
@@ -115,7 +117,7 @@ if (isset($_SESSION['UserID'])) {
                     <li><a class="dropdown-item" href="index_drink.php">Đồ uống</a></li>
                     <li><a class="dropdown-item" href="index_drinkcategories.php">Loại đồ uống</a></li>
                 </ul>
-                <a class="nav-link" href="#">Hóa đơn</a>
+                <a class="nav-link" href="index_bills.php">Hóa đơn</a>
                 <a class="nav-link" href="#">Báo cáo kết ca</a>
                 <a class="nav-link dropdown-toggle" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Người dùng</a>
                 <ul class="dropdown-menu" aria-labelledby="userDropdown">

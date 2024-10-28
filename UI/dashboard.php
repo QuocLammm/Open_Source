@@ -57,6 +57,7 @@ if (isset($_POST['tableCount'])) {
     <link rel="shortcut icon" href="images/favicon.png" />
 </head>
 
+
 <body>
     <?php include("includes/_layoutAdmin.php");?>
     <div class="container-scroller">
@@ -80,24 +81,35 @@ if (isset($_POST['tableCount'])) {
 
                             <!-- Table display -->
                             <div class="row">
-                              <?php while($item = mysqli_fetch_assoc($tables)): ?>
-                                  <?php
-                                  $slot = ($item['Status'] == true) ? "Có người" : "Trống";
-                                  $color = ($item['Status'] == true) ? "bg-success" : "bg-info";
-                                  ?>
-                                  <div class="col-3 mb-3"> <!-- Đã thay đổi từ col-2 sang col-3 -->
-                                      <a class="btn square-card card <?= $color ?> text-white" href="order.php?id=<?= $item['TableID'] ?>&tableName=<?= urlencode($item['TableName']) ?>">
-                                          <div class="card-body square-card-content">
-                                              <p style="font-size: 30px"><?= $item['TableName'] ?></p>
-                                              <p><?= $slot ?></p>
-                                              <?php if ($item['Status'] == true && !empty($item['Bills'])): ?>
-                                                  <p><?= number_format($item['Bills'][0]['TotalAmount'], 0, ',', '.') ?> ₫</p>
-                                              <?php endif; ?>
-                                          </div>
-                                      </a>
-                                  </div>
-                              <?php endwhile; ?>
-                          </div>
+                                <?php while($item = mysqli_fetch_assoc($tables)): ?>
+                                    <?php
+                                    $slot = ($item['Status'] == true) ? "Có người" : "Trống";
+                                    $color = ($item['Status'] == true) ? "bg-success" : "bg-info";
+                                    
+                                    // Kiểm tra xem có hóa đơn nào chưa thanh toán không
+                                    $hasUnpaidBill = false;
+                                    if ($item['Status'] == true && !empty($item['Bills'])) {
+                                        foreach ($item['Bills'] as $bill) {
+                                            if (!$bill['IsPaid']) {
+                                                $hasUnpaidBill = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    ?>
+                                    <div class="col-3 mb-3">
+                                        <a class="btn square-card card <?= $hasUnpaidBill ? 'bg-warning' : $color ?> text-white" href="order.php?id=<?= $item['TableID'] ?>&tableName=<?= urlencode($item['TableName']) ?>">
+                                            <div class="card-body square-card-content">
+                                                <p style="font-size: 30px"><?= $item['TableName'] ?></p>
+                                                <p><?= $slot ?></p>
+                                                <?php if ($item['Status'] == true && !empty($item['Bills'])): ?>
+                                                    <p><?= number_format($item['Bills'][0]['TotalAmount'], 0, ',', '.') ?> ₫</p>
+                                                <?php endif; ?>
+                                            </div>
+                                        </a>
+                                    </div>
+                                <?php endwhile; ?>
+                            </div>
 
 
                             <!-- Additional logic -->

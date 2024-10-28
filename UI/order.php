@@ -1,40 +1,43 @@
 <?php
 include("includes/connectSQL.php");
 
+// Get the table name from the query string and sanitize it
 $tableName = isset($_GET['tableName']) ? $_GET['tableName'] : ""; 
 $tableName = htmlspecialchars($tableName); 
-$check = true; 
 
-// Lấy danh sách các danh mục đồ uống
+// Initialize an array to hold the data for different entities
+$listDrinkCategories = [];
+$listDrinks = [];
+$billInfos = [];
+
+// Fetch drink categories
 $sqlCategories = "SELECT * FROM drinkcategories";
 $resultCategories = $conn->query($sqlCategories);
-$listDrinkCategories = [];
 if ($resultCategories->num_rows > 0) {
-    while($row = $resultCategories->fetch_assoc()) {
+    while ($row = $resultCategories->fetch_assoc()) {
         $listDrinkCategories[] = $row;
     }
 }
 
-// Lấy danh sách đồ uống
+// Fetch drinks
 $sqlDrinks = "SELECT * FROM drinks"; 
 $resultDrinks = $conn->query($sqlDrinks);
-$listDrinks = [];
 if ($resultDrinks->num_rows > 0) {
-    while($row = $resultDrinks->fetch_assoc()) {
+    while ($row = $resultDrinks->fetch_assoc()) {
         $listDrinks[] = $row;
     }
 }
 
-// Lấy thông tin hóa đơn
+// Fetch bill information
 $sqlBillInfos = "SELECT * FROM billinfos"; 
 $resultBillInfos = $conn->query($sqlBillInfos);
-$billInfos = [];
 if ($resultBillInfos->num_rows > 0) {
-    while($row = $resultBillInfos->fetch_assoc()) {
+    while ($row = $resultBillInfos->fetch_assoc()) {
         $billInfos[] = $row;
     }
 }
-// Đóng kết nối
+
+// Close the database connection
 $conn->close();
 ?>
 
@@ -56,11 +59,12 @@ $conn->close();
             margin-top: 20px;
         }
         .form-section {
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
+            padding: 5px;
+            background-color: wheat;
+            border-radius: 5px;
             width: 120%;
             margin: 120px 0 80px;
+            max-height: 100%;
         }
         .square-card {
             width: 100%;
@@ -110,7 +114,7 @@ $conn->close();
     <?php include("includes/_layoutAdmin.php"); ?>
 
     <div class="container mt-4">
-        <form enctype="multipart/form-data" class="form-section">
+        <form enctype="multipart/form-data" class="form-section full-page-wrapper">
             <div class="card p-3 h-100">
                 <div class="row h-100">
                     <div class="col-7">
@@ -150,12 +154,11 @@ $conn->close();
                             </table>
                         </div>
 
-                        <div class="h-25" id="payment-section" style="display: none;">
+                        <div id="payment-section" style="display: none;">
                             <hr />
                             <p class="text-right" style="font-size: 20px">Tổng tiền: <span id="total-amount">0</span>₫</p>
                             <hr />
                             <div class="d-flex justify-content-center">
-                                <a class="btn btn-info mr-2" id="btnExportPDF" href="#">Hóa đơn tạm tính</a>
                                 <a class="btn btn-primary" id="btnThanhToan" href="#">Thanh toán</a>
                             </div>
                         </div>
@@ -186,6 +189,8 @@ $conn->close();
                     this.classList.add('selected-drink');
                 });
             });
+
+            // Automatically click the first category link to show drinks
             if (categoryLinks.length > 0) {
                 categoryLinks[0].click();
             }
@@ -193,6 +198,7 @@ $conn->close();
             var totalAmount = 0;
             var selectedDrinks = {};
 
+            // Handle drink selection
             document.querySelectorAll('.drink-select').forEach(function (drink) {
                 drink.addEventListener('click', function () {
                     var drinkID = this.getAttribute('data-drink-id');
@@ -213,6 +219,7 @@ $conn->close();
                 });
             });
 
+            // Update the bill table with selected drinks
             function updateBillTable() {
                 var tableBody = document.querySelector('#bill-table tbody');
                 tableBody.innerHTML = '';
@@ -225,19 +232,15 @@ $conn->close();
                         row.innerHTML = `
                             <td>${drink.name}</td>
                             <td>
-                                <a href="#" class="bg-info p-2 mr-2 decrease-quantity" data-drink-id="${id}" style="color: white; border-radius: 20%">-
-                                    
-                                </a>
+                                <a href="#" class="bg-info p-2 mr-2 decrease-quantity" data-drink-id="${id}" style="color: white; border-radius: 20%">-</a>
                                 ${drink.quantity}
-                                <a href="#" class="bg-info p-2 ml-2 increase-quantity" data-drink-id="${id}" style="color: white; border-radius: 20%">+
-                                    
-                                </a>
+                                <a href="#" class="bg-info p-2 ml-2 increase-quantity" data-drink-id="${id}" style="color: white; border-radius: 20%">+</a>
                             </td>
                             <td>${numberWithCommas(drink.price)}₫</td>
-                            <td>                                              
+                            <td>
                                 <a class="btn btn-danger delete-item" href="#" data-drink-id="${id}">
                                     <i class="fa fa-trash-o fa-lg"></i> Delete
-                                </a>                            
+                                </a>
                             </td>
                         `;
                         tableBody.appendChild(row);
@@ -246,47 +249,60 @@ $conn->close();
                 }
 
                 document.getElementById('total-amount').textContent = numberWithCommas(totalAmount);
-
-                // Hiển thị phần thông tin hóa đơn nếu có món uống được chọn
-                if (Object.keys(selectedDrinks).length > 0) {
-                    document.getElementById('selected-drink-info').style.display = 'block';
-                    document.getElementById('payment-section').style.display = 'block';
-                } else {
-                    document.getElementById('selected-drink-info').style.display = 'none';
-                    document.getElementById('payment-section').style.display = 'none';
-                }
+                document.getElementById('payment-section').style.display = (totalAmount > 0) ? 'block' : 'none';
+                document.getElementById('selected-drink-info').style.display = (totalAmount > 0) ? 'block' : 'none';
             }
 
-            document.addEventListener('click', function (e) {
-                if (e.target.classList.contains('increase-quantity')) {
-                    e.preventDefault();
-                    var id = e.target.getAttribute('data-drink-id');
-                    selectedDrinks[id].quantity++;
+            // Function to format numbers with commas
+            function numberWithCommas(x) {
+                return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            }
+
+            // Handle quantity changes and item deletion
+            document.querySelector('#bill-table').addEventListener('click', function (event) {
+                if (event.target.classList.contains('increase-quantity')) {
+                    var drinkID = event.target.getAttribute('data-drink-id');
+                    selectedDrinks[drinkID].quantity++;
                     updateBillTable();
                 }
 
-                if (e.target.classList.contains('decrease-quantity')) {
-                    e.preventDefault();
-                    var id = e.target.getAttribute('data-drink-id');
-                    if (selectedDrinks[id].quantity > 1) {
-                        selectedDrinks[id].quantity--;
+                if (event.target.classList.contains('decrease-quantity')) {
+                    var drinkID = event.target.getAttribute('data-drink-id');
+                    if (selectedDrinks[drinkID].quantity > 1) {
+                        selectedDrinks[drinkID].quantity--;
                     } else {
-                        delete selectedDrinks[id];
+                        delete selectedDrinks[drinkID];
                     }
                     updateBillTable();
                 }
 
-                if (e.target.classList.contains('delete-item')) {
-                    e.preventDefault();
-                    var id = e.target.getAttribute('data-drink-id');
-                    delete selectedDrinks[id];
+                if (event.target.classList.contains('delete-item')) {
+                    event.preventDefault();
+                    var drinkID = event.target.getAttribute('data-drink-id');
+                    delete selectedDrinks[drinkID];
                     updateBillTable();
                 }
             });
 
-            function numberWithCommas(x) {
-                return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            }
+            // Payment button click event
+            document.getElementById('btnThanhToan').addEventListener('click', function (e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Bạn có chắc chắn muốn thanh toán?',
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonText: 'Xác nhận',
+                    cancelButtonText: 'Hủy',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Gọi AJAX để xử lý thanh toán ở đây
+                        Swal.fire('Thanh toán thành công!', '', 'success');
+                        window.location.href = 'dashboard.php';
+                    } else {
+                        Swal.fire('Thanh toán đã bị hủy!', '', 'error');
+                    }
+                });
+            });
         });
     </script>
 </body>

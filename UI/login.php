@@ -42,7 +42,7 @@ if(isset($_POST['login'])) {
                     <div class="col-lg-4 mx-auto">
                         <div class="auth-form-light text-left py-5 px-4 px-sm-5">
                             <div class="brand-logo d-flex justify-content-center">
-                                <img src="images/lt2p_mini.png" alt="logo" class="w-100">
+                                <img src="images/lt.jpg" alt="logo" class="w-100">
                             </div>
                             <?php if (isset($errorMessage)): ?>
                                 <div class="alert alert-danger" role="alert">

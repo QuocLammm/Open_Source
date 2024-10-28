@@ -19,9 +19,11 @@ $sql = "SELECT d.DrinkID, d.DrinkName, d.DrinkImage, d.DrinkPrice, dc.DrinkCateg
 if ($searchDrink) {
     $sql .= " AND d.DrinkName LIKE '%" . $conn->real_escape_string($searchDrink) . "%'";
 }
+
 if ($searchCategory) {
     $sql .= " AND dc.DrinkCategoryName LIKE '%" . $conn->real_escape_string($searchCategory) . "%'";
 }
+
 if ($minPrice) {
     $sql .= " AND d.DrinkPrice >= " . (float)$minPrice;
 }
