@@ -3,7 +3,7 @@
 include("includes/connectSQL.php");
 
 // Initialize variables
-$drinkCategoryName = isset($_POST['drinkCategoryName']) ? $_POST['drinkCategoryName'] : '';
+$drinkCategoryName = isset($_GET['drinkCategoryName']) ? $_GET['drinkCategoryName'] : ''; // Changed from POST to GET
 $drinkCategories = [];
 
 // Define the SQL query to fetch drink categories
@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <?php include("includes/_layoutAdmin.php"); ?>
     <div class="container mt-4">
-        <form action="" method="GET" class="form-section">
+        <form action="" method="GET" class="form-section"> <!-- Changed method to GET -->
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3>Danh Sách Loại Đồ Uống</h3>
                 <a href="create_drink_category.php" class="btn btn-success">Thêm mới</a>
@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div class="col">
                     <button type="submit" class="btn btn-primary">Tìm kiếm</button>
-                    <button type="button" class="btn btn-secondary" onclick="window.location.reload();">Làm mới</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetPage();">Làm mới</button>
                 </div>
             </div>
 
@@ -158,46 +158,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll('.btnDelete').forEach(function (btn) {
-                btn.addEventListener('click', function (e) {
+                btn.addEventListener('click', async function (e) {
                     e.preventDefault();
                     var itemId = this.getAttribute('data-id');
-                    Swal.fire({
+                    const result = await Swal.fire({
                         title: 'Bạn có chắc chắn muốn xóa bản ghi này?',
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonText: 'OK',
                         cancelButtonText: 'Hủy',
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            fetch('', { // Current file
+                    });
+                    if (result.isConfirmed) {
+                        try {
+                            const response = await fetch('', {
                                 method: 'POST',
                                 body: JSON.stringify({ id: itemId }),
                                 headers: { 'Content-Type': 'application/json' }
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    Swal.fire({
-                                        title: 'Đã xóa thành công!',
-                                        icon: 'success',
-                                        confirmButtonText: 'OK'
-                                    }).then(() => {
-                                        location.reload(); // Reload the page to update the list
-                                    });
-                                } else {
-                                    Swal.fire({
-                                        title: 'Lỗi!',
-                                        text: data.message,
-                                        icon: 'error',
-                                        confirmButtonText: 'OK'
-                                    });
-                                }
+                            });
+                            const data = await response.json();
+                            if (data.success) {
+                                await Swal.fire({
+                                    title: 'Đã xóa thành công!',
+                                    icon: 'success',
+                                    confirmButtonText: 'OK'
+                                });
+                                location.reload(); // Reload the page to update the list
+                            } else {
+                                await Swal.fire({
+                                    title: 'Lỗi!',
+                                    text: data.message,
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        } catch (error) {
+                            await Swal.fire({
+                                title: 'Lỗi!',
+                                text: 'Có lỗi xảy ra. Vui lòng thử lại sau.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
                             });
                         }
-                    });
+                    }
                 });
             });
         });
+
+        function resetPage() {
+            // Clear the search input
+            document.querySelector('input[name="drinkCategoryName"]').value = '';
+            
+            // Reload the page without any query parameters
+            window.location.href = window.location.pathname; // Redirect to the current page
+        }
+
     </script>
 </body>
 </html>

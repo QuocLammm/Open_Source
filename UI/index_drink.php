@@ -3,8 +3,9 @@
 include("includes/connectSQL.php");
 include("includes/Pager.php");
 
+
 // Handle search/filter request
-$searchDrink = $_GET['drink'] ?? '';
+$searchDrink = isset($_GET['drinkName']) ? $_GET['drinkName'] : '';
 $searchCategory = $_GET['category'] ?? '';
 $minPrice = isset($_GET['min_price']) ? (float)$_GET['min_price'] : "Giá nhỏ nhất"; // Sửa giá trị mặc định
 $maxPrice = isset($_GET['max_price']) ? (float)$_GET['max_price'] : "Giá cao nhất"; // Sửa giá trị mặc định
@@ -38,6 +39,47 @@ $drinks = $result->fetch_all(MYSQLI_ASSOC);
 // Tạo đối tượng Pager với dữ liệu và số lượng sản phẩm mỗi trang
 $pager = new Pager($drinks, 3); // 3 sản phẩm mỗi trang
 $currentDrinks = $pager->getDataForCurrentPage(3); // Lấy dữ liệu cho trang hiện tại
+
+// Handle delete request
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $data = json_decode(file_get_contents("php://input"), true);
+    $id = $data['id'] ?? null;
+
+    if ($id) {
+        // Check if there are any associated categories before deletion
+        $checkSql = "SELECT COUNT(*) as count FROM Drinkcategories WHERE DrinkCategoryID IN (SELECT DrinkCategoryID FROM Drinks WHERE DrinkID = ?)";
+        if ($checkStmt = $conn->prepare($checkSql)) {
+            $checkStmt->bind_param("i", $id);
+            $checkStmt->execute();
+            $checkResult = $checkStmt->get_result();
+            $row = $checkResult->fetch_assoc();
+
+            if ($row['count'] > 0) {
+                echo json_encode(['success' => false, 'message' => 'Không thể xóa đồ uống này vì có loại đồ uống liên quan.']);
+                exit;
+            }
+            $checkStmt->close();
+        }
+
+        // Prepare and execute the delete statement
+        $sql = "DELETE FROM Drinks WHERE DrinkID = ?";
+        if ($stmt = $conn->prepare($sql)) {
+            $stmt->bind_param("i", $id);
+            if ($stmt->execute()) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Không thể xóa bản ghi.']);
+            }
+            $stmt->close();
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Lỗi truy vấn.']);
+        }
+    } else {
+        echo json_encode(['success' => false, 'message' => 'ID không hợp lệ.']);
+    }
+    exit; // Stop further processing after handling the delete request
+}
+
 
 $conn->close();
 ?>
@@ -111,7 +153,7 @@ $conn->close();
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="drink" class="form-label">Đồ uống:</label>
-                        <input type="text" name="drink" id="drink" class="form-control" placeholder="Tên đồ uống" value="<?php echo htmlspecialchars($searchDrink); ?>">
+                        <input type="text" name="drinkName" id="drinkName" class="form-control" placeholder="Tên đồ uống" value="<?php echo htmlspecialchars($searchDrink); ?>">
                     </div>
                     <div class="mb-3">
                         <label for="category" class="form-label">Loại đồ uống:</label>
@@ -135,7 +177,7 @@ $conn->close();
                         <input type="number" name="max_price" id="max_price" class="form-control" placeholder="Giá cao nhất" value="<?php echo htmlspecialchars($maxPrice); ?>">
                     </div>
                     <div class="mb-3">
-                        <button type="button" class="btn btn-secondary" onclick="window.location.reload();">Làm mới</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetPage();">Làm mới</button>
                     </div>
                 </div>
             </div>
@@ -166,7 +208,8 @@ $conn->close();
                                 <td><?php echo number_format($drink['DrinkPrice'], 0, ',', '.'); ?>đ</td>
                                 <td>
                                     <a href="edit_drink.php?id=<?php echo $drink['DrinkID']; ?>" class="btn btn-sm btn-primary">Sửa</a>
-                                    <a href="#" class="btn btn-sm btn-danger btnDelete" data-id="<?php echo $drink['DrinkID']; ?>">Xóa</a>
+                                    <a href="#" class="btn btn-sm btn-danger btnDelete" data-id="<?= $drink['DrinkID'] ?>">Xóa</a>
+
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -183,14 +226,70 @@ $conn->close();
     </div>
 
     <script>
-        document.querySelectorAll('.btnDelete').forEach(button => {
-            button.addEventListener('click', function() {
-                const drinkId = this.getAttribute('data-id');
-                if (confirm('Bạn có chắc chắn muốn xóa?')) {
-                    window.location.href = `delete_drink.php?id=${drinkId}`;
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.btnDelete').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            var itemId = this.getAttribute('data-id');
+            Swal.fire({
+                title: 'Bạn có chắc chắn muốn xóa bản ghi này?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'OK',
+                cancelButtonText: 'Hủy',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('delete_drink.php', { // Ensure this points to your delete logic
+                        method: 'POST',
+                        body: JSON.stringify({ id: itemId }),
+                        headers: { 'Content-Type': 'application/json' }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Đã xóa thành công!',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                location.reload(); // Reload the page to update the list
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Lỗi!',
+                                text: data.message,
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            title: 'Lỗi!',
+                            text: 'Đã xảy ra lỗi khi xóa.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    });
                 }
             });
         });
-    </script>
+    });
+});
+
+function resetPage() {
+    // Clear all search input fields
+    document.querySelector('input[name="drinkName"]').value = '';
+    document.querySelector('input[name="category"]').value = '';
+    document.querySelector('input[name="min_price"]').value = '';
+    document.querySelector('input[name="max_price"]').value = '';
+    
+    // Reload the page without any query parameters
+    window.location.href = window.location.pathname;
+}
+
+
+</script>
+
 </body>
 </html>

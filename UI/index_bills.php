@@ -125,7 +125,7 @@ $result = $conn->query("SELECT * FROM Bills");
                     cancelButtonText: 'Hủy',
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        $.post('index.php', {ids: str}, function (response) {
+                        $.post('index_bills.php', {ids: str}, function (response) {
                             location.reload();
                         });
                     }
@@ -144,7 +144,7 @@ $result = $conn->query("SELECT * FROM Bills");
                 cancelButtonText: 'Hủy',
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $.post('index.php', {id: itemId}, function (response) {
+                    $.post('index_bills.php', {id: itemId}, function (response) {
                         location.reload();
                     });
                 }

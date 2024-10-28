@@ -36,6 +36,47 @@ if ($result_categories->num_rows > 0) {
     }
 }
 
+// Handle the form submission for updating the drink information
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Get the posted data
+    $drinkName = $_POST['drinkName'];
+    $categoryName = $_POST['categoryName'];
+    $price = $_POST['price'];
+    
+    // Handle the image upload
+    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+        // Handle the image upload
+        $targetDir = "images/drinks/"; // Ensure correct directory
+        $imageName = basename($_FILES["image"]["name"]);
+        $targetFile = $targetDir . $imageName;
+        
+        // Attempt to move the uploaded file
+        if (move_uploaded_file($_FILES["image"]["tmp_name"], $targetFile)) {
+            $imagePath = $imageName; // Store just the file name in the database
+        } else {
+            echo "<script>alert('Lỗi khi tải lên hình ảnh.');</script>";
+            $imagePath = $drink['DrinkImage']; // Keep old image if upload fails
+        }
+    } else {
+        // Keep the existing image path (if no new image uploaded)
+        $imagePath = $drink['DrinkImage'];
+    }
+
+    // Prepare the update statement
+    $sql_update = "UPDATE drinks SET DrinkName = ?, DrinkCategoryID = ?, DrinkPrice = ?, DrinkImage = ? WHERE DrinkID = ?";
+    if ($stmt = $conn->prepare($sql_update)) {
+        $stmt->bind_param("ssssi", $drinkName, $categoryName, $price, $imagePath, $drinkId);
+        if ($stmt->execute()) {
+            echo "<script>alert('Cập nhật thành công!'); window.location.href = 'index_drink.php';</script>";
+        } else {
+            echo "<script>alert('Cập nhật không thành công.');</script>";
+        }
+        $stmt->close();
+    } else {
+        echo "<script>alert('Lỗi truy vấn.');</script>";
+    }
+}
+
 $conn->close();
 ?>
 <!DOCTYPE html>
@@ -154,7 +195,7 @@ $conn->close();
                 <div class="form-column">
                     <div class="form-group">
                         <label for="image">Hình Ảnh</label>
-                        <input type="file" id="image" name="image" accept="image/*">
+                        <input type="file" id="image" name="image" accept="image">
                     </div>
                     
                     <div class="form-group">
