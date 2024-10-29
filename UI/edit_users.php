@@ -210,7 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="mb-3">
                 <label for="user_image" class="form-label">Ảnh đại diện:</label><br>
                 <?php if (!empty($userImage)) : ?>
-                    <img src="../UI/images/users/<?php echo htmlspecialchars($userImage); ?>" class="profile-pic mb-2" alt="Current Profile Picture">
+                    <img src="images/users/<?php echo htmlspecialchars($userImage); ?>" class="profile-pic mb-2" alt="Current Profile Picture">
                 <?php else : ?>
                     <p>Chưa có ảnh đại diện</p>
                 <?php endif; ?>

@@ -1,87 +1,30 @@
 <?php
-include("includes/connectSQL.php");
+require_once("includes/UsersController.php");
 
-// Handle delete request
+$controller = new UsersController();
+$users = [];
+$fullName = $gender = $userCategoryName = '';
+$data = json_decode(file_get_contents("php://input"), true);
+
+if (isset($data['delete_id'])) {
+    // Xóa một người dùng
+    $controller->delete($data['delete_id']);
+} elseif (isset($data['delete_ids'])) {
+    // Xóa nhiều người dùng
+    $ids = $data['delete_ids'];
+    $controller->deleteAll($ids);
+} else {
+    echo json_encode(['success' => false, 'message' => 'Không có ID nào để xóa.']);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $data = json_decode(file_get_contents("php://input"), true);
-    $id = $data['delete_id'] ?? null;
-
-    if ($id) {
-        // Check if there are any associated UserCategories
-        $checkSql = "SELECT COUNT(*) as count FROM UserCategories WHERE UserCategoryID IN (SELECT UserCategoryID FROM Users WHERE UserID = ?)";
-        if ($checkStmt = $conn->prepare($checkSql)) {
-            $checkStmt->bind_param("i", $id);
-            $checkStmt->execute();
-            $checkResult = $checkStmt->get_result();
-            $row = $checkResult->fetch_assoc();
-
-            // If associated UserCategories exist, prevent deletion
-            if ($row['count'] > 0) {
-                echo json_encode(['success' => false, 'message' => 'Không thể xóa người dùng này vì có loại người dùng liên quan.']);
-                exit;
-            }
-            $checkStmt->close();
-        }
-
-        // Prepare and execute the delete statement
-        $sql = "DELETE FROM Users WHERE UserID = ?";
-        if ($stmt = $conn->prepare($sql)) {
-            $stmt->bind_param("i", $id);
-            if ($stmt->execute()) {
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Không thể xóa bản ghi.']);
-            }
-            $stmt->close();
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Lỗi truy vấn.']);
-        }
-    } else {
-        echo json_encode(['success' => false, 'message' => 'ID không hợp lệ.']);
-    }
-    exit; // Stop further processing after handling the delete request
+    $fullName = $_POST['fullName'] ?? '';
+    $gender = $_POST['gender'] ?? '';
+    $userCategoryName = $_POST['userCategoryName'] ?? '';
+    $users = $controller->search($fullName, $gender, $userCategoryName);
+} else {
+    $users = $controller->index();
 }
-
-
-
-
-// Handle search request
-$searchName = isset($_GET['name']) ? $_GET['name'] : '';
-$searchRole = isset($_GET['role']) ? $_GET['role'] : '';
-
-// Base SQL query
-$sql = "SELECT u.UserID, u.FullName, uc.UserCategoryName, u.Gender, u.UserImage, u.PhoneNumber, u.Username, u.Password
-        FROM Users u
-        JOIN UserCategories uc ON u.UserCategoryID = uc.UserCategoryID
-        WHERE 1=1"; // Add a placeholder to simplify appending conditions
-
-// Prepare parameters for search
-$params = [];
-if (!empty($searchName)) {
-    $sql .= " AND u.FullName LIKE ?";
-    $params[] = '%' . $searchName . '%';
-}
-if (!empty($searchRole)) {
-    $sql .= " AND uc.UserCategoryName LIKE ?";
-    $params[] = '%' . $searchRole . '%';
-}
-
-// Prepare and execute the query
-$stmt = $conn->prepare($sql);
-
-// Bind parameters if necessary
-if (!empty($params)) {
-    $types = str_repeat('s', count($params)); // All parameters are strings
-    $stmt->bind_param($types, ...$params);
-}
-
-$stmt->execute();
-$result = $stmt->get_result();
-
-// Fetch all users as an associative array
-$users = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
-$stmt->close();
-$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -91,6 +34,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Danh sách Người Dùng</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <style>
     .container {
@@ -143,22 +87,22 @@ $conn->close();
 
     <div class="container mt-4">
         <form action="" method="GET" enctype="multipart/form-data" class="form-section">
-            <div class="d-flex justify-content-between align-items-center">
-                <h3>Danh Sách Người Dùng</h3>
-                <a href="create_users.php" class="btn btn-success">Thêm mới</a>
+        <div class="d-flex justify-content-between align-items-center">
+            <h3>Danh Sách Người Dùng</h3>
+            <a href="create_users.php" class="btn btn-success">Thêm mới</a>
+        </div>
+        <div class="row mb-3">
+            <div class="col">
+                <input type="text" name="fullName" class="form-control" placeholder="Tên người dùng" value="<?php echo htmlspecialchars($fullName); ?>">
             </div>
-            <div class="row mb-3">
-                <div class="col">
-                    <input type="text" name="name" class="form-control" placeholder="Tên người dùng" value="">
-                </div>
-                <div class="col">
-                    <input type="text" name="role" class="form-control" placeholder="Tên loại người dùng" value="">
-                </div>
-                <div class="col">
-                    <button type="submit" class="btn btn-primary">Tìm kiếm</button>
-                    <button type="button" class="btn btn-secondary" onclick="window.location.href='index_users.php';">Load</button>
-                </div>
+            <div class="col">
+                <input type="text" name="userCategoryName" class="form-control" placeholder="Tên loại người dùng" value="<?php echo htmlspecialchars($userCategoryName); ?>">
             </div>
+            <div class="col">
+                <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                <button type="button" class="btn btn-secondary" onclick="window.location.href='index_users.php';">Load lại</button>
+            </div>
+        </div>
 
             <table class="table table-bordered">
                 <thead>
@@ -176,31 +120,36 @@ $conn->close();
                     </tr>
                 </thead>
                 <tbody>
-                    <?php
-                    // Duyệt qua dữ liệu bằng foreach
-                    if (!empty($users)) {
-                        foreach ($users as $row) {
-                            echo "<tr>";
-                            echo "<td><input type='checkbox' class='user-checkbox' data-id='{$row['UserID']}'></td>";
-                            echo "<td>" . $row['UserID'] . "</td>";
-                            echo "<td>" . htmlspecialchars($row['FullName']) . "</td>";
-                            echo "<td>" . htmlspecialchars($row['UserCategoryName']) . "</td>";
-                            echo "<td>" . htmlspecialchars($row['Gender']) . "</td>";
-                            echo "<td><img src='../UI/images/users/" . htmlspecialchars($row['UserImage']) . "' alt='image' style='width: 50px;'></td>";
-                            echo "<td>" . htmlspecialchars($row['PhoneNumber']) . "</td>";
-                            echo "<td>" . htmlspecialchars($row['Username']) . "</td>";
-                            echo "<td>" . htmlspecialchars($row['Password']) . "</td>";
-                            echo "<td>
-                                    <a href='edit_users.php?id=" . $row['UserID'] . "' class='btn btn-sm btn-primary'>Sửa</a>
-                                    <a href='#' class='btn btn-sm btn-danger btnDelete' data-id='" . $row['UserID'] . "'>Xóa</a>
-                                </td>";
-                            echo "</tr>";
-                        }
-                    } else {
-                        echo "<tr><td colspan='10' class='text-center'>Không có dữ liệu</td></tr>";
-                    }
-                    ?>
-                </tbody>
+    <?php
+    if (!empty($users)) {
+        foreach ($users as $row) {
+            // Kiểm tra UserID có tồn tại không
+            if (isset($row['UserID'])) {
+                echo "<tr>";
+                echo "<td><input type='checkbox' class='user-checkbox' data-id='{$row['UserID']}'></td>";
+                echo "<td>" . htmlspecialchars($row['UserID']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['FullName']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['UserCategoryName']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['Gender']) . "</td>";
+                echo "<td><img src='images/users/" . htmlspecialchars($row['UserImage']) . "' alt='image' style='width: 50px;'></td>";
+                echo "<td>" . htmlspecialchars($row['PhoneNumber']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['Username']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['Password']) . "</td>";
+                echo "<td>
+                        <a href='edit_users.php?id=" . $row['UserID'] . "' class='btn btn-sm btn-primary'>Sửa</a>
+                        <a href='#' class='btn btn-sm btn-danger btnDelete' data-id='" . $row['UserID'] . "'>Xóa</a>
+                    </td>";
+                echo "</tr>";
+            } else {
+                // Xử lý trường hợp không có UserID
+                echo "<tr><td colspan='10' class='text-center'>Bản ghi không hợp lệ</td></tr>";
+            }
+        }
+    } else {
+        echo "<tr><td colspan='10' class='text-center'>Không có dữ liệu</td></tr>";
+    }
+    ?>
+</tbody>
             </table>
         </form>
     </div>
@@ -234,14 +183,14 @@ $conn->close();
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Send a POST request to delete the user
-                    fetch('delete_users.php', { // Ensure this points to your delete logic
+                    fetch('index_users.php', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json' // Changed to application/json
+                            'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ delete_id: itemId }) // Changed to JSON format
+                        body: JSON.stringify({ delete_id: itemId })
                     })
-                    .then(response => response.json()) // Parse the response as JSON
+                    .then(response => response.json())
                     .then(data => {
                         if (data.success) {
                             Swal.fire({
@@ -249,12 +198,12 @@ $conn->close();
                                 icon: 'success',
                                 confirmButtonText: 'OK'
                             }).then(() => {
-                                location.reload(); // Reload the page to update the list
+                                location.reload();
                             });
                         } else {
                             Swal.fire({
                                 title: 'Lỗi!',
-                                text: data.message, // Use the message from the response
+                                text: data.message,
                                 icon: 'error',
                                 confirmButtonText: 'OK'
                             });
@@ -271,6 +220,66 @@ $conn->close();
                 }
             });
         });
+    });
+
+    // Thêm nút xóa nhiều người dùng
+    document.getElementById('delete-selected').addEventListener('click', function () {
+        const selectedIds = Array.from(document.querySelectorAll('.user-checkbox:checked'))
+            .map(checkbox => checkbox.getAttribute('data-id'))
+            .join(',');
+
+        if (selectedIds) {
+            Swal.fire({
+                title: 'Bạn có chắc chắn muốn xóa các bản ghi đã chọn?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'OK',
+                cancelButtonText: 'Hủy',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('delete_users.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ delete_ids: selectedIds })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Đã xóa thành công!',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Lỗi!',
+                                text: data.message,
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            title: 'Lỗi!',
+                            text: 'Đã xảy ra lỗi khi xóa.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    });
+                }
+            });
+        } else {
+            Swal.fire({
+                title: 'Chưa chọn người dùng!',
+                icon: 'info',
+                confirmButtonText: 'OK'
+            });
+        }
     });
 });
 

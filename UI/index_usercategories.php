@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Xử lý tìm kiếm và đưa dữ liệu
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $userCategoryName = $_POST['userCategoryName'] ?? '';
+    $userCategoryName = $_POST['userCategoryName'] ?? ''; // Đảm bảo sử dụng cùng tên
     $userCategories = $controller->search($userCategoryName);
 } else {
     $userCategories = $controller->index();
@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <?php include('includes/_layoutAdmin.php'); ?>
     <div class="container mt-4">
-        <form action="" method="GET" class="form-section">
+        <form action="" method="POST" class="form-section">
             <div class="d-flex justify-content-between align-items-center">
                 <h3>Danh Sách Loại Người Dùng</h3>
                 <a href="create_usercategories.php" class="btn btn-success">Thêm mới</a>
@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="text" name="search" class="form-control" placeholder="Tên loại người dùng">
                 </div>
                 <div class="col">
-                    <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                    <button type="submit" class="btn btn-primary" method="POST" name="userCategoryName">Tìm kiếm</button>
                     <button type="button" class="btn btn-secondary" onclick="window.location.reload();">Làm mới</button>
                 </div>
             </div>

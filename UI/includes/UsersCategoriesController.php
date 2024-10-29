@@ -18,31 +18,18 @@ class UserCategoriesController
     public function search($userCategoryName)
     {
         global $conn;
-
-        // Kiểm tra nếu $userCategoryName rỗng
         if (empty($userCategoryName)) {
             return []; // Trả về mảng rỗng nếu không có từ khóa tìm kiếm
         }
-
         $query = "SELECT * FROM UserCategories WHERE LOWER(UserCategoryName) LIKE LOWER(?)";
-        
         $stmt = $conn->prepare($query);
         $searchTerm = "%$userCategoryName%";
         $stmt->bind_param("s", $searchTerm);
-        
         if (!$stmt->execute()) {
-            // Ghi log nếu có lỗi trong quá trình thực hiện
-            error_log("SQL Error: " . $stmt->error);
+            error_log("SQL Error: " . $stmt->error); // Ghi log nếu có lỗi
             return [];
         }
-
         $result = $stmt->get_result();
-
-        // Kiểm tra số lượng bản ghi
-        if ($result->num_rows === 0) {
-            error_log("No records found for search term: " . $userCategoryName);
-        }
-
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
