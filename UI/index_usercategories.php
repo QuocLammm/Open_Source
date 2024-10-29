@@ -27,6 +27,14 @@ if (isset($_POST['delete_id'])) {
 // Define the SQL query to fetch user categories
 $query = "SELECT UserCategoryID, UserCategoryName, UserCategoryDescription FROM UserCategories";
 $result = $conn->query($query);
+
+// Fetch all user categories into an array
+$userCategories = [];
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $userCategories[] = $row;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -40,51 +48,55 @@ $result = $conn->query($query);
 </head>
 
 <style>
-        .container {
-            max-width: 900px;
-            margin-top: 20px;
-        }
-        .form-section {
-            width: 102%;
-            padding: 10px;
-            margin: 70px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-        .form-label {
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-        .btnDelete {
-            cursor: pointer;
-        }
-        .pagination {
-            display: flex;
-            justify-content: center; /* Căn giữa các liên kết */
-            gap: 10px; /* Tạo khoảng cách giữa các liên kết */
-        }
+    .container {
+        max-width: 900px;
+        margin-top: 20px;
+    }
 
-        .pagination a {
-            text-decoration: none; /* Bỏ gạch chân cho liên kết */
-            padding: 8px 12px; /* Thêm padding cho các liên kết */
-            border: 1px solid #007bff; /* Đường viền cho các liên kết */
-            border-radius: 5px; /* Bo góc cho các liên kết */
-            color: #007bff; /* Màu chữ */
-        }
+    .form-section {
+        width: 102%;
+        padding: 10px;
+        margin: 70px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
 
-        .pagination a:hover {
-            text-decoration: none; /* Bỏ gạch chân cho liên kết */
-            background-color: #007bff; /* Màu nền khi hover */
-            color: white; /* Màu chữ khi hover */
-        }
+    .form-label {
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
 
-        .pagination strong {
-            color: red; /* Màu chữ cho trang hiện tại */
-            border: 1px solid #007bff; /* Đường viền cho trang hiện tại */
-            padding: 8px 12px; /* Padding tương tự như các liên kết khác */
-            border-radius: 5px; /* Bo góc giống nhau */
-        }
-    </style>
+    .btnDelete {
+        cursor: pointer;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center; /* Căn giữa các liên kết */
+        gap: 10px; /* Tạo khoảng cách giữa các liên kết */
+    }
+
+    .pagination a {
+        text-decoration: none; /* Bỏ gạch chân cho liên kết */
+        padding: 8px 12px; /* Thêm padding cho các liên kết */
+        border: 1px solid #007bff; /* Đường viền cho các liên kết */
+        border-radius: 5px; /* Bo góc cho các liên kết */
+        color: #007bff; /* Màu chữ */
+    }
+
+    .pagination a:hover {
+        text-decoration: none; /* Bỏ gạch chân cho liên kết */
+        background-color: #007bff; /* Màu nền khi hover */
+        color: white; /* Màu chữ khi hover */
+    }
+
+    .pagination strong {
+        color: red; /* Màu chữ cho trang hiện tại */
+        border: 1px solid #007bff; /* Đường viền cho trang hiện tại */
+        padding: 8px 12px; /* Padding tương tự như các liên kết khác */
+        border-radius: 5px; /* Bo góc giống nhau */
+    }
+</style>
 
 <body>
     <?php include('includes/_layoutAdmin.php'); ?>
@@ -116,13 +128,13 @@ $result = $conn->query($query);
                 </thead>
                 <tbody>
                     <?php
-                    if ($result->num_rows > 0) {
-                        while ($row = $result->fetch_assoc()) {
+                    if (!empty($userCategories)) {
+                        foreach ($userCategories as $row) {
                             echo "<tr>";
                             echo "<td><input type='checkbox' class='user-checkbox' data-id='{$row['UserCategoryID']}'></td>";
                             echo "<td>" . $row['UserCategoryID'] . "</td>";
-                            echo "<td>" . $row['UserCategoryName'] . "</td>";
-                            echo "<td>" . $row['UserCategoryDescription'] . "</td>";
+                            echo "<td>" . htmlspecialchars($row['UserCategoryName']) . "</td>";
+                            echo "<td>" . htmlspecialchars($row['UserCategoryDescription']) . "</td>";
                             echo "<td>
                                     <a href='edit_usercategories.php?id=" . $row['UserCategoryID'] . "' class='btn btn-sm btn-primary'>Sửa</a>
                                     <form method='post' style='display:inline;'>
@@ -140,10 +152,10 @@ $result = $conn->query($query);
             </table>
         </form>
     </div>
-    
+
     <script>
         // Handle "select all" checkbox functionality
-        document.getElementById('select-all').addEventListener('change', function() {
+        document.getElementById('select-all').addEventListener('change', function () {
             const checkboxes = document.querySelectorAll('.user-checkbox');
             checkboxes.forEach(checkbox => {
                 checkbox.checked = this.checked;
@@ -152,6 +164,7 @@ $result = $conn->query($query);
     </script>
 </body>
 </html>
+
 <?php
 $conn->close();
 ?>

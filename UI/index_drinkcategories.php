@@ -67,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         margin-top: 20px;
     }
     .form-section {
+        width: 100%;
         padding: 10px;
         margin: 70px;
         background-color: #f8f9fa;
