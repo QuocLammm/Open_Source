@@ -51,10 +51,12 @@ $conn->close();
     <link rel="stylesheet" href="path/to/font-awesome/css/font-awesome.min.css">
     <script src="path-to-your-js-file.js"></script> 
     <style>
+        
         .form-group label {
             display: block;
             margin-bottom: 5px;
         }
+        
         .form-group input, .form-group select {
             width: 100%;
             padding: 10px;
@@ -85,7 +87,7 @@ $conn->close();
         }
 
         .container {
-            max-width: 900px;
+            max-width: 75%;
             margin-top: 20px;
         }
         .form-section {
