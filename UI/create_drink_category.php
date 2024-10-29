@@ -1,34 +1,36 @@
 <?php
-// Include database connection file
 include("includes/connectSQL.php");
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+include("includes/DrinkCategoriesController.php"); // Bao gồm lớp điều khiển
 
-if (isset($_POST['submit'])) {
+$controller = new DrinkCategoriesController($conn);
+
+// Kiểm tra xem có gửi dữ liệu từ biểu mẫu không
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Fetch form data
-    $drinkCategoryName = mysqli_real_escape_string($conn, $_POST['drinkCategoryName']);
-    $description = mysqli_real_escape_string($conn, $_POST['description']);
+    $drinkCategoryName = isset($_POST['drinkCategoryName']) ? $_POST['drinkCategoryName'] : '';
+    $description = isset($_POST['description']) ? $_POST['description'] : '';
 
-    // Check if required fields are not empty
+    // Kiểm tra các trường bắt buộc
     if (empty($drinkCategoryName)) {
-        echo "Tên loại đồ uống không được để trống.";
+        $error_message = "Tên loại đồ uống không được để trống.";
     } else {
-        // Prepare SQL statement
-        $stmt = $conn->prepare("INSERT INTO DrinkCategories (DrinkCategoryName, DrinkCategoryDescription) VALUES (?, ?)");
-        $stmt->bind_param("ss", $drinkCategoryName, $description);
+        $drinkCategory = [
+            'DrinkCategoryName' => $drinkCategoryName,
+            'DrinkCategoryDescription' => $description
+        ];
 
-        if ($stmt->execute()) {
+        // Gọi phương thức tạo mới
+        if ($controller->create($drinkCategory)) {
             header("Location: index_drinkcategories.php?success=1");
             exit();
         } else {
-            echo "Lỗi khi thêm loại đồ uống: " . $conn->error;
+            $error_message = "Lỗi khi thêm loại đồ uống.";
         }
-        $stmt->close();
     }
 }
-// Close database connection
+
 $conn->close();
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -38,7 +40,6 @@ $conn->close();
     <title>Thêm Loại Đồ Uống</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
-        
         h3 {
             margin-bottom: 20px;
         }
@@ -105,26 +106,25 @@ $conn->close();
         <form action="" method="POST" enctype="multipart/form-data" class="form-section">
             <h3>Thêm Loại Đồ Uống Mới</h3>
             <a href="index_drinkcategories.php" class="btn btn-primary mb-2">
-                <i class="ti-arrow-left"></i> Quay lại
+                Quay lại
             </a>
+            <?php if (isset($error_message)): ?>
+                <div class="alert alert-danger"><?= htmlspecialchars($error_message) ?></div>
+            <?php endif; ?>
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
                         <label for="drinkCategoryName">Tên loại đồ uống <span class="text-danger">*</span></label>
                         <input type="text" id="drinkCategoryName" name="drinkCategoryName" class="form-control" required>
                     </div>
-                
                     <div class="form-group">
                         <label for="description">Mô tả</label>
                         <textarea id="description" name="description" class="form-control" rows="3"></textarea>
                     </div>
                 </div>
-            
             </div>
             <button type="submit" name="submit" class="btn btn-info mt-2">Lưu</button>
-            </div>
         </form>
     </div>
-
 </body>
 </html>

@@ -1,31 +1,9 @@
 <?php
-// Establish the connection to the database
-include("includes/connectSQL.php");
+include("includes/connectSQL.php"); // Kết nối đến cơ sở dữ liệu
+include("includes/DrinkCategoriesController.php"); // Bao gồm lớp điều khiển
 
-// Initialize variables
-$drinkCategoryName = isset($_GET['drinkCategoryName']) ? $_GET['drinkCategoryName'] : ''; // Changed from POST to GET
-$drinkCategories = [];
-
-// Define the SQL query to fetch drink categories
-$query = "SELECT DrinkCategoryID, DrinkCategoryName, DrinkCategoryDescription FROM DrinkCategories";
-
-// Add search condition if a search term is provided
-if (!empty($drinkCategoryName)) {
-    $query .= " WHERE DrinkCategoryName LIKE ?";
-}
-
-// Prepare and execute the query
-if ($stmt = $conn->prepare($query)) {
-    if (!empty($drinkCategoryName)) {
-        $searchTerm = '%' . $drinkCategoryName . '%';
-        $stmt->bind_param("s", $searchTerm);
-    }
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $drinkCategories = $result->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-}
-
+// Khởi tạo điều khiển
+$controller = new DrinkCategoriesController($conn);
 // Handle delete request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents("php://input"), true);
@@ -50,6 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     exit; // Stop further processing after handling the delete request
 }
+
+// Xử lý tìm kiếm nếu có
+$drinkCategoryName = isset($_POST['drinkCategoryName']) ? $_POST['drinkCategoryName'] : '';
+$drinkCategories = $controller->index();
 ?>
 
 <!DOCTYPE html>
