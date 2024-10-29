@@ -1,9 +1,5 @@
 <?php
-require_once("includes/UsersCategoriesController.php");
-
-$controller = new UserCategoriesController();
-$userCategories = [];
-$userCategoryName = '';
+include("includes/connectSQL.php");
 
 // Handle delete request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -30,15 +26,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit; // Stop further processing after handling the delete request
 }
 
-// Xử lý tìm kiếm và đưa dữ liệu
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $userCategoryName = $_POST['userCategoryName'] ?? '';
-    $userCategories = $controller->search($userCategoryName);
-} else {
-    $userCategories = $controller->index();
+
+// Define the SQL query to fetch user categories
+$query = "SELECT UserCategoryID, UserCategoryName, UserCategoryDescription FROM UserCategories";
+$result = $conn->query($query);
+
+// Fetch all user categories into an array
+$userCategories = [];
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $userCategories[] = $row;
+    }
 }
-// Hiển thị dữ liệu
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -47,7 +48,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Danh Sách Loại Người Dùng</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Thêm SweetAlert2 -->
 </head>
 
 <style>
@@ -106,8 +106,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container mt-4">
         <form action="" method="GET" class="form-section">
             <div class="d-flex justify-content-between align-items-center">
-                <h3>Danh Sách Loại Người Dùng</h3>
-                <a href="create_usercategories.php" class="btn btn-success">Thêm mới</a>
+                <h3>Phân Quyền</h3>
+                
             </div>
             <div class="row mb-3">
                 <div class="col">
@@ -139,8 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             echo "<td>" . htmlspecialchars($row['UserCategoryName']) . "</td>";
                             echo "<td>" . htmlspecialchars($row['UserCategoryDescription']) . "</td>";
                             echo "<td>
-                                    <a href='edit_usercategories.php?id=" . $row['UserCategoryID'] . "' class='btn btn-sm btn-primary'>Sửa</a>
-                                    <a href='#' class='btn btn-sm btn-danger btnDelete' data-id='" . $row['UserCategoryID'] . "'>Xóa</a>
+                                    <a href='edit_author.php?id=" . $row['UserCategoryID'] . "' class='btn btn-sm btn-primary'>Sửa</a>                                   
                                 </td>";
                             echo "</tr>";
                         }
@@ -149,6 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     ?>
                 </tbody>
+
             </table>
         </form>
     </div>
@@ -161,55 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 checkbox.checked = this.checked;
             });
         });
-
-        // Xóa bản ghi
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.btnDelete').forEach(function (btn) {
-                btn.addEventListener('click', async function (e) {
-                    e.preventDefault();
-                    var itemId = this.getAttribute('data-id');
-                    const result = await Swal.fire({
-                        title: 'Bạn có chắc chắn muốn xóa bản ghi này?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'OK',
-                        cancelButtonText: 'Hủy',
-                    });
-                    if (result.isConfirmed) {
-                        try {
-                            const response = await fetch('', {
-                                method: 'POST',
-                                body: JSON.stringify({ id: itemId }),
-                                headers: { 'Content-Type': 'application/json' }
-                            });
-                            const data = await response.json();
-                            if (data.success) {
-                                await Swal.fire({
-                                    title: 'Đã xóa thành công!',
-                                    icon: 'success',
-                                    confirmButtonText: 'OK'
-                                });
-                                location.reload(); // Reload the page to update the list
-                            } else {
-                                await Swal.fire({
-                                    title: 'Lỗi!',
-                                    text: data.message,
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
-                                });
-                            }
-                        } catch (error) {
-                            await Swal.fire({
-                                title: 'Lỗi!',
-                                text: 'Có lỗi xảy ra. Vui lòng thử lại sau.',
-                                icon: 'error',
-                                confirmButtonText: 'OK'
-                            });
-                        }
-                    }
-                });
-            });
-        });
+        
     </script>
 </body>
 </html>

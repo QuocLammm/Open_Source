@@ -1,31 +1,24 @@
 <?php
-// Kết nối cơ sở dữ liệu
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "qlcoffee"; // Thay bằng tên cơ sở dữ liệu của bạn
-$conn = new mysqli($servername, $username, $password, $dbname);
+session_start();
+include("includes/connectSQL.php"); // Kết nối đến cơ sở dữ liệu
+include("includes/UsersCategoriesController.php"); // Bao gồm lớp UserCategoriesController
 
-// Kiểm tra kết nối
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+$controller = new UserCategoriesController();
+$userCategoryID = null;
+$userCategoryName = '';
+$userCategoryDescription = '';
 
 // Lấy UserCategoryID từ URL và kiểm tra hợp lệ
 if (isset($_GET['id']) && is_numeric($_GET['id'])) {
     $userCategoryID = $_GET['id'];
-
-    // Thực hiện truy vấn để lấy thông tin loại người dùng
-    $query = "SELECT UserCategoryName, UserCategoryDescription FROM UserCategories WHERE UserCategoryID = ?";
-    $stmt = $conn->prepare($query);
-    if ($stmt) {
-        $stmt->bind_param("i", $userCategoryID);
-        $stmt->execute();
-        $stmt->bind_result($userCategoryName, $userCategoryDescription);
-        $stmt->fetch();
-        $stmt->close();
+    
+    // Lấy thông tin loại người dùng
+    $category = $controller->getCategory($userCategoryID);
+    if ($category) {
+        $userCategoryName = $category['name'];
+        $userCategoryDescription = $category['description'];
     } else {
-        echo "Error preparing query: " . $conn->error;
+        echo "Không tìm thấy loại người dùng.";
         exit();
     }
 } else {
@@ -39,19 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $updatedDescription = htmlspecialchars($_POST['description']);
 
     // Cập nhật thông tin loại người dùng
-    $updateQuery = "UPDATE UserCategories SET UserCategoryName = ?, UserCategoryDescription = ? WHERE UserCategoryID = ?";
-    $updateStmt = $conn->prepare($updateQuery);
-    if ($updateStmt) {
-        $updateStmt->bind_param("ssi", $updatedName, $updatedDescription, $userCategoryID);
-        
-        if ($updateStmt->execute()) {
-            echo "<script>alert('Record updated successfully'); window.location.href='index_usercategories.php';</script>";
-        } else {
-            echo "Error updating record: " . $conn->error;
-        }
-        $updateStmt->close();
+    if ($controller->updateCategory($userCategoryID, $updatedName, $updatedDescription)) {
+        echo "<script>alert('Cập nhật thành công!'); window.location.href='index_usercategories.php';</script>";
     } else {
-        echo "Error preparing update statement: " . $conn->error;
+        echo "Lỗi khi cập nhật bản ghi: " . $conn->error;
     }
 }
 
@@ -65,7 +49,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit User Category</title>
+    <title>Chỉnh sửa loại người dùng</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .container{
@@ -154,8 +138,8 @@ $conn->close();
 <body>
     <?php include('includes/_layoutAdmin.php'); ?>
     <div class="container mt-5">
-        <form method="post" enctype="multipart/form-data" class="form-section">
-        <h2 class="mb-4">Chỉnh sửa loại người dùng</h2>
+        <form method="post" class="form-section">
+            <h2 class="mb-4">Chỉnh sửa loại người dùng</h2>
             <div class="mb-3">
                 <label for="name" class="form-label">Tên loại người dùng:</label>
                 <input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($userCategoryName); ?>" required>

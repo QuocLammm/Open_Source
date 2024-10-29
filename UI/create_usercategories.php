@@ -1,41 +1,25 @@
 <?php
-// Establish the connection to the database
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "qlcoffee"; // Replace with your database name
+session_start();
+include("includes/connectSQL.php"); // Kết nối đến cơ sở dữ liệu
+include("includes/UsersCategoriesController.php"); // Bao gồm lớp UserCategoriesController
 
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
+$controller = new UserCategoriesController();
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+// Xử lý form submit để thêm loại người dùng mới
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $newUserCategory = [
+        'UserCategoryName' => htmlspecialchars($_POST['userCategoryName']),
+        'UserCategoryDescription' => htmlspecialchars($_POST['userCategoryDescription'])
+    ];
 
-// Kiểm tra xem có gửi dữ liệu từ biểu mẫu không
-if (isset($_POST['submit'])) {
-    // Lấy dữ liệu từ biểu mẫu
-    $userCategoryName = $_POST['userCategoryName'];
-    $userCategoryDescription = $_POST['userCategoryDescription'];
-
-    // Kiểm tra dữ liệu nhập vào
-    if (empty($userCategoryName) || empty($userCategoryDescription)) {
-        echo '<script>alert("Vui lòng nhập tất cả thông tin cần thiết.");</script>';
+    // Gọi phương thức create để thêm loại người dùng
+    if ($controller->create($newUserCategory)) {
+        echo "<script>alert('Thêm loại người dùng thành công!'); window.location.href='index_usercategories.php';</script>";
     } else {
-        // Truy vấn để thêm loại người dùng
-        $query = mysqli_query($conn, "INSERT INTO usercategories (UserCategoryName, UserCategoryDescription) VALUES ('$userCategoryName', '$userCategoryDescription')");
-
-        // Kiểm tra kết quả truy vấn
-        if ($query) {
-            echo '<script>alert("Thêm loại người dùng thành công.");</script>';
-            echo "<script>window.location.href ='index_usercategories.php';</script>";
-            exit();
-        } else {
-            echo '<script>alert("Có lỗi xảy ra: ' . mysqli_error($conn) . '. Vui lòng thử lại.");</script>';
-        }
+        echo "Lỗi khi thêm loại người dùng: " . $conn->error;
     }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -59,7 +43,7 @@ if (isset($_POST['submit'])) {
         .btn-info {
             background-color: #DEB887; /* Màu nền mới */
             color: white; /* Màu chữ */
-}
+        }
         .form-label {
             margin-bottom: 0.5rem;
             font-weight: 500;
@@ -67,55 +51,30 @@ if (isset($_POST['submit'])) {
         .btnDelete {
             cursor: pointer;
         }
-        .pagination {
-            display: flex;
-            justify-content: center; /* Căn giữa các liên kết */
-            gap: 10px; /* Tạo khoảng cách giữa các liên kết */
-        }
-
-        .pagination a {
-            text-decoration: none; /* Bỏ gạch chân cho liên kết */
-            padding: 8px 12px; /* Thêm padding cho các liên kết */
-            border: 1px solid #007bff; /* Đường viền cho các liên kết */
-            border-radius: 5px; /* Bo góc cho các liên kết */
-            color: #007bff; /* Màu chữ */
-        }
-
-        .pagination a:hover {
-            text-decoration: none; /* Bỏ gạch chân cho liên kết */
-            background-color: #007bff; /* Màu nền khi hover */
-            color: white; /* Màu chữ khi hover */
-        }
-
-        .pagination strong {
-            color: red; /* Màu chữ cho trang hiện tại */
-            border: 1px solid #007bff; /* Đường viền cho trang hiện tại */
-            padding: 8px 12px; /* Padding tương tự như các liên kết khác */
-            border-radius: 5px; /* Bo góc giống nhau */
-        }
+        /* Các styles khác... */
     </style>
 </head>
 <body>
     <?php include('includes/_layoutAdmin.php'); ?>
     <div class="container mt-4">
-    <form action="" method="GET" enctype="multipart/form-data" class="form-section">
-        <h3>Thêm loại người dùng</h3>
-        <a href="index_usercategories.php" class="btn btn-primary mb-2">
-            <i class="ti-arrow-left"></i> Quay lại
-        </a>
-        <div class="card">
-            <div class="card-body">
-                <div class="form-group">
-                    <label for="userCategoryName">Tên loại người dùng <span class="text-danger">*</span></label>
-                    <input type="text" id="userCategoryName" name="userCategoryName" class="form-control" required>
+        <form action="" method="POST" enctype="multipart/form-data" class="form-section">
+            <h3>Thêm loại người dùng</h3>
+            <a href="index_usercategories.php" class="btn btn-primary mb-2">
+                <i class="ti-arrow-left"></i> Quay lại
+            </a>
+            <div class="card">
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="userCategoryName">Tên loại người dùng <span class="text-danger">*</span></label>
+                        <input type="text" id="userCategoryName" name="userCategoryName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userCategoryDescription">Mô tả</label>
+                        <textarea id="userCategoryDescription" name="userCategoryDescription" class="form-control" rows="4"></textarea>
+                    </div>
+                    <button type="submit" name="submit" class="btn btn-success">Lưu</button>
                 </div>
-                <div class="form-group">
-                    <label for="userCategoryDescription">Mô tả</label>
-                    <textarea id="userCategoryDescription" name="userCategoryDescription" class="form-control" rows="4"></textarea>
-                </div>
-                <button type="submit" name="submit" class="btn btn-success">Lưu</button>
             </div>
-        </div>
         </form>
     </div>
 

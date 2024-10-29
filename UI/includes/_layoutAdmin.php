@@ -124,7 +124,7 @@ if (isset($_SESSION['UserID'])) {
                     <li><a class="dropdown-item" href="index_users.php">Người dùng</a></li>
                     <li><a class="dropdown-item" href="index_usercategories.php">Loại người dùng</a></li>
                 </ul>
-                <a class="nav-link" href="#">Phân quyền</a>
+                <a class="nav-link" href="index_authorizations.php">Phân quyền</a>
             </nav>
         </div>
 </div>
