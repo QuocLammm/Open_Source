@@ -2,27 +2,30 @@
 include("includes/connectSQL.php");
 
 // Handle delete request
-if (isset($_POST['delete_id'])) {
-    $deleteID = $_POST['delete_id'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $data = json_decode(file_get_contents("php://input"), true);
+    $id = $data['id'] ?? null;
 
-    // Prepare and execute delete query
-    $deleteQuery = "DELETE FROM UserCategories WHERE UserCategoryID = ?";
-    $deleteStmt = $conn->prepare($deleteQuery);
-    $deleteStmt->bind_param("i", $deleteID);
-
-    if ($deleteStmt->execute()) {
-        echo "<script>alert('Xóa thành công!'); window.location.href='index_usercategories.php';</script>";
-    } else {
-        // Catch foreign key constraint errors
-        if (strpos($conn->error, 'foreign key constraint') !== false) {
-            echo "<script>alert('Không thể xóa vì có ràng buộc dữ liệu với bảng khác!'); window.location.href='index_usercategories.php';</script>";
+    if ($id) {
+        // Prepare and execute the delete statement
+        $sql = "DELETE FROM UserCategories WHERE UserCategoryID = ?";
+        if ($stmt = $conn->prepare($sql)) {
+            $stmt->bind_param("i", $id);
+            if ($stmt->execute()) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Không thể xóa bản ghi.']);
+            }
+            $stmt->close();
         } else {
-            echo "Error deleting record: " . $conn->error;
+            echo json_encode(['success' => false, 'message' => 'Lỗi truy vấn.']);
         }
+    } else {
+        echo json_encode(['success' => false, 'message' => 'ID không hợp lệ.']);
     }
-
-    $deleteStmt->close();
+    exit; // Stop further processing after handling the delete request
 }
+
 
 // Define the SQL query to fetch user categories
 $query = "SELECT UserCategoryID, UserCategoryName, UserCategoryDescription FROM UserCategories";
@@ -132,16 +135,13 @@ if ($result->num_rows > 0) {
                         foreach ($userCategories as $row) {
                             echo "<tr>";
                             echo "<td><input type='checkbox' class='user-checkbox' data-id='{$row['UserCategoryID']}'></td>";
-                            echo "<td>" . $row['UserCategoryID'] . "</td>";
+                            echo "<td>" . htmlspecialchars($row['UserCategoryID']) . "</td>";
                             echo "<td>" . htmlspecialchars($row['UserCategoryName']) . "</td>";
                             echo "<td>" . htmlspecialchars($row['UserCategoryDescription']) . "</td>";
                             echo "<td>
                                     <a href='edit_usercategories.php?id=" . $row['UserCategoryID'] . "' class='btn btn-sm btn-primary'>Sửa</a>
-                                    <form method='post' style='display:inline;'>
-                                        <input type='hidden' name='delete_id' value='{$row['UserCategoryID']}'>
-                                        <button type='submit' class='btn btn-outline-danger' onclick='return confirm(\"Bạn có chắc chắn muốn xóa không?\")'>Xóa</button>
-                                    </form>
-                                  </td>";
+                                    <a href='#' class='btn btn-sm btn-danger btnDelete' data-id='" . $row['UserCategoryID'] . "'>Xóa</a>
+                                </td>";
                             echo "</tr>";
                         }
                     } else {
@@ -149,6 +149,7 @@ if ($result->num_rows > 0) {
                     }
                     ?>
                 </tbody>
+
             </table>
         </form>
     </div>
@@ -159,6 +160,54 @@ if ($result->num_rows > 0) {
             const checkboxes = document.querySelectorAll('.user-checkbox');
             checkboxes.forEach(checkbox => {
                 checkbox.checked = this.checked;
+            });
+        });
+        //Delete
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.btnDelete').forEach(function (btn) {
+                btn.addEventListener('click', async function (e) {
+                    e.preventDefault();
+                    var itemId = this.getAttribute('data-id');
+                    const result = await Swal.fire({
+                        title: 'Bạn có chắc chắn muốn xóa bản ghi này?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'OK',
+                        cancelButtonText: 'Hủy',
+                    });
+                    if (result.isConfirmed) {
+                        try {
+                            const response = await fetch('', {
+                                method: 'POST',
+                                body: JSON.stringify({ id: itemId }),
+                                headers: { 'Content-Type': 'application/json' }
+                            });
+                            const data = await response.json();
+                            if (data.success) {
+                                await Swal.fire({
+                                    title: 'Đã xóa thành công!',
+                                    icon: 'success',
+                                    confirmButtonText: 'OK'
+                                });
+                                location.reload(); // Reload the page to update the list
+                            } else {
+                                await Swal.fire({
+                                    title: 'Lỗi!',
+                                    text: data.message,
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        } catch (error) {
+                            await Swal.fire({
+                                title: 'Lỗi!',
+                                text: 'Có lỗi xảy ra. Vui lòng thử lại sau.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    }
+                });
             });
         });
     </script>

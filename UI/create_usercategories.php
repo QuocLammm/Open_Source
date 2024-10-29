@@ -97,26 +97,25 @@ if (isset($_POST['submit'])) {
 </head>
 <body>
     <?php include('includes/_layoutAdmin.php'); ?>
-    <div class="container mt-5">
+    <div class="container mt-4">
+    <form action="" method="GET" enctype="multipart/form-data" class="form-section">
         <h3>Thêm loại người dùng</h3>
         <a href="index_usercategories.php" class="btn btn-primary mb-2">
             <i class="ti-arrow-left"></i> Quay lại
         </a>
-
-        <form method="post" action="">
-            <div class="card">
-                <div class="card-body">
-                    <div class="form-group">
-                        <label for="userCategoryName">Tên loại người dùng <span class="text-danger">*</span></label>
-                        <input type="text" id="userCategoryName" name="userCategoryName" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="userCategoryDescription">Mô tả</label>
-                        <textarea id="userCategoryDescription" name="userCategoryDescription" class="form-control" rows="4"></textarea>
-                    </div>
-                    <button type="submit" name="submit" class="btn btn-success">Lưu</button>
+        <div class="card">
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="userCategoryName">Tên loại người dùng <span class="text-danger">*</span></label>
+                    <input type="text" id="userCategoryName" name="userCategoryName" class="form-control" required>
                 </div>
+                <div class="form-group">
+                    <label for="userCategoryDescription">Mô tả</label>
+                    <textarea id="userCategoryDescription" name="userCategoryDescription" class="form-control" rows="4"></textarea>
+                </div>
+                <button type="submit" name="submit" class="btn btn-success">Lưu</button>
             </div>
+        </div>
         </form>
     </div>
 

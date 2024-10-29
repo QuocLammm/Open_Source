@@ -1,76 +1,56 @@
 <?php
-    include("includes/connectSQL.php");
+include("includes/connectSQL.php");
 
-    if(isset($_POST["submit"])){
-        $name = $_POST['name'];
-        $fullname = $_POST['fullname'];
-        $password = $_POST['password'];
-        $createdUserCategoryID = $_POST['user_category'];
-        $phone = $_POST['phone'];
-        $gener = $_POST['gener'];
-        $accountname = $_POST['accountname'];
+// Enable error reporting
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-        // Đường dẫn thư mục lưu ảnh (thư mục này đã tồn tại)
-        $target_dir = "..UI/images/users/";
+// Initialize an error variable
+$error = '';
 
-        $target_file = $target_dir . basename($_FILES["image"]["name"]);
-        $uploadOk = 1;
-        $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $fullName = mysqli_real_escape_string($conn, $_POST['fullname']);
+    $userName = mysqli_real_escape_string($conn, $_POST['username']);
+    $password = mysqli_real_escape_string($conn, $_POST['password']);
+    $phoneNumber = mysqli_real_escape_string($conn, $_POST['phone']);
+    $gender = mysqli_real_escape_string($conn, $_POST['gender']);
+    $userCategoryID = mysqli_real_escape_string($conn, $_POST['user_category']);
+    $accountName = mysqli_real_escape_string($conn, $_POST['accountname']);
+    $userImage = $_FILES['image']['name']; // Get the uploaded file name
+    
 
-        // Kiểm tra xem file có phải là hình ảnh không
-        $check = getimagesize($_FILES["image"]["tmp_name"]);
-        if($check !== false) {
-            $uploadOk = 1;
-        } else {
-            echo "File is not an image.";
-            $uploadOk = 0;
-        }
+    // Check for required fields
+    if (empty($fullName) || empty($userName) || empty($password) || empty($phoneNumber) || empty($userCategoryID) || empty($accountName)) {
+        $error = "Vui lòng điền tất cả các trường bắt buộc.";
+    } else {
+        // Validate and move uploaded image
+        if ($_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            if (move_uploaded_file($_FILES['image']['tmp_name'], "images/users/" . $userImage)) {
+                // Prepare SQL statement
+                $stmt = $conn->prepare("INSERT INTO users (FullName, Username, Password, PhoneNumber, Gender, UserImage, UserCategoryID, AccountName) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("ssssssss", $fullName, $userName, $password, $phoneNumber, $gender, $targetPath, $userCategoryID, $accountName);
 
-        // Kiểm tra nếu file đã tồn tại
-        if (file_exists($target_file)) {
-            echo "Sorry, file already exists.";
-            $uploadOk = 0;
-        }
-
-        // Kiểm tra kích thước file
-        if ($_FILES["image"]["size"] > 500000) { // 500KB
-            echo "Sorry, your file is too large.";
-            $uploadOk = 0;
-        }
-
-        // Chỉ cho phép các định dạng hình ảnh cụ thể
-        if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg" && $imageFileType != "gif" ) {
-            echo "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
-            $uploadOk = 0;
-        }
-
-        // Kiểm tra nếu không có lỗi, thì upload file
-        if ($uploadOk == 1) {
-            if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
-                // Upload thành công, lưu đường dẫn ảnh vào database
-                $image = $target_file;
-
-                // Câu lệnh SQL
-                $q = "INSERT INTO users (FullName, Username, Password, PhoneNumber, Gender, UserImage, AccountName, UserCategoryID)
-                VALUES ('$fullname','$name', '$password', '$phone', '$gener', '$image', '$accountname', '$createdUserCategoryID')";
-
-                $query = mysqli_query($conn, $q);
-
-                if($query){
-                    header("Location: index_users.php");
+                if ($stmt->execute()) {
+                    header("Location: index_users.php?success=1"); // Redirect on success
                     exit();
                 } else {
-                    echo "<p>Error: " . mysqli_error($conn) . "</p>";
+                    $error = "Lỗi khi thêm người dùng: " . $conn->error;
                 }
+                $stmt->close();
             } else {
-                echo "Sorry, there was an error uploading your file.";
+                $error = "Có lỗi khi tải lên hình ảnh.";
             }
+        } else {
+            $error = "Lỗi khi tải lên hình ảnh: " . $_FILES['image']['error'];
         }
     }
+}
+
+// Display error message if there is one
+if (!empty($error)) {
+    echo "<p class='text-danger'>$error</p>";
+}
 ?>
-
-
-
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -82,48 +62,45 @@
 </head>
 <style>
     .container {
-            max-width: 900px;
-            margin-top: 20px;
-        }
-        .form-section {
-            padding: 10px;
-            margin: 70px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-        .form-label {
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-        .btnDelete {
-            cursor: pointer;
-        }
-        .pagination {
-            display: flex;
-            justify-content: center; /* Căn giữa các liên kết */
-            gap: 10px; /* Tạo khoảng cách giữa các liên kết */
-        }
-
-        .pagination a {
-            text-decoration: none; /* Bỏ gạch chân cho liên kết */
-            padding: 8px 12px; /* Thêm padding cho các liên kết */
-            border: 1px solid #007bff; /* Đường viền cho các liên kết */
-            border-radius: 5px; /* Bo góc cho các liên kết */
-            color: #007bff; /* Màu chữ */
-        }
-
-        .pagination a:hover {
-            text-decoration: none; /* Bỏ gạch chân cho liên kết */
-            background-color: #007bff; /* Màu nền khi hover */
-            color: white; /* Màu chữ khi hover */
-        }
-
-        .pagination strong {
-            color: red; /* Màu chữ cho trang hiện tại */
-            border: 1px solid #007bff; /* Đường viền cho trang hiện tại */
-            padding: 8px 12px; /* Padding tương tự như các liên kết khác */
-            border-radius: 5px; /* Bo góc giống nhau */
-        }
+        max-width: 900px;
+        margin-top: 20px;
+    }
+    .form-section {
+        padding: 10px;
+        margin: 70px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+    .form-label {
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    .btnDelete {
+        cursor: pointer;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center; /* Căn giữa các liên kết */
+        gap: 10px; /* Tạo khoảng cách giữa các liên kết */
+    }
+    .pagination a {
+        text-decoration: none; /* Bỏ gạch chân cho liên kết */
+        padding: 8px 12px; /* Thêm padding cho các liên kết */
+        border: 1px solid #007bff; /* Đường viền cho các liên kết */
+        border-radius: 5px; /* Bo góc cho các liên kết */
+        color: #007bff; /* Màu chữ */
+    }
+    .pagination a:hover {
+        text-decoration: none; /* Bỏ gạch chân cho liên kết */
+        background-color: #007bff; /* Màu nền khi hover */
+        color: white; /* Màu chữ khi hover */
+    }
+    .pagination strong {
+        color: red; /* Màu chữ cho trang hiện tại */
+        border: 1px solid #007bff; /* Đường viền cho trang hiện tại */
+        padding: 8px 12px; /* Padding tương tự như các liên kết khác */
+        border-radius: 5px; /* Bo góc giống nhau */
+    }
 </style>
 
 <body>
@@ -137,12 +114,12 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label for="fullname">Tên người dùng <span class="text-danger">*</span></label>
+                        <label for="fullname">Họ tên <span class="text-danger">*</span></label>
                         <input type="text" id="fullname" name="fullname" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="name">Tên người dùng (Viết liền không dấu) <span class="text-danger">*</span></label>
-                        <input type="text" id="name" name="name" class="form-control" required>
+                        <label for="username">Tên người dùng (Viết liền không dấu) <span class="text-danger">*</span></label>
+                        <input type="text" id="username" name="username" class="form-control" required>
                     </div>
                     <div class="form-group">
                         <label for="password">Mật khẩu <span class="text-danger">*</span></label>
@@ -153,8 +130,8 @@
                         <input type="text" id="phone" name="phone" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="gener">Giới tính <span class="text-danger">*</span></label>
-                        <select id="gener" name="gener" class="form-control" required>
+                        <label for="gender">Giới tính <span class="text-danger">*</span></label>
+                        <select id="gender" name="gender" class="form-control" required>
                             <option value="Male">Nam</option>
                             <option value="Female">Nữ</option>
                         </select>
@@ -170,14 +147,14 @@
                             $categoryQuery = "SELECT UserCategoryID, UserCategoryName FROM UserCategories";
                             $categoryStmt = $conn->query($categoryQuery);
                             while ($row = $categoryStmt->fetch_assoc()) {
-                                echo "<option value='" . $row['UserCategoryID'] . "'>" . htmlspecialchars($row['UserCategoryName']) . "</option>";
+                                echo "<option value='" . htmlspecialchars($row['UserCategoryID']) . "'>" . htmlspecialchars($row['UserCategoryName']) . "</option>";
                             }
                             ?>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="image">Hình ảnh <span class="text-danger">*</span></label>
-                        <input type="file" id="image" name="image" class="form-control" required>
+                        <input type="file" id="image" name="image" class="form-control" accept="image/*" required>
                     </div>
                     <div class="form-group">
                         <label for="accountname">Tên tài khoản <span class="text-danger">*</span></label>

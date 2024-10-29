@@ -227,7 +227,7 @@ $conn->close();
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.btnDelete').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
             e.preventDefault();

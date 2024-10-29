@@ -69,24 +69,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Edit User</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        .form-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px; /* Space between columns */
+        }
+        .form-column {
+            flex: 1; /* Equal width columns */
+        }
+        .text-center {
+            text-align: center;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
         .container {
             max-width: 900px;
             margin-top: 20px;
         }
-        .profile-pic {
-            max-width: 150px;
-            max-height: 150px;
-        }
-        .form-label {
-            font-weight: bold;
-        }
         .form-section {
-            padding: 20px;
+            padding: 10px;
+            margin: 70px;
             background-color: #f8f9fa;
             border-radius: 8px;
         }
-        .btn-save {
-            margin-top: 20px;
+        .form-label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .btnDelete {
+            cursor: pointer;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center; /* Căn giữa các liên kết */
+            gap: 10px; /* Tạo khoảng cách giữa các liên kết */
+        }
+
+        .pagination a {
+            text-decoration: none; /* Bỏ gạch chân cho liên kết */
+            padding: 8px 12px; /* Thêm padding cho các liên kết */
+            border: 1px solid #007bff; /* Đường viền cho các liên kết */
+            border-radius: 5px; /* Bo góc cho các liên kết */
+            color: #007bff; /* Màu chữ */
+        }
+
+        .pagination a:hover {
+            text-decoration: none; /* Bỏ gạch chân cho liên kết */
+            background-color: #007bff; /* Màu nền khi hover */
+            color: white; /* Màu chữ khi hover */
+        }
+
+        .pagination strong {
+            color: red; /* Màu chữ cho trang hiện tại */
+            border: 1px solid #007bff; /* Đường viền cho trang hiện tại */
+            padding: 8px 12px; /* Padding tương tự như các liên kết khác */
+            border-radius: 5px; /* Bo góc giống nhau */
+        }
+        .profile-pic {
+            width: 100px; /* Set a specific width */
+            height: 120px; /* Keep the aspect ratio */
+            border-radius: 5px; /* Optional: Add some border radius */
         }
     </style>
 </head>
@@ -95,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php include('includes/_layoutAdmin.php'); ?>
     <div class="container">
         <form method="post" enctype="multipart/form-data" class="form-section"> <!-- Added enctype for file uploads -->
-        <h2 class="text-center mb-4">Chỉnh Sửa Người Dùng</h2>
+        <h3 class="text-center mb-4">Chỉnh Sửa Người Dùng</h3>
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">

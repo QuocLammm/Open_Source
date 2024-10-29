@@ -2,36 +2,86 @@
 include("includes/connectSQL.php");
 
 // Handle delete request
-if (isset($_POST['delete_id'])) {
-    $deleteID = $_POST['delete_id'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $data = json_decode(file_get_contents("php://input"), true);
+    $id = $data['delete_id'] ?? null;
 
-    // Prepare and execute delete query
-    $deleteQuery = "DELETE FROM usercategories WHERE UserCategoryID = ?";
-    $deleteStmt = $conn->prepare($deleteQuery);
-    $deleteStmt->bind_param("i", $deleteID);
+    if ($id) {
+        // Check if there are any associated UserCategories
+        $checkSql = "SELECT COUNT(*) as count FROM UserCategories WHERE UserCategoryID IN (SELECT UserCategoryID FROM Users WHERE UserID = ?)";
+        if ($checkStmt = $conn->prepare($checkSql)) {
+            $checkStmt->bind_param("i", $id);
+            $checkStmt->execute();
+            $checkResult = $checkStmt->get_result();
+            $row = $checkResult->fetch_assoc();
 
-    if ($deleteStmt->execute()) {
-        echo "<script>alert('Xóa thành công!'); window.location.href='index_users.php';</script>";
-    } else {
-        // Check for foreign key constraint errors
-        if (strpos($conn->error, 'foreign key constraint') !== false) {
-            echo "<script>alert('Không thể xóa người dùng vì có ràng buộc dữ liệu với bảng khác!'); window.location.href='index_users.php';</script>";
-        } else {
-            error_log("Error deleting record: " . $conn->error);
-            echo "Error deleting record: " . $conn->error;
+            // If associated UserCategories exist, prevent deletion
+            if ($row['count'] > 0) {
+                echo json_encode(['success' => false, 'message' => 'Không thể xóa người dùng này vì có loại người dùng liên quan.']);
+                exit;
+            }
+            $checkStmt->close();
         }
+
+        // Prepare and execute the delete statement
+        $sql = "DELETE FROM Users WHERE UserID = ?";
+        if ($stmt = $conn->prepare($sql)) {
+            $stmt->bind_param("i", $id);
+            if ($stmt->execute()) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Không thể xóa bản ghi.']);
+            }
+            $stmt->close();
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Lỗi truy vấn.']);
+        }
+    } else {
+        echo json_encode(['success' => false, 'message' => 'ID không hợp lệ.']);
     }
-    $deleteStmt->close();
+    exit; // Stop further processing after handling the delete request
 }
 
-// Query users and their roles
+
+
+
+// Handle search request
+$searchName = isset($_GET['name']) ? $_GET['name'] : '';
+$searchRole = isset($_GET['role']) ? $_GET['role'] : '';
+
+// Base SQL query
 $sql = "SELECT u.UserID, u.FullName, uc.UserCategoryName, u.Gender, u.UserImage, u.PhoneNumber, u.Username, u.Password
         FROM Users u
-        JOIN Usercategories uc ON u.UserCategoryID = uc.UserCategoryID";
-$result = $conn->query($sql);
+        JOIN UserCategories uc ON u.UserCategoryID = uc.UserCategoryID
+        WHERE 1=1"; // Add a placeholder to simplify appending conditions
+
+// Prepare parameters for search
+$params = [];
+if (!empty($searchName)) {
+    $sql .= " AND u.FullName LIKE ?";
+    $params[] = '%' . $searchName . '%';
+}
+if (!empty($searchRole)) {
+    $sql .= " AND uc.UserCategoryName LIKE ?";
+    $params[] = '%' . $searchRole . '%';
+}
+
+// Prepare and execute the query
+$stmt = $conn->prepare($sql);
+
+// Bind parameters if necessary
+if (!empty($params)) {
+    $types = str_repeat('s', count($params)); // All parameters are strings
+    $stmt->bind_param($types, ...$params);
+}
+
+$stmt->execute();
+$result = $stmt->get_result();
 
 // Fetch all users as an associative array
 $users = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+$stmt->close();
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -116,7 +166,7 @@ $users = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
                         <th><input type="checkbox" id="select-all"></th>
                         <th>#</th>
                         <th>Họ và tên</th>
-                        <th>Tên loại người dùng</th>
+                        <th>Loại người dùng</th>
                         <th>Giới tính</th>
                         <th>Hình ảnh</th>
                         <th>Số điện thoại</th>
@@ -142,11 +192,8 @@ $users = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
                             echo "<td>" . htmlspecialchars($row['Password']) . "</td>";
                             echo "<td>
                                     <a href='edit_users.php?id=" . $row['UserID'] . "' class='btn btn-sm btn-primary'>Sửa</a>
-                                    <form method='post' style='display:inline;' onsubmit='return confirmDelete()'>
-                                        <input type='hidden' name='delete_id' value='{$row['UserID']}'>
-                                        <button type='submit' class='btn btn-outline-danger'>Xóa</button>
-                                    </form>
-                                  </td>";
+                                    <a href='#' class='btn btn-sm btn-danger btnDelete' data-id='" . $row['UserID'] . "'>Xóa</a>
+                                </td>";
                             echo "</tr>";
                         }
                     } else {
@@ -171,6 +218,62 @@ $users = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
                 checkbox.checked = this.checked;
             });
         });
+
+        
+        document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.btnDelete').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            var itemId = this.getAttribute('data-id');
+            Swal.fire({
+                title: 'Bạn có chắc chắn muốn xóa bản ghi này?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'OK',
+                cancelButtonText: 'Hủy',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Send a POST request to delete the user
+                    fetch('delete_users.php', { // Ensure this points to your delete logic
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json' // Changed to application/json
+                        },
+                        body: JSON.stringify({ delete_id: itemId }) // Changed to JSON format
+                    })
+                    .then(response => response.json()) // Parse the response as JSON
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Đã xóa thành công!',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                location.reload(); // Reload the page to update the list
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Lỗi!',
+                                text: data.message, // Use the message from the response
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            title: 'Lỗi!',
+                            text: 'Đã xảy ra lỗi khi xóa.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    });
+                }
+            });
+        });
+    });
+});
+
     </script>
 </body>
 </html>
