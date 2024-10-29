@@ -54,6 +54,7 @@ $result = $conn->query($sql);
             margin-top: 20px;
         }
         .form-section {
+            width: 102%;
             padding: 10px;
             margin: 70px;
             background-color: #f8f9fa;
