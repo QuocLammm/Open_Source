@@ -1,6 +1,20 @@
 <?php 
 include("includes/connectSQL.php");
+$userID = isset($_COOKIE['UserID']) ? $_COOKIE['UserID'] : null;
+$usercategoriesID = null;
 
+if ($userID) {
+    // Fetch the user's category ID
+    $queryCategory = "SELECT uc.UserCategoryID FROM users u 
+                      JOIN usercategories uc ON u.UserCategoryID = uc.UserCategoryID
+                      WHERE u.UserID = ?";
+    $stmt = $conn->prepare($queryCategory);
+    $stmt->bind_param("i", $userID);
+    $stmt->execute();
+    $resultCategory = $stmt->get_result();
+    $userCategory = $resultCategory->fetch_assoc();
+    $usercategoriesID = $userCategory['UserCategoryID'];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -64,6 +78,7 @@ include("includes/connectSQL.php");
 
                         <?php if ($user) { ?>
                             <ul class="navbar-nav navbar-nav-right">
+                            <div id="greeting"><?= $message ?></div>
                                 <li class="nav-item">
                                     <?php echo htmlspecialchars($user['FullName']); ?>
                                 </li>
@@ -81,13 +96,28 @@ include("includes/connectSQL.php");
                         <?php } ?>
                     </div>
                 </nav>
-                <a class="nav-link" href="dashboard.php">Bán hàng</a>
+                <!--Xử lí người quản lý hoặc thu ngân-->
+                <?php if (in_array($usercategoriesID, [1, 3])): ?>
+                    <a class="nav-link" href="dashboard.php">Bán hàng</a>
+                <?php endif; ?>
+
+                <?php if (in_array($usercategoriesID, [1])): ?>
                 <a class="nav-link dropdown-toggle" id="drinkDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Đồ uống</a>
                 <ul class="dropdown-menu" aria-labelledby="drinkDropdown">
                     <li><a class="dropdown-item" href="index_drink.php">Đồ uống</a></li>
                     <li><a class="dropdown-item" href="index_drinkcategories.php">Loại đồ uống</a></li>
                 </ul>
+                <?php endif; ?>
+
+                <?php if (in_array($usercategoriesID, [1, 3])): ?>
                 <a class="nav-link" href="index_bills.php">Hóa đơn</a>
+                <?php endif; ?>
+
+                <?php if (in_array($usercategoriesID, [3])): ?>
+                    <a class="nav-link" href="#">Kết ca</a>
+                <?php endif; ?>
+
+                <?php if (in_array($usercategoriesID, [1])): ?>
                 <a class="nav-link" href="#">Báo cáo kết ca</a>
                 <a class="nav-link dropdown-toggle" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Người dùng</a>
                 <ul class="dropdown-menu" aria-labelledby="userDropdown">
@@ -95,6 +125,7 @@ include("includes/connectSQL.php");
                     <li><a class="dropdown-item" href="index_usercategories.php">Loại người dùng</a></li>
                 </ul>
                 <a class="nav-link" href="index_authorizations.php">Phân quyền</a>
+                <?php endif; ?>
             </nav>
         </div>
 </div>
