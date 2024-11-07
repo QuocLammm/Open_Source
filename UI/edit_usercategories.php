@@ -1,6 +1,5 @@
 <?php
-session_start();
-include("includes/connectSQL.php"); // Kết nối đến cơ sở dữ liệu
+include("includes/session_user.php");
 include("includes/UsersCategoriesController.php"); // Bao gồm lớp UserCategoriesController
 
 $controller = new UserCategoriesController();

@@ -1,5 +1,5 @@
 <?php
-include("includes/connectSQL.php");
+include("includes/session_user.php");
 
 // Enable error reporting
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);

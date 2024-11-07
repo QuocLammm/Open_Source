@@ -1,6 +1,5 @@
 <?php
-// Include database connection
-include("includes/connectSQL.php");
+include("includes/session_user.php");
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // Initialize an error variable

@@ -1,5 +1,4 @@
 <?php
-include("includes/connectSQL.php");
 require_once("includes/session_user.php");
 // Handle delete request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

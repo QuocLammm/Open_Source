@@ -1,6 +1,5 @@
 <?php
-// Assuming you have set up your database connection
-include("includes/connectSQL.php");
+include("includes/session_user.php");
 
 // Check if the form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

@@ -1,5 +1,5 @@
 <?php
-include("includes/connectSQL.php");
+include("includes/session_user.php");
 include("includes/DrinkCategoriesController.php"); // Bao gồm lớp điều khiển
 
 $controller = new DrinkCategoriesController($conn);

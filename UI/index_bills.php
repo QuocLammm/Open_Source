@@ -1,25 +1,83 @@
 <?php
 require_once("includes/session_user.php");
-// Xóa hóa đơn
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
-    $id = (int)$_POST['id']; // Chuyển đổi về kiểu int để bảo mật
-    $conn->query("DELETE FROM Bills WHERE BillID = $id");
-    header("Location: index_bills.php");
-    exit();
+
+function deleteBill($idBill) {
+    global $conn;
+
+    // Delete the bill
+    $stmt = $conn->prepare("DELETE FROM Bills WHERE BillID = ?");
+    $stmt->bind_param("i", $idBill);
+    $stmt->execute();
+
+    // Check if deletion was successful
+    if ($stmt->affected_rows > 0) {
+        echo json_encode(["success" => true]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Failed to delete bill."]);
+    }
+
+    $stmt->close();
 }
 
-// Xóa nhiều hóa đơn
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ids'])) {
-    $ids = $_POST['ids'];
-    $idArray = explode(',', $ids);
-    $idList = implode(',', array_map('intval', $idArray)); // Bảo mật đầu vào
-    $conn->query("DELETE FROM Bills WHERE BillID IN ($idList)");
-    header("Location: index_bills.php");
-    exit();
+function deleteBillItem($idDrink, $idBill) {
+    global $conn;
+
+    // Delete the item from BillInfos based on BillID and DrinkID
+    $stmt = $conn->prepare("DELETE FROM BillInfos WHERE BillID = ? AND DrinkID = ?");
+    $stmt->bind_param("ii", $idBill, $idDrink);
+    $stmt->execute();
+
+    // Check if there are any remaining BillInfos for this BillID
+    $checkStmt = $conn->prepare("SELECT COUNT(*) as count FROM BillInfos WHERE BillID = ?");
+    $checkStmt->bind_param("i", $idBill);
+    $checkStmt->execute();
+    $result = $checkStmt->get_result();
+    $row = $result->fetch_assoc();
+
+    if ($row['count'] == 0) {
+        // If no items left in BillInfos, delete the Bill from Bills table
+        $deleteBillStmt = $conn->prepare("DELETE FROM Bills WHERE BillID = ?");
+        $deleteBillStmt->bind_param("i", $idBill);
+        $deleteBillStmt->execute();
+    } else {
+        // If there are still items, update the TotalAmount in Bills
+        $updateStmt = $conn->prepare("UPDATE Bills SET TotalAmount = (SELECT SUM(DrinkCount * DrinkPrice) FROM BillInfos WHERE BillID = ?) WHERE BillID = ?");
+        $updateStmt->bind_param("ii", $idBill, $idBill);
+        $updateStmt->execute();
+    }
+
+    // Return JSON confirmation of success
+    echo json_encode(["success" => true]);
+
+    // Close statements
+    $stmt->close();
+    $checkStmt->close();
+    $deleteBillStmt->close();
+    $updateStmt->close();
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['idBill'])) {
+        $idBill = $_POST['idBill'];
+        deleteBill($idBill);
+    } elseif (isset($_POST['idDrink']) && isset($_POST['idBill'])) {
+        $idDrink = $_POST['idDrink'];
+        $idBill = $_POST['idBill'];
+        deleteBillItem($idDrink, $idBill);
+    } elseif (isset($_POST['ids'])) {
+        // Handle multiple deletion
+        $ids = $_POST['ids'];
+        $idArray = explode(',', $ids);
+        $idList = implode(',', array_map('intval', $idArray));
+        if (!$conn->query("DELETE FROM Bills WHERE BillID IN ($idList)")) {
+            echo "Lỗi khi xóa nhiều hóa đơn: " . $conn->error;
+        }
+        header("Location: index_bills.php");
+        exit();
+    }
+}
 
-// Lấy danh sách hóa đơn
+// Retrieve the list of bills
 $stmt = $conn->prepare("SELECT bills.BillID, users.FullName, bills.CreateDate FROM bills JOIN users ON bills.UserID = users.UserID");
 $stmt->execute();
 $result = $stmt->get_result();
@@ -51,10 +109,9 @@ if (!$result) {
             border-radius: 8px;
         }
     </style>
-    
 </head>
 <body>
-<?php include("includes/_layoutAdmin.php");?>
+<?php include("includes/_layoutAdmin.php"); ?>
 <div class="container mt-4">
     <form action="" method="POST" class="form-section">
         <div class="card">
@@ -86,7 +143,7 @@ if (!$result) {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if ($result->num_rows === 0): echo "No data found in bills table or join condition failed.";?>
+                            <?php if ($result->num_rows === 0): ?>
                                 <tr>
                                     <td colspan="5" class="text-center">Không có dữ liệu</td>
                                 </tr>
@@ -103,9 +160,15 @@ if (!$result) {
                                         <td><?= htmlspecialchars($row['BillID']) ?></td>
                                         <td><?= htmlspecialchars($row['FullName']) ?></td>
                                         <td><?= htmlspecialchars($row['CreateDate']) ?></td>
-                                        <td>
-                                            <button class="btnDelete" style="border:none; background:none; cursor:pointer;">
-                                                <i class="mdi mdi-delete" style="font-size: 25px; color: red"></i>
+                                        <td style="display: flex; align-items: center;">
+                                            <a href="detail_bills.php?BillID=<?= urlencode($row['BillID']) ?>" 
+                                               style="text-decoration: none; padding: 10px;">
+                                                <i class="mdi mdi-eye" style="font-size: 25px; color: blue;"></i>
+                                            </a>
+                                            <button class="action-button btnDelete" 
+                                                    data-bill-id="<?= htmlspecialchars($row['BillID']) ?>" 
+                                                    style="border:none; background:none; cursor:pointer; padding: 10px;">
+                                                <i class="mdi mdi-delete" style="font-size: 25px; color: red;"></i>
                                             </button>
                                         </td>
                                     </tr>
@@ -116,7 +179,7 @@ if (!$result) {
                 </div>
             </div>
         </div>
-        </form>
+    </form>
 </div>
 
 <script>
@@ -128,19 +191,20 @@ if (!$result) {
     $(document).ready(function () {
         checkDeleteButtonVisibility();
 
+        // Show delete button when at least one item is checked
         $('body').on('change', '.cbkItem', function () {
             checkDeleteButtonVisibility();
         });
 
+        // Handle multiple bill deletions
         $('body').on('click', '#btnDeleteAll', function (e) {
             e.preventDefault();
-            var str = "";
+            var idList = [];
             $('.cbkItem:checked').each(function () {
-                if (str.length > 0) str += ",";
-                str += $(this).val();
+                idList.push($(this).val());
             });
 
-            if (str.length > 0) {
+            if (idList.length > 0) {
                 Swal.fire({
                     title: 'Bạn có chắc chắn muốn xóa các bản ghi này?',
                     icon: 'warning',
@@ -149,7 +213,8 @@ if (!$result) {
                     cancelButtonText: 'Hủy',
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        $.post('index_bills.php', {ids: str}, function (response) {
+                        $.post('index_bills.php', { ids: idList.join(',') }, function (response) {
+                            console.log("Phản hồi từ server:", response);
                             location.reload();
                         });
                     }
@@ -157,9 +222,11 @@ if (!$result) {
             }
         });
 
+        // Handle single bill deletion
         $('body').on('click', '.btnDelete', function (e) {
             e.preventDefault();
-            var itemId = $(this).closest('tr').find('.cbkItem').val();
+            var idBill = $(this).data('bill-id'); // Get the BillID from data attribute
+
             Swal.fire({
                 title: 'Bạn có chắc chắn muốn xóa bản ghi này?',
                 icon: 'warning',
@@ -168,13 +235,17 @@ if (!$result) {
                 cancelButtonText: 'Hủy',
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $.post('index_bills.php', {id: itemId}, function (response) {
+                    $.post('index_bills.php', { idBill: idBill }, function (response) {
+                        console.log("Phản hồi từ server:", response);
                         location.reload();
+                    }).fail(function (jqXHR, textStatus, errorThrown) {
+                        console.error("Error deleting bill:", textStatus, errorThrown);
                     });
                 }
             });
         });
 
+        // Select all checkboxes
         $('#SelectAll').change(function () {
             var checkStatus = this.checked;
             $('.cbkItem').prop('checked', checkStatus);
@@ -186,4 +257,4 @@ if (!$result) {
 </body>
 </html>
 
-<?php $conn->close();?>
+<?php $conn->close(); ?>s

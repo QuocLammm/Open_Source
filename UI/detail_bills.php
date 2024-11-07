@@ -1,36 +1,64 @@
 <?php
-include("include/connectSQL.php");
+require_once("includes/session_user.php");
 
-// Assuming you have fetched $billInfos from the database
-// For example: $billID = $_GET['id']; // Replace with your actual logic to get the bill ID
-$billID = 1; // Replace with actual bill ID from the request
-$query = "SELECT BillID, DrinkCount, DrinkPrice, Drinks.DrinkName, Bills.CreateDate, Users.FullName 
+// Kiểm tra xem BillID có tồn tại trong URL không
+if (isset($_GET['BillID'])) {
+    $billID = urldecode($_GET['BillID']); // Lấy BillID từ URL
+} else {
+    echo "Mã hóa đơn không hợp lệ.";
+    exit();
+}
+
+// Truy vấn thông tin hóa đơn từ cơ sở dữ liệu
+$query = "SELECT BillInfos.BillID, BillInfos.DrinkCount, BillInfos.DrinkPrice, Drinks.DrinkName, Bills.CreateDate, Users.FullName 
           FROM BillInfos 
           JOIN Bills ON BillInfos.BillID = Bills.BillID 
           JOIN Users ON Bills.UserID = Users.UserID 
           JOIN Drinks ON BillInfos.DrinkID = Drinks.DrinkID 
           WHERE BillInfos.BillID = ?";
 $stmt = $conn->prepare($query);
-$stmt->bind_param("i", $billID);
+$stmt->bind_param("s", $billID); // Sử dụng 's' vì BillID có thể là chuỗi
 $stmt->execute();
 $result = $stmt->get_result();
 $billInfos = $result->fetch_all(MYSQLI_ASSOC);
 
-$userFullName = ''; // Placeholder for user full name
-if (!empty($billInfos)) {
-    $userFullName = htmlspecialchars($billInfos[0]['FullName']);
+if (empty($billInfos)) {
+    echo "Không tìm thấy dữ liệu cho hóa đơn này.";
+    exit();
 }
 
-// Close the database connection
+// Lấy thông tin người dùng
+$userFullName = htmlspecialchars($billInfos[0]['FullName']);
+
+// Tính tổng tiền
+$total = 0;
+foreach ($billInfos as $item) {
+    $total += $item['DrinkCount'] * $item['DrinkPrice'];
+}
+
+// Đóng kết nối
 $stmt->close();
 $conn->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Chi tiết hóa đơn</title>
+    <link rel="stylesheet" href="path/to/bootstrap.css"> <!-- Đảm bảo đường dẫn đúng -->
     <style>
+        .container {
+            max-width: 900px;
+            margin-top: 20px;
+        }
+        .form-section {
+            width: 102%;
+            padding: 10px;
+            margin: 70px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
         h1, h2, p {
             text-align: center;
         }
@@ -68,10 +96,18 @@ $conn->close();
         .invoice-box table tr.item.last td {
             border-bottom: none;
         }
+        .invoice-box table tr.total td {
+            border-top: 2px solid #eee;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <div class="card">
+    <?php include("includes/_layoutAdmin.php");?>
+    
+    <div class="container mt-4">
+        <form action="" method="POST" class="form-section">
+        <div class="card">
         <div class="card-body">
             <div class="d-flex justify-content-between mb-2">
                 <p class="card-title">Chi tiết hóa đơn</p>
@@ -79,14 +115,14 @@ $conn->close();
                     <a class="btn btn-info mr-2" id="btnExportPDF" href="#">
                         <i class="ti-printer"></i>
                     </a>
-                    <a href="index.php" class="btn btn-primary">
+                    <a href="index_bills.php" class="btn btn-primary">
                         <i class="ti-arrow-left"></i>
                     </a>
                 </div>
             </div>
-            <p>Mã hóa đơn: <?php echo htmlspecialchars($billInfos[0]['BillID']); ?></p>
-            <p>Ngày lập hóa đơn: <?php echo date('Y-m-d H:i', strtotime($billInfos[0]['CreateDate'])); ?></p>
-            <p>Nhân viên: <?php echo $userFullName; ?></p>
+            <p>Mã hóa đơn: <?= htmlspecialchars($billInfos[0]['BillID']); ?></p>
+            <p>Ngày lập hóa đơn: <?= date('Y-m-d H:i', strtotime($billInfos[0]['CreateDate'])); ?></p>
+            <p>Nhân viên: <?= $userFullName; ?></p>
             <div class="invoice-box">
                 <table>
                     <tr class="heading">
@@ -95,29 +131,27 @@ $conn->close();
                         <td>Giá</td>
                         <td>Thành tiền</td>
                     </tr>
-                    <?php 
-                    $total = 0;
-                    foreach ($billInfos as $item): 
-                        $drinkPriceFormatted = number_format($item['DrinkPrice'], 0, ',', '.') . ' VNĐ';
-                        $total += $item['DrinkCount'] * $item['DrinkPrice'];
-                    ?>
-                    <tr class="item">
-                        <td><?php echo htmlspecialchars($item['DrinkName']); ?></td>
-                        <td><?php echo $item['DrinkCount']; ?></td>
-                        <td><?php echo $drinkPriceFormatted; ?></td>
-                        <td><?php echo number_format($item['DrinkCount'] * $item['DrinkPrice'], 0, ',', '.') . ' VNĐ'; ?></td>
-                    </tr>
+                    <?php foreach ($billInfos as $item): ?>
+                        <tr class="item">
+                            <td><?= htmlspecialchars($item['DrinkName']); ?></td>
+                            <td><?= $item['DrinkCount']; ?></td>
+                            <td><?= number_format($item['DrinkPrice'], 0, ',', '.') . ' VNĐ'; ?></td>
+                            <td><?= number_format($item['DrinkCount'] * $item['DrinkPrice'], 0, ',', '.') . ' VNĐ'; ?></td>
+                        </tr>
                     <?php endforeach; ?>
                     <tr class="total">
                         <td colspan="3" style="text-align: right; font-weight: bold;">Tổng cộng:</td>
                         <td style="font-size: 25px; padding-top: 20px">
-                            <?php echo number_format($total, 0, ',', '.') . ' VNĐ'; ?>
+                            <?= number_format($total, 0, ',', '.') . ' VNĐ'; ?>
                         </td>
                     </tr>
                 </table>
             </div>
         </div>
     </div>
+        </form>
+    </div>
+    
     <script>
         document.getElementById('btnExportPDF').addEventListener('click', function (e) {
             e.preventDefault();

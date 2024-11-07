@@ -1,5 +1,5 @@
 <?php
-include("includes/connectSQL.php");
+include("includes/session_user.php");
 
 // Lấy UserID từ URL
 if (isset($_GET['id']) && is_numeric($_GET['id'])) {
