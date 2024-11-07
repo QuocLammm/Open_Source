@@ -60,6 +60,19 @@ $conn->close();
             }
             updateDrinkInfo();
         }
+        function decreaseDrink(drinkID) {
+            if (selectedDrinks[drinkID]) {
+                selectedDrinks[drinkID].quantity -= 1;
+                if (selectedDrinks[drinkID].quantity <= 0) {
+                    delete selectedDrinks[drinkID];
+                }
+            }
+            updateDrinkInfo();
+        }
+        function removeDrink(drinkID) {
+            delete selectedDrinks[drinkID];
+            updateDrinkInfo();
+        }
 
         function updateDrinkInfo() {
             let tableBody = document.querySelector("#bill-table tbody");
@@ -75,12 +88,29 @@ $conn->close();
                 total += price;
 
                 let row = document.createElement("tr");
-                row.innerHTML = `<td>${drinkName}</td><td>${quantity}</td><td>${price}₫</td>`;
+                row.innerHTML = `
+                    <td>${drinkName}</td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="decreaseDrink(${id})">
+                            -<i class="fa fa-minus"></i>
+                        </button>
+                        <span id="drink-quantity-${id}">${quantity}</span>
+                        <button type="button" class="btn btn-success btn-sm" onclick="addToDrink(${id})">
+                            +<i class="fa fa-plus"></i>
+                        </button>
+                    </td>
+                    <td>${price}₫</td>
+                    <td>
+                        <button type="button" class="btn btn-warning btn-sm" onclick="removeDrink(${id})">
+                            Xóa<i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                `;
                 tableBody.appendChild(row);
             }
 
             document.getElementById("total-amount").textContent = total + "₫";
-            document.getElementById("payment-section").style.display = "block";
+            document.getElementById("payment-section").style.display = total > 0 ? "block" : "none";
         }
 
         function processPayment() {
@@ -306,7 +336,7 @@ $conn->close();
                     <div class="col-5">
                         <div id="selected-drink-info" class="h-75" style="overflow-y: auto;">
                             <table class="table table-striped table-hover" id="bill-table">
-                                <tbody>Hóa đơn bàn </tbody>
+                                <tbody>Hóa đơn <?= htmlspecialchars($tableName) ?></tbody>
                             </table>
                         </div>
                         <div id="payment-section" style="display: none;">
