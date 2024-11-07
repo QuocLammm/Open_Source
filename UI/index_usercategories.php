@@ -1,6 +1,6 @@
 <?php
 require_once("includes/UsersCategoriesController.php");
-
+require_once("includes/session_user.php");
 $controller = new UserCategoriesController();
 $userCategories = [];
 $userCategoryName = '';

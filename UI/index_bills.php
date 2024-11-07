@@ -1,11 +1,10 @@
 <?php
-include("includes/connectSQL.php");
-
+require_once("includes/session_user.php");
 // Xóa hóa đơn
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
     $id = (int)$_POST['id']; // Chuyển đổi về kiểu int để bảo mật
-    $mysqli->query("DELETE FROM Bills WHERE BillID = $id");
-    header("Location: index.php");
+    $conn->query("DELETE FROM Bills WHERE BillID = $id");
+    header("Location: index_bills.php");
     exit();
 }
 
@@ -14,13 +13,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ids'])) {
     $ids = $_POST['ids'];
     $idArray = explode(',', $ids);
     $idList = implode(',', array_map('intval', $idArray)); // Bảo mật đầu vào
-    $mysqli->query("DELETE FROM Bills WHERE BillID IN ($idList)");
+    $conn->query("DELETE FROM Bills WHERE BillID IN ($idList)");
     header("Location: index_bills.php");
     exit();
 }
 
+
 // Lấy danh sách hóa đơn
-$result = $conn->query("SELECT * FROM Bills");
+$stmt = $conn->prepare("SELECT bills.BillID, users.FullName, bills.CreateDate FROM bills JOIN users ON bills.UserID = users.UserID");
+$stmt->execute();
+$result = $stmt->get_result();
+
+if (!$result) {
+    echo "Error: " . $conn->error; // Check for SQL errors
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -31,68 +38,85 @@ $result = $conn->query("SELECT * FROM Bills");
     <link rel="stylesheet" href="path/to/bootstrap.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .container {
+            max-width: 900px;
+            margin-top: 20px;
+        }
+        .form-section {
+            width: 102%;
+            padding: 10px;
+            margin: 70px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+    </style>
+    
 </head>
 <body>
 <?php include("includes/_layoutAdmin.php");?>
-<div class="card">
-    <div class="card-body">
-        <div class="d-flex justify-content-between mb-2">
-            <p class="card-title">Danh sách hóa đơn</p>
-            <div>
-                <button class="btn btn-danger" id="btnDeleteAll" style="display:none;">
-                    <i class="ti-trash"></i>
-                </button>
-            </div>
-        </div>
+<div class="container mt-4">
+    <form action="" method="POST" class="form-section">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <p class="card-title">Danh sách hóa đơn</p>
+                    <div>
+                        <button class="btn btn-danger" id="btnDeleteAll" style="display:none;">
+                            <i class="ti-trash"></i>
+                        </button>
+                    </div>
+                </div>
 
-        <div>
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr style="background-color: dodgerblue; color: white;">
-                        <th>
-                            <div class="form-check">
-                                <label class="form-check-label">
-                                    <input type="checkbox" class="form-check-input" id="SelectAll">
-                                </label>
-                            </div>
-                        </th>
-                        <th>#</th>
-                        <th>Mã hóa đơn</th>
-                        <th>Họ và tên</th>
-                        <th>Ngày Lập</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ($result->num_rows === 0): ?>
-                        <tr>
-                            <td colspan="6" class="text-center">Không có dữ liệu</td>
-                        </tr>
-                    <?php else: ?>
-                        <?php while ($row = $result->fetch_assoc()): ?>
-                            <tr>
-                                <td>
+                <div>
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr style="background-color: dodgerblue; color: white;">
+                                <th>
                                     <div class="form-check">
                                         <label class="form-check-label">
-                                            <input type="checkbox" class="form-check-input cbkItem" value="<?= htmlspecialchars($row['BillID']) ?>">
+                                            <input type="checkbox" class="form-check-input" id="SelectAll">
                                         </label>
                                     </div>
-                                </td>
-                                <td><?= htmlspecialchars($row['BillID']) ?></td>
-                                <td><?= htmlspecialchars($row['UserFullName']) ?></td>
-                                <td><?= htmlspecialchars($row['CreateDate']) ?></td>
-                                <td>
-                                    <button class="btnDelete" style="border:none; background:none; cursor:pointer;">
-                                        <i class="mdi mdi-delete" style="font-size: 25px; color: red"></i>
-                                    </button>
-                                </td>
+                                </th>
+                                <th>Mã hóa đơn</th>
+                                <th>Họ và tên</th>
+                                <th>Ngày Lập</th>
+                                <th></th>
                             </tr>
-                        <?php endwhile; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                        </thead>
+                        <tbody>
+                            <?php if ($result->num_rows === 0): echo "No data found in bills table or join condition failed.";?>
+                                <tr>
+                                    <td colspan="5" class="text-center">Không có dữ liệu</td>
+                                </tr>
+                            <?php else: ?>
+                                <?php while ($row = $result->fetch_assoc()): ?>
+                                    <tr>
+                                        <td>
+                                            <div class="form-check">
+                                                <label class="form-check-label">
+                                                    <input type="checkbox" class="form-check-input cbkItem" value="<?= htmlspecialchars($row['BillID']) ?>">
+                                                </label>
+                                            </div>
+                                        </td>
+                                        <td><?= htmlspecialchars($row['BillID']) ?></td>
+                                        <td><?= htmlspecialchars($row['FullName']) ?></td>
+                                        <td><?= htmlspecialchars($row['CreateDate']) ?></td>
+                                        <td>
+                                            <button class="btnDelete" style="border:none; background:none; cursor:pointer;">
+                                                <i class="mdi mdi-delete" style="font-size: 25px; color: red"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-    </div>
+        </form>
 </div>
 
 <script>
@@ -162,7 +186,4 @@ $result = $conn->query("SELECT * FROM Bills");
 </body>
 </html>
 
-<?php
-// Đóng kết nối
-$conn->close();
-?>
+<?php $conn->close();?>

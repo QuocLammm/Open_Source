@@ -1,6 +1,7 @@
 <?php
 include("includes/connectSQL.php"); // Kết nối đến cơ sở dữ liệu
 include("includes/DrinkCategoriesController.php"); // Bao gồm lớp điều khiển
+require_once("includes/session_user.php");
 
 // Khởi tạo điều khiển
 $controller = new DrinkCategoriesController($conn);

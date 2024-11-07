@@ -1,43 +1,42 @@
-<?php
-include("includes/connectSQL.php");
+<?php 
+require_once("includes/session_user.php");
 
-// Get the table name from the query string and sanitize it
-$tableName = isset($_GET['tableName']) ? $_GET['tableName'] : ""; 
-$tableName = htmlspecialchars($tableName); 
+// Handle table name from query string
+$tableName = isset($_GET['tableName']) ? htmlspecialchars($_GET['tableName']) : ""; 
+$tableID = null;
 
-// Initialize an array to hold the data for different entities
-$listDrinkCategories = [];
-$listDrinks = [];
-$billInfos = [];
-
-// Fetch drink categories
-$sqlCategories = "SELECT * FROM drinkcategories";
-$resultCategories = $conn->query($sqlCategories);
-if ($resultCategories->num_rows > 0) {
-    while ($row = $resultCategories->fetch_assoc()) {
-        $listDrinkCategories[] = $row;
+if ($tableName !== "") {
+    $stmt = $conn->prepare("SELECT TableID FROM tables WHERE TableName = ?");
+    $stmt->bind_param("s", $tableName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $tableID = $row['TableID']; // Save tableID
+    } else {
+        echo "No tableID found for tableName: $tableName";
+        exit;
     }
 }
 
-// Fetch drinks
-$sqlDrinks = "SELECT * FROM drinks"; 
-$resultDrinks = $conn->query($sqlDrinks);
-if ($resultDrinks->num_rows > 0) {
-    while ($row = $resultDrinks->fetch_assoc()) {
-        $listDrinks[] = $row;
+// Fetching data function
+function fetchData($conn, $sql) {
+    $data = [];
+    $result = $conn->query($sql);
+    if ($result && $result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $data[] = $row;
+        }
     }
+    return $data;
 }
 
-// Fetch bill information
-$sqlBillInfos = "SELECT * FROM billinfos"; 
-$resultBillInfos = $conn->query($sqlBillInfos);
-if ($resultBillInfos->num_rows > 0) {
-    while ($row = $resultBillInfos->fetch_assoc()) {
-        $billInfos[] = $row;
-    }
-}
+// Fetch required data
+$listDrinkCategories = fetchData($conn, "SELECT * FROM drinkcategories");
+$listDrinks = fetchData($conn, "SELECT * FROM drinks");
+$billInfos = fetchData($conn, "SELECT * FROM billinfos");
 
-// Close the database connection
+// Close database connection
 $conn->close();
 ?>
 
@@ -50,7 +49,99 @@ $conn->close();
     <link rel="stylesheet" href="path-to-your-css-file.css"> 
     <link rel="stylesheet" href="path/to/font-awesome/css/font-awesome.min.css">
     <script src="path-to-your-js-file.js"></script> 
+    <script>
+        let selectedDrinks = {};
+
+        function addToDrink(drinkID) {
+            if (!selectedDrinks[drinkID]) {
+                selectedDrinks[drinkID] = { quantity: 1 };
+            } else {
+                selectedDrinks[drinkID].quantity += 1;
+            }
+            updateDrinkInfo();
+        }
+
+        function updateDrinkInfo() {
+            let tableBody = document.querySelector("#bill-table tbody");
+            tableBody.innerHTML = "";
+
+            let total = 0;
+            for (let id in selectedDrinks) {
+                let quantity = selectedDrinks[id].quantity;
+                let drinkPrice = document.querySelector(`[data-drink-id='${id}']`).getAttribute("data-drink-price");
+                let drinkName = document.querySelector(`[data-drink-id='${id}']`).getAttribute("data-drink-name");
+
+                let price = quantity * drinkPrice;
+                total += price;
+
+                let row = document.createElement("tr");
+                row.innerHTML = `<td>${drinkName}</td><td>${quantity}</td><td>${price}₫</td>`;
+                tableBody.appendChild(row);
+            }
+
+            document.getElementById("total-amount").textContent = total + "₫";
+            document.getElementById("payment-section").style.display = "block";
+        }
+
+        function processPayment() {
+            const items = Object.keys(selectedDrinks).map(id => ({
+                drinkID: id,
+                quantity: selectedDrinks[id].quantity
+            }));
+
+            const totalAmount = document.getElementById('total-amount').textContent.replace(/\./g, "").replace("₫", "").trim();
+
+            fetch('payment.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    tableID: <?= json_encode($tableID ?? null) ?>,
+                    userID: <?= json_encode($userID ?? null) ?>,
+                    items: items,
+                    totalAmount: totalAmount
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Thanh toán thành công!', '', 'success').then(() => {
+                        window.location.href = 'dashboard.php';
+                    });
+                } else {
+                    Swal.fire('Có lỗi xảy ra!', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Có lỗi xảy ra!', 'Vui lòng thử lại sau.', 'error');
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            let drinkItems = document.querySelectorAll('.drink-item');
+            let categoryLinks = document.querySelectorAll('.category-link');
+
+            categoryLinks.forEach(link => {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    let categoryId = this.getAttribute('data-category-id');
+                    drinkItems.forEach(item => {
+                        item.style.display = (item.getAttribute('data-category-id') === categoryId) ? 'block' : 'none';
+                    });
+                    categoryLinks.forEach(link => link.classList.remove('selected-drink'));
+                    this.classList.add('selected-drink');
+                });
+            });
+
+            // Click the first category link automatically to show drinks if present
+            if (categoryLinks.length > 0) categoryLinks[0].click();
+        });
+
+    </script>
     <style>
+        <style>
         
         .form-group label {
             display: block;
@@ -177,7 +268,6 @@ $conn->close();
 
 <body>
     <?php include("includes/_layoutAdmin.php"); ?>
-
     <div class="container mt-4">
         <form enctype="multipart/form-data" class="form-section full-page-wrapper">
             <div class="card p-3 h-100">
@@ -200,7 +290,11 @@ $conn->close();
                             <div class="col-10 row" style="border-radius: 20px">
                                 <?php foreach ($listDrinks as $item): ?>
                                     <div class="col-3 drink-item" data-category-id="<?= $item['DrinkCategoryID'] ?>">
-                                        <div class="btn square-card card drink-select" data-drink-id="<?= $item['DrinkID'] ?>" data-drink-name="<?= htmlspecialchars($item['DrinkName']) ?>" data-drink-price="<?= $item['DrinkPrice'] ?>">
+                                        <div class="btn square-card card drink-select" 
+                                            data-drink-id="<?= $item['DrinkID'] ?>" 
+                                            data-drink-name="<?= htmlspecialchars($item['DrinkName']) ?>" 
+                                            data-drink-price="<?= $item['DrinkPrice'] ?>"
+                                            onclick="addToDrink(<?= $item['DrinkID'] ?>)">
                                             <img src="images/drinks/<?= htmlspecialchars($item['DrinkImage']) ?>" class="card-img-top" />
                                             <div class="card-body"><?= htmlspecialchars($item['DrinkName']) ?></div>
                                         </div>
@@ -209,23 +303,18 @@ $conn->close();
                             </div>
                         </div>
                     </div>
-
                     <div class="col-5">
-                        <div id="selected-drink-info" class="h-75" style="overflow-y: auto; display: none;">
+                        <div id="selected-drink-info" class="h-75" style="overflow-y: auto;">
                             <table class="table table-striped table-hover" id="bill-table">
-                                <tbody>
-                                    <!-- Thông tin đồ uống sẽ được thêm vào đây -->
-                                </tbody>
+                                <tbody>Hóa đơn bàn </tbody>
                             </table>
                         </div>
-
                         <div id="payment-section" style="display: none;">
                             <hr />
-                            <p class="text-right" style="font-size: 20px">Tổng tiền: <span id="total-amount">0</span>₫</p>
-                            <hr />
-                            <div class="d-flex justify-content-center">
-                                <a class="btn btn-primary" id="btnThanhToan" href="#">Thanh toán</a>
-                            </div>
+                            <p class="text-right" style="font-size: 24px;">Tổng tiền: <span id="total-amount">0₫</span></p>
+                            <button type="button" class="btn btn-success btn-lg w-100" onclick="processPayment()">
+                                Thanh toán
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -233,142 +322,5 @@ $conn->close();
         </form>
     </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            var drinkItems = document.querySelectorAll('.drink-item');
-            drinkItems.forEach(function (item) {
-                item.style.display = 'none';
-            });
-
-            var categoryLinks = document.querySelectorAll('.category-link');
-            categoryLinks.forEach(function (link) {
-                link.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    var categoryId = this.getAttribute('data-category-id');
-                    drinkItems.forEach(function (item) {
-                        item.style.display = (item.getAttribute('data-category-id') === categoryId) ? 'block' : 'none';
-                    });
-                    categoryLinks.forEach(function (link) {
-                        link.classList.remove('selected-drink');
-                    });
-                    this.classList.add('selected-drink');
-                });
-            });
-
-            // Automatically click the first category link to show drinks
-            if (categoryLinks.length > 0) {
-                categoryLinks[0].click();
-            }
-
-            var totalAmount = 0;
-            var selectedDrinks = {};
-
-            // Handle drink selection
-            document.querySelectorAll('.drink-select').forEach(function (drink) {
-                drink.addEventListener('click', function () {
-                    var drinkID = this.getAttribute('data-drink-id');
-                    var drinkName = this.getAttribute('data-drink-name');
-                    var drinkPrice = parseFloat(this.getAttribute('data-drink-price'));
-
-                    if (selectedDrinks[drinkID]) {
-                        selectedDrinks[drinkID].quantity++;
-                    } else {
-                        selectedDrinks[drinkID] = {
-                            name: drinkName,
-                            price: drinkPrice,
-                            quantity: 1
-                        };
-                    }
-
-                    updateBillTable();
-                });
-            });
-
-            // Update the bill table with selected drinks
-            function updateBillTable() {
-                var tableBody = document.querySelector('#bill-table tbody');
-                tableBody.innerHTML = '';
-                totalAmount = 0;
-
-                for (var id in selectedDrinks) {
-                    if (selectedDrinks.hasOwnProperty(id)) {
-                        var drink = selectedDrinks[id];
-                        var row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${drink.name}</td>
-                            <td>
-                                <a href="#" class="bg-info p-2 mr-2 decrease-quantity" data-drink-id="${id}" style="color: white; border-radius: 20%">-</a>
-                                ${drink.quantity}
-                                <a href="#" class="bg-info p-2 ml-2 increase-quantity" data-drink-id="${id}" style="color: white; border-radius: 20%">+</a>
-                            </td>
-                            <td>${numberWithCommas(drink.price)}₫</td>
-                            <td>
-                                <a class="btn btn-danger delete-item" href="#" data-drink-id="${id}">
-                                    <i class="fa fa-trash-o fa-lg"></i> Delete
-                                </a>
-                            </td>
-                        `;
-                        tableBody.appendChild(row);
-                        totalAmount += drink.price * drink.quantity;
-                    }
-                }
-
-                document.getElementById('total-amount').textContent = numberWithCommas(totalAmount);
-                document.getElementById('payment-section').style.display = (totalAmount > 0) ? 'block' : 'none';
-                document.getElementById('selected-drink-info').style.display = (totalAmount > 0) ? 'block' : 'none';
-            }
-
-            // Function to format numbers with commas
-            function numberWithCommas(x) {
-                return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-            }
-
-            // Handle quantity changes and item deletion
-            document.querySelector('#bill-table').addEventListener('click', function (event) {
-                if (event.target.classList.contains('increase-quantity')) {
-                    var drinkID = event.target.getAttribute('data-drink-id');
-                    selectedDrinks[drinkID].quantity++;
-                    updateBillTable();
-                }
-
-                if (event.target.classList.contains('decrease-quantity')) {
-                    var drinkID = event.target.getAttribute('data-drink-id');
-                    if (selectedDrinks[drinkID].quantity > 1) {
-                        selectedDrinks[drinkID].quantity--;
-                    } else {
-                        delete selectedDrinks[drinkID];
-                    }
-                    updateBillTable();
-                }
-
-                if (event.target.classList.contains('delete-item')) {
-                    event.preventDefault();
-                    var drinkID = event.target.getAttribute('data-drink-id');
-                    delete selectedDrinks[drinkID];
-                    updateBillTable();
-                }
-            });
-
-            // Payment button click event
-            document.getElementById('btnThanhToan').addEventListener('click', function (e) {
-                e.preventDefault();
-                Swal.fire({
-                    title: 'Bạn có chắc chắn muốn thanh toán?',
-                    icon: 'info',
-                    showCancelButton: true,
-                    confirmButtonText: 'Xác nhận',
-                    cancelButtonText: 'Hủy',
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Gọi AJAX để xử lý thanh toán ở đây
-                        Swal.fire('Thanh toán thành công!', '', 'success');
-                        window.location.href = 'dashboard.php';
-                    } else {
-                        Swal.fire('Thanh toán đã bị hủy!', '', 'error');
-                    }
-                });
-            });
-        });
-    </script>
 </body>
 </html>

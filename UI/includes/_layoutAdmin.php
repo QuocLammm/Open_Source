@@ -1,36 +1,6 @@
 <?php 
-// Start the session only if it's not already started
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
 include("includes/connectSQL.php");
 
-// Check if UserID exists in the session
-if (isset($_SESSION['UserID'])) {
-    $userId = $_SESSION['UserID'];
-
-    // Connect to the database
-    include("includes/connectSQL.php");
-
-    // Prepare the SQL query
-    $query = "SELECT FullName, 	UserImage FROM users WHERE UserID = ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $userId);
-    
-    // Execute the query
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    // Fetch the user details
-    if ($result->num_rows > 0) {
-        $user = $result->fetch_assoc(); // Get user data
-    } else {
-        $user = null; // No user found
-    }
-} else {
-    $user = null; // UserID not in session
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -92,7 +62,7 @@ if (isset($_SESSION['UserID'])) {
                             <span class="icon-menu"></span>
                         </button>
 
-                        <?php if ($user !== null) { ?>
+                        <?php if ($user) { ?>
                             <ul class="navbar-nav navbar-nav-right">
                                 <li class="nav-item">
                                     <?php echo htmlspecialchars($user['FullName']); ?>

@@ -1,6 +1,6 @@
 <?php
 include("includes/connectSQL.php");
-
+require_once("includes/session_user.php");
 // Handle delete request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents("php://input"), true);
@@ -102,7 +102,7 @@ if ($result->num_rows > 0) {
 </style>
 
 <body>
-    <?php include('includes/_layoutAdmin.php'); ?>
+    <?php include("includes/_layoutAdmin.php"); ?>
     <div class="container mt-4">
         <form action="" method="GET" class="form-section">
             <div class="d-flex justify-content-between align-items-center">

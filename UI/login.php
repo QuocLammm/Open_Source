@@ -1,9 +1,6 @@
 <?php
-session_start();
-error_reporting(0);
 include('includes/connectSQL.php');
-
-if(isset($_POST['login'])) {
+if (isset($_POST['login'])) {
     $adminuser = $_POST['username'];
     $password = $_POST['password'];
     $query = mysqli_query($conn, "SELECT UserID FROM users WHERE AccountName='$adminuser' AND Password='$password'");
@@ -11,14 +8,18 @@ if(isset($_POST['login'])) {
 
     if ($num_rows > 0) {
         $ret = mysqli_fetch_array($query);
-        $_SESSION['UserID'] = $ret['UserID'];
+        // Set cookie for 1 hour
+        setcookie('UserID', $ret['UserID'], time() + 3600, "/"); // "/" allows cookie to be accessible site-wide
         header('location:dashboard.php');
+        exit(); // Always exit after header redirection
     } else {
-        $errorMessage = "Thông tin không hợp lệ.";
+        $errorMessage = "Tên đăng nhập hoặc mật khẩu không đúng!";
     }
-
 }
+
+$conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">

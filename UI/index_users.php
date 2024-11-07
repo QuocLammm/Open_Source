@@ -1,6 +1,7 @@
 <?php
 require_once("includes/UsersController.php");
-
+require_once("includes/session_user.php");
+//
 $controller = new UsersController();
 $users = [];
 $fullName = $gender = $userCategoryName = '';
@@ -13,9 +14,7 @@ if (isset($data['delete_id'])) {
     // Xóa nhiều người dùng
     $ids = $data['delete_ids'];
     $controller->deleteAll($ids);
-} else {
-    echo json_encode(['success' => false, 'message' => 'Không có ID nào để xóa.']);
-}
+} 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fullName = $_POST['fullName'] ?? '';
@@ -42,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         margin-top: 20px;
     }
     .form-section {
-        width: 110%;
+        width: 105%;
         padding: 10px;
         margin: 70px;
         background-color: #f8f9fa;

@@ -2,6 +2,7 @@
 // Kết nối cơ sở dữ liệu
 include("includes/connectSQL.php");
 include("includes/Pager.php");
+require_once("includes/session_user.php");
 
 
 // Handle search/filter request
@@ -142,7 +143,6 @@ $conn->close();
 </head>
 <body>
     <?php include("includes/_layoutAdmin.php"); ?>
-
     <div class="container mt-4">
         <form method="GET" class="form-section">
             <div class="d-flex justify-content-between align-items-center mb-3">

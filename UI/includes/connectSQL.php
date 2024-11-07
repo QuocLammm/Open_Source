@@ -1,6 +1,5 @@
 <?php
 // connectSQL.php
-
 $servername = "localhost"; // Địa chỉ máy chủ MySQL (thường là localhost)
 $username = "root";        // Tên người dùng MySQL (thường là root)
 $password = "";            // Mật khẩu MySQL (nếu có)
