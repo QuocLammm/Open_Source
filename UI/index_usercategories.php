@@ -1,42 +1,37 @@
 <?php
 require_once("includes/UsersCategoriesController.php");
 require_once("includes/session_user.php");
+//
 $controller = new UserCategoriesController();
 $userCategories = [];
 $userCategoryName = '';
-
-// Handle delete request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $data = json_decode(file_get_contents("php://input"), true);
-    $id = $data['id'] ?? null;
+    // Check if it's a delete request
+    if (isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['id'])) {
+        $id = $_POST['id'];
 
-    if ($id) {
-        // Prepare and execute the delete statement
-        $sql = "DELETE FROM UserCategories WHERE UserCategoryID = ?";
-        if ($stmt = $conn->prepare($sql)) {
-            $stmt->bind_param("i", $id);
-            if ($stmt->execute()) {
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Không thể xóa bản ghi.']);
-            }
-            $stmt->close();
+        // Assuming there's a method in the controller to handle deletion
+        $deleteSuccess = $controller->delete($id);
+        
+        if ($deleteSuccess) {
+            echo json_encode(['success' => true]);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Lỗi truy vấn.']);
+            echo json_encode(['success' => false, 'message' => 'Delete failed']);
         }
-    } else {
-        echo json_encode(['success' => false, 'message' => 'ID không hợp lệ.']);
+        exit;
     }
-    exit; // Stop further processing after handling the delete request
-}
 
-// Xử lý tìm kiếm và đưa dữ liệu
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $userCategoryName = $_POST['userCategoryName'] ?? ''; // Đảm bảo sử dụng cùng tên
+    // Search functionality
+    $userCategoryName = $_POST['userCategoryName'] ?? '';
     $userCategories = $controller->search($userCategoryName);
 } else {
+    // Load all user categories on initial page load
     $userCategories = $controller->index();
 }
+
+
+
+
 // Hiển thị dữ liệu
 ?>
 <!DOCTYPE html>
@@ -111,11 +106,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="row mb-3">
                 <div class="col">
-                    <input type="text" name="search" class="form-control" placeholder="Tên loại người dùng">
+                    <input type="text" name="userCategoryName" class="form-control" placeholder="Tên loại người dùng">
                 </div>
                 <div class="col">
-                    <button type="submit" class="btn btn-primary" method="POST" name="userCategoryName">Tìm kiếm</button>
-                    <button type="button" class="btn btn-secondary" onclick="window.location.reload();">Làm mới</button>
+                    <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='index_usercategories.php';">Làm mới</button>
                 </div>
             </div>
 
@@ -164,52 +159,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Xóa bản ghi
         document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.btnDelete').forEach(function (btn) {
-                btn.addEventListener('click', async function (e) {
-                    e.preventDefault();
-                    var itemId = this.getAttribute('data-id');
-                    const result = await Swal.fire({
-                        title: 'Bạn có chắc chắn muốn xóa bản ghi này?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'OK',
-                        cancelButtonText: 'Hủy',
-                    });
-                    if (result.isConfirmed) {
-                        try {
-                            const response = await fetch('', {
-                                method: 'POST',
-                                body: JSON.stringify({ id: itemId }),
-                                headers: { 'Content-Type': 'application/json' }
-                            });
-                            const data = await response.json();
-                            if (data.success) {
-                                await Swal.fire({
-                                    title: 'Đã xóa thành công!',
-                                    icon: 'success',
-                                    confirmButtonText: 'OK'
-                                });
-                                location.reload(); // Reload the page to update the list
-                            } else {
-                                await Swal.fire({
-                                    title: 'Lỗi!',
-                                    text: data.message,
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
-                                });
-                            }
-                        } catch (error) {
-                            await Swal.fire({
-                                title: 'Lỗi!',
-                                text: 'Có lỗi xảy ra. Vui lòng thử lại sau.',
-                                icon: 'error',
-                                confirmButtonText: 'OK'
-                            });
-                        }
-                    }
-                });
+    document.querySelectorAll('.btnDelete').forEach(function (btn) {
+        btn.addEventListener('click', async function (e) {
+            e.preventDefault();
+            var itemId = this.getAttribute('data-id');
+            const result = await Swal.fire({
+                title: 'Bạn có chắc chắn muốn xóa bản ghi này?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'OK',
+                cancelButtonText: 'Hủy',
             });
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch('', {
+                        method: 'POST',
+                        body: JSON.stringify({ 
+                            action: 'delete', 
+                            id: itemId 
+                        }),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        await Swal.fire({
+                            title: 'Đã xóa thành công!',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        });
+                        location.reload(); // Reload the page to update the list
+                    } else {
+                        await Swal.fire({
+                            title: 'Lỗi!',
+                            text: data.message,
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                } catch (error) {
+                    await Swal.fire({
+                        title: 'Lỗi!',
+                        text: 'Có lỗi xảy ra. Vui lòng thử lại sau.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            }
         });
+    });
+});
+
     </script>
 </body>
 </html>

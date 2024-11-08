@@ -106,32 +106,55 @@ class UsersController
     {
         global $conn;
 
+        // Create the base query
         $query = "SELECT u.*, uc.UserCategoryName 
                 FROM Users u 
                 LEFT JOIN UserCategories uc ON u.UserCategoryID = uc.UserCategoryID 
-                WHERE 1=1"; // 1=1 để dễ dàng thêm điều kiện
+                WHERE 1=1";
 
-        // Thêm điều kiện cho tên người dùng
+        // Add search conditions dynamically based on user input
         if (!empty($fullName)) {
-            $fullName = $conn->real_escape_string($fullName);
-            $query .= " AND u.FullName LIKE '%$fullName%'";
+            $query .= " AND u.FullName LIKE ?";
         }
-
-        // Thêm điều kiện cho giới tính (nếu cần)
         if (!empty($gender)) {
-            $gender = $conn->real_escape_string($gender);
-            $query .= " AND u.Gender = '$gender'";
+            $query .= " AND u.Gender = ?";
         }
-
-        // Thêm điều kiện cho tên loại người dùng
         if (!empty($userCategoryName)) {
-            $userCategoryName = $conn->real_escape_string($userCategoryName);
-            $query .= " AND uc.UserCategoryName LIKE '%$userCategoryName%'";
+            $query .= " AND uc.UserCategoryName LIKE ?";
         }
 
-        $result = $conn->query($query);
-        return $result->fetch_all(MYSQLI_ASSOC);
+        // Prepare and execute the query
+        $stmt = $conn->prepare($query);
+
+        // Bind parameters based on search inputs
+        $types = "";
+        $params = [];
+
+        if (!empty($fullName)) {
+            $types .= "s";
+            $params[] = "%" . $fullName . "%";
+        }
+        if (!empty($gender)) {
+            $types .= "s";
+            $params[] = $gender;
+        }
+        if (!empty($userCategoryName)) {
+            $types .= "s";
+            $params[] = "%" . $userCategoryName . "%";
+        }
+
+        // Bind parameters and execute
+        if ($types) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $users = $result->fetch_all(MYSQLI_ASSOC);
+
+        return $users;
+        }
+
     }
-}
 
 ?>

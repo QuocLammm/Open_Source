@@ -85,23 +85,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php include('includes/_layoutAdmin.php'); ?>
 
     <div class="container mt-4">
-        <form action="" method="GET" enctype="multipart/form-data" class="form-section">
-        <div class="d-flex justify-content-between align-items-center">
-            <h3>Danh Sách Người Dùng</h3>
-            <a href="create_users.php" class="btn btn-success">Thêm mới</a>
-        </div>
-        <div class="row mb-3">
-            <div class="col">
-                <input type="text" name="fullName" class="form-control" placeholder="Tên người dùng" value="<?php echo htmlspecialchars($fullName); ?>">
+        <form action="" method="POST" class="form-section">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3>Danh Sách Người Dùng</h3>
+                <a href="create_users.php" class="btn btn-success">Thêm mới</a>
             </div>
-            <div class="col">
-                <input type="text" name="userCategoryName" class="form-control" placeholder="Tên loại người dùng" value="<?php echo htmlspecialchars($userCategoryName); ?>">
+            <div class="row mb-3">
+                <div class="col">
+                    <input type="text" name="fullName" class="form-control" placeholder="Tên người dùng" value="<?php echo htmlspecialchars($fullName); ?>">
+                </div>
+                <div class="col">
+                    <input type="text" name="userCategoryName" class="form-control" placeholder="Tên loại người dùng" value="<?php echo htmlspecialchars($userCategoryName); ?>">
+                </div>
+                <div class="col">
+                    <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='index_users.php';">Load</button>
+                </div>
             </div>
-            <div class="col">
-                <button type="submit" class="btn btn-primary">Tìm kiếm</button>
-                <button type="button" class="btn btn-secondary" onclick="window.location.href='index_users.php';">Load lại</button>
-            </div>
-        </div>
+                        <!--table-->
+        
 
             <table class="table table-bordered">
                 <thead>

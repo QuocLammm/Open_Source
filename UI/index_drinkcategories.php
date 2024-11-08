@@ -1,38 +1,12 @@
 <?php
-include("includes/connectSQL.php"); // Kết nối đến cơ sở dữ liệu
-include("includes/DrinkCategoriesController.php"); // Bao gồm lớp điều khiển
+include("includes/connectSQL.php");
+include("includes/DrinkCategoriesController.php"); // Include the controller
 require_once("includes/session_user.php");
 
-// Khởi tạo điều khiển
 $controller = new DrinkCategoriesController($conn);
-// Handle delete request
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $data = json_decode(file_get_contents("php://input"), true);
-    $id = $data['id'] ?? null;
 
-    if ($id) {
-        // Prepare and execute the delete statement
-        $sql = "DELETE FROM DrinkCategories WHERE DrinkCategoryID = ?";
-        if ($stmt = $conn->prepare($sql)) {
-            $stmt->bind_param("i", $id);
-            if ($stmt->execute()) {
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Không thể xóa bản ghi.']);
-            }
-            $stmt->close();
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Lỗi truy vấn.']);
-        }
-    } else {
-        echo json_encode(['success' => false, 'message' => 'ID không hợp lệ.']);
-    }
-    exit; // Stop further processing after handling the delete request
-}
-
-// Xử lý tìm kiếm nếu có
-$drinkCategoryName = isset($_POST['drinkCategoryName']) ? $_POST['drinkCategoryName'] : '';
-$drinkCategories = $controller->index();
+$drinkCategoryName = isset($_GET['drinkCategoryName']) ? $_GET['drinkCategoryName'] : '';
+$drinkCategories = $controller->search($drinkCategoryName);
 ?>
 
 <!DOCTYPE html>
@@ -89,7 +63,7 @@ $drinkCategories = $controller->index();
 <body>
     <?php include("includes/_layoutAdmin.php"); ?>
     <div class="container mt-4">
-        <form action="" method="GET" class="form-section"> <!-- Changed method to GET -->
+        <form action="" method="GET" class="form-section">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3>Danh Sách Loại Đồ Uống</h3>
                 <a href="create_drink_category.php" class="btn btn-success">Thêm mới</a>
@@ -140,62 +114,10 @@ $drinkCategories = $controller->index();
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.btnDelete').forEach(function (btn) {
-                btn.addEventListener('click', async function (e) {
-                    e.preventDefault();
-                    var itemId = this.getAttribute('data-id');
-                    const result = await Swal.fire({
-                        title: 'Bạn có chắc chắn muốn xóa bản ghi này?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'OK',
-                        cancelButtonText: 'Hủy',
-                    });
-                    if (result.isConfirmed) {
-                        try {
-                            const response = await fetch('', {
-                                method: 'POST',
-                                body: JSON.stringify({ id: itemId }),
-                                headers: { 'Content-Type': 'application/json' }
-                            });
-                            const data = await response.json();
-                            if (data.success) {
-                                await Swal.fire({
-                                    title: 'Đã xóa thành công!',
-                                    icon: 'success',
-                                    confirmButtonText: 'OK'
-                                });
-                                location.reload(); // Reload the page to update the list
-                            } else {
-                                await Swal.fire({
-                                    title: 'Lỗi!',
-                                    text: data.message,
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
-                                });
-                            }
-                        } catch (error) {
-                            await Swal.fire({
-                                title: 'Lỗi!',
-                                text: 'Có lỗi xảy ra. Vui lòng thử lại sau.',
-                                icon: 'error',
-                                confirmButtonText: 'OK'
-                            });
-                        }
-                    }
-                });
-            });
-        });
-
         function resetPage() {
-            // Clear the search input
             document.querySelector('input[name="drinkCategoryName"]').value = '';
-            
-            // Reload the page without any query parameters
-            window.location.href = window.location.pathname; // Redirect to the current page
+            window.location.href = window.location.pathname;
         }
-
     </script>
 </body>
 </html>
