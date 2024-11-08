@@ -1,13 +1,12 @@
 <?php
-// Kết nối cơ sở dữ liệu
-include("includes/connectSQL.php");
+
 include("includes/Pager.php");
 require_once("includes/session_user.php");
 
 
 // Handle search/filter request
 $searchDrink = isset($_GET['drinkName']) ? $_GET['drinkName'] : '';
-$searchCategory = $_GET['category'] ?? '';
+$searchCategory = isset($_GET['category']) ? $_GET['category'] : '';
 $minPrice = isset($_GET['min_price']) ? (float)$_GET['min_price'] : "Giá nhỏ nhất"; // Sửa giá trị mặc định
 $maxPrice = isset($_GET['max_price']) ? (float)$_GET['max_price'] : "Giá cao nhất"; // Sửa giá trị mặc định
 
@@ -29,6 +28,7 @@ if ($searchCategory) {
 if ($minPrice) {
     $sql .= " AND d.DrinkPrice >= " . (float)$minPrice;
 }
+
 if ($maxPrice < 99999999) {
     $sql .= " AND d.DrinkPrice <= " . (float)$maxPrice;
 }
@@ -152,10 +152,13 @@ $conn->close();
 
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="drink" class="form-label">Đồ uống:</label>
-                        <input type="text" name="drinkName" id="drinkName" class="form-control" placeholder="Tên đồ uống" value="<?php echo htmlspecialchars($searchDrink); ?>">
-                    </div>
+                    <!-- Tìm kiếm theo tên đồ uống -->
+                    
+                        <div class="mb-3">
+                            <label for="drink" class="form-label">Tên đồ uống:</label>
+                            <input type="text" name="drinkName" id="drinkName" class="form-control" placeholder="Tên đồ uống" value="<?php echo htmlspecialchars($searchDrink); ?>">
+                        </div>
+                    
                     <div class="mb-3">
                         <label for="category" class="form-label">Loại đồ uống:</label>
                         <input type="text" name="category" id="category" class="form-control" placeholder="Loại đồ uống" value="<?php echo htmlspecialchars($searchCategory); ?>">
