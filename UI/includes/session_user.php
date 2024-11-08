@@ -51,16 +51,34 @@ if (isset($_COOKIE['UserID'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        #greeting {
-            display: block;
-            margin-bottom: 20px;
-            font-size: 16px;
-            text-align: center;
-            max-width: 520px;
-            margin: auto;
+    #greeting {
+        display: block;
+        margin-bottom: 20px;
+        font-size: 17px;
+        text-align: center;
+        max-width: 520px;
+        margin: auto;
+        color: white;
+        animation: colorChange 6s ease-in-out infinite; /* Adjusted the timing */
+    }
+
+    @keyframes colorChange {
+        0% {
+            color: red; /* Starting color */
+        }
+        25% {
+            color: orange;
+        }
+        50% {
+            color: yellow;
+        }
+        75% {
             color: white;
         }
-    </style>
+        100% {
+            color: sienna; /* Ending color */
+        }
+    }
+</style>
 </head>
-
 </html>

@@ -1,12 +1,22 @@
 <?php
-include("includes/connectSQL.php");
 include("includes/DrinkCategoriesController.php"); // Include the controller
 require_once("includes/session_user.php");
 
 $controller = new DrinkCategoriesController($conn);
-
 $drinkCategoryName = isset($_GET['drinkCategoryName']) ? $_GET['drinkCategoryName'] : '';
 $drinkCategories = $controller->search($drinkCategoryName);
+
+
+if (isset($_GET['id'])) {
+    $drinkCategoryId = (int)$_GET['id'];
+    if ($controller->delete($drinkCategoryId)) {
+        echo 'success';
+    } else {
+        echo 'error';
+    }
+} else {
+    echo 'error';
+}
 ?>
 
 <!DOCTYPE html>
@@ -18,6 +28,7 @@ $drinkCategories = $controller->search($drinkCategoryName);
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 </head>
+
 <style>
     .container {
         max-width: 900px;
@@ -103,7 +114,7 @@ $drinkCategories = $controller->search($drinkCategoryName);
                                 <td><?= htmlspecialchars($item['DrinkCategoryDescription']) ?></td>
                                 <td>
                                     <a href="edit_drink_category.php?id=<?= $item['DrinkCategoryID'] ?>" class="btn btn-sm btn-primary">Sửa</a>
-                                    <a href="#" class="btn btn-sm btn-danger btnDelete" data-id="<?= $item['DrinkCategoryID'] ?>">Xóa</a>
+                                    <a href="javascript:void(0);" class="btn btn-sm btn-danger" onclick="removeDrink(<?= $item['DrinkCategoryID'] ?>)">Xóa</a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -114,6 +125,41 @@ $drinkCategories = $controller->search($drinkCategoryName);
     </div>
 
     <script>
+        function removeDrink(drinkCategoryId) {
+            Swal.fire({
+                title: 'Bạn có chắc chắn muốn xóa?',
+                text: "Bạn sẽ không thể khôi phục lại dữ liệu này!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Có, xóa!',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Send AJAX request to delete the category
+                    fetch(`delete_drink_category.php?id=${drinkCategoryId}`, {
+                        method: 'GET',
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        if (data === 'success') {
+                            Swal.fire('Xóa thành công!', '', 'success');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            Swal.fire('Lỗi!', 'Xóa không thành công.', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Lỗi!', 'Có lỗi xảy ra khi xóa.', 'error');
+                    });
+                }
+            });
+        }
+
+
         function resetPage() {
             document.querySelector('input[name="drinkCategoryName"]').value = '';
             window.location.href = window.location.pathname;
@@ -121,3 +167,4 @@ $drinkCategories = $controller->search($drinkCategoryName);
     </script>
 </body>
 </html>
+

@@ -78,9 +78,9 @@ if ($userID) {
 
                         <?php if ($user) { ?>
                             <ul class="navbar-nav navbar-nav-right">
-                            <div id="greeting"><?= $message ?></div>
-                                <li class="nav-item">
-                                    <?php echo htmlspecialchars($user['FullName']); ?>
+                            
+                                <li class="nav-item" id="greeting">
+                                    <?= $message ?> <?php echo htmlspecialchars($user['FullName']); ?>
                                 </li>
                                 <li class="nav-item nav-profile dropdown">
                                     <?php if (!empty($user['UserImage'])) { ?>

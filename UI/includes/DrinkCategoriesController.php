@@ -48,12 +48,13 @@ class DrinkCategoriesController
         return $result->fetch_all(MYSQLI_ASSOC); // Trả về kết quả tìm kiếm
     }
 
-    public function delete($id)
-    {
-        $stmt = $this->conn->prepare("DELETE FROM DrinkCategories WHERE DrinkCategoryID = ?");
-        $stmt->bind_param("i", $id);
-        return $stmt->execute(); // Trả về kết quả xóa
+    public function delete($drinkCategoryId) {
+        $stmt = $this->conn->prepare("DELETE FROM drinkcategories WHERE DrinkCategoryID = ?");
+        $stmt->bind_param("i", $drinkCategoryId);
+        return $stmt->execute();
     }
+
+
 
     public function deleteAll($ids)
     {
