@@ -2,6 +2,13 @@
 require_once("includes/session_user.php");
 $userID = isset($_COOKIE['UserID']) ? $_COOKIE['UserID'] : null;
 
+// Check if the form has been submitted and set the session variable
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['firstAmount'])) {
+    // Validate the amount (ensure it's a valid number)
+    $firstAmount = is_numeric($_POST['firstAmount']) ? $_POST['firstAmount'] : 0;
+    $_SESSION['firstAmount'] = $firstAmount; // Store in session
+}
+
 // Fetch the user's category name
 $queryCategory = "SELECT uc.UserCategoryID FROM users u 
                   JOIN usercategories uc ON u.UserCategoryID = uc.UserCategoryID
@@ -75,7 +82,9 @@ $check = mysqli_fetch_assoc($check_result)['count'];
                     <div class="auth-form-light text-left py-5 px-4 px-sm-5">
 
                         <!-- Cashier's Starting Amount Modal -->
-                        <?php if ($usercategoriesName == 3): ?>
+                        <?php
+                        // Kiểm tra nếu số tiền đã được lưu trong session, không cần nhập lại
+                        if ($usercategoriesName == 3 ): ?>
                             <div class="modal fade" id="amountModal" tabindex="-1" role="dialog" aria-labelledby="amountModalLabel" aria-hidden="true">
                                 <div class="modal-dialog" role="document">
                                     <div class="modal-content">
@@ -102,6 +111,7 @@ $check = mysqli_fetch_assoc($check_result)['count'];
                                 </div>
                             </div>
                         <?php endif; ?>
+
 
                         <!-- Display Table Form and List if user is Manager or Cashier has entered amount -->
                         <?php if ($usercategoriesName == 1 || isset($_POST['firstAmount'])): ?>
@@ -160,18 +170,28 @@ $(document).ready(function() {
         }
     });
 });
-
 function submitAmount() {
-    var amountStr = document.getElementById("firstAmount").value;
-    var amount = parseFloat(amountStr.replace(",", "."));
-    if (isNaN(amount) || amountStr.trim() === "" || amount <= 0) {
-        document.getElementById("firstAmount").classList.add("is-invalid");
-    } else {
-        document.getElementById("firstAmount").classList.remove("is-invalid");
-        document.getElementById('amountForm').submit();
-        $('#amountModal').modal('hide');
+        var amount = document.getElementById('firstAmount').value;
+        // Optionally validate the input
+        if (amount) {
+            // Submit the form
+            document.getElementById('amountForm').submit();
+        } else {
+            document.getElementById('amountError').style.display = 'block';
+        }
     }
-}
+// function submitAmount() {
+//     var amountStr = document.getElementById("firstAmount").value;
+//     var amount = parseFloat(amountStr.replace(",", "."));
+//     if (isNaN(amount) || amountStr.trim() === "" || amount <= 0) {
+//         document.getElementById("firstAmount").classList.add("is-invalid");
+//     } else {
+//         document.getElementById("firstAmount").classList.remove("is-invalid");
+//         document.getElementById('amountForm').submit();
+//         $('#amountModal').modal('hide');
+//     }
+// }
+
 
 document.getElementById('saveButton').addEventListener('click', function() {
     if (<?= $check ?> > 0) {

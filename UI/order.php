@@ -1,4 +1,5 @@
 <?php 
+
 require_once("includes/session_user.php");
 
 // Handle table name from query string
@@ -60,6 +61,7 @@ $conn->close();
             }
             updateDrinkInfo();
         }
+
         function decreaseDrink(drinkID) {
             if (selectedDrinks[drinkID]) {
                 selectedDrinks[drinkID].quantity -= 1;
@@ -69,6 +71,7 @@ $conn->close();
             }
             updateDrinkInfo();
         }
+
         function removeDrink(drinkID) {
             delete selectedDrinks[drinkID];
             updateDrinkInfo();
@@ -111,6 +114,9 @@ $conn->close();
 
             document.getElementById("total-amount").textContent = total + "₫";
             document.getElementById("payment-section").style.display = total > 0 ? "block" : "none";
+
+            // Update the link for the temporary invoice
+            document.getElementById("btnTemporaryInvoice").href = `hoadontamtinh.php?tableID=${<?= json_encode($tableID) ?>}&totalAmount=${total}`;
         }
 
         function processPayment() {
@@ -168,11 +174,8 @@ $conn->close();
             // Click the first category link automatically to show drinks if present
             if (categoryLinks.length > 0) categoryLinks[0].click();
         });
-
     </script>
     <style>
-        <style>
-        
         .form-group label {
             display: block;
             margin-bottom: 5px;
@@ -213,15 +216,10 @@ $conn->close();
         }
         .form-section {
             width: 110%;
-
             padding: 10px;
             margin: 60px;
             background-color: #f8f9fa;
             border-radius: 8px;
-        }
-        .form-label {
-            margin-bottom: 0.5rem;
-            font-weight: 500;
         }
         .btnDelete {
             cursor: pointer;
@@ -341,7 +339,12 @@ $conn->close();
                         </div>
                         <div id="payment-section" style="display: none;">
                             <hr />
-                            <p class="text-right" style="font-size: 24px;">Tổng tiền: <span id="total-amount">0₫</span></p>
+                            <p class="text-right" style="font-size: 24px;">
+                                Tổng tiền: <span id="total-amount">0₫</span>
+                                <a href="hoadontamtinh.php?tableID=<?= htmlspecialchars($tableID) ?>" id="btnTemporaryInvoice" class="btn btn-info btn-sm" style="margin-left: 20px;">
+                                    Hóa đơn tạm tính
+                                </a>
+                            </p>
                             <button type="button" class="btn btn-success btn-lg w-100" onclick="processPayment()">
                                 Thanh toán
                             </button>
@@ -351,6 +354,6 @@ $conn->close();
             </div>
         </form>
     </div>
-
+    
 </body>
 </html>

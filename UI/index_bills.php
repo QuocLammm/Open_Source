@@ -1,5 +1,6 @@
 <?php
 require_once("includes/session_user.php");
+include("includes/Pager.php");
 
 function deleteBill($idBill) {
     global $conn;
@@ -77,14 +78,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Retrieve the list of bills
-$stmt = $conn->prepare("SELECT bills.BillID, users.FullName, bills.CreateDate FROM bills JOIN users ON bills.UserID = users.UserID");
-$stmt->execute();
-$result = $stmt->get_result();
+$itemsPerPage = 5; // Define the number of items per page
 
-if (!$result) {
-    echo "Error: " . $conn->error; // Check for SQL errors
+// Get the current page from the URL, default is 1
+$currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($currentPage < 1) {
+    $currentPage = 1;
 }
+
+// Calculate the offset for the SQL query
+$offset = ($currentPage - 1) * $itemsPerPage;
+
+// Modify SQL query to fetch only the data for the current page
+$sql = "SELECT bills.BillID, users.FullName, bills.CreateDate 
+        FROM bills 
+        JOIN users ON bills.UserID = users.UserID 
+        LIMIT $itemsPerPage OFFSET $offset";
+$result = $conn->query($sql);
+
+// Fetch data and check for SQL errors
+if (!$result) {
+    echo "Error: " . $conn->error;
+} else {
+    $bills = $result->fetch_all(MYSQLI_ASSOC);
+}
+
+// Get total count for pagination
+$totalResults = $conn->query("SELECT COUNT(*) as count FROM bills")->fetch_assoc()['count'];
+$pager = new Pager(range(1, $totalResults), $itemsPerPage); // Use a range to represent the total pages
 
 ?>
 
@@ -107,6 +128,39 @@ if (!$result) {
             margin: 70px;
             background-color: #f8f9fa;
             border-radius: 8px;
+        }
+        .form-label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .btnDelete {
+            cursor: pointer;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center; /* Căn giữa các liên kết */
+            gap: 10px; /* Tạo khoảng cách giữa các liên kết */
+        }
+
+        .pagination a {
+            text-decoration: none; /* Bỏ gạch chân cho liên kết */
+            padding: 8px 12px; /* Thêm padding cho các liên kết */
+            border: 1px solid #007bff; /* Đường viền cho các liên kết */
+            border-radius: 5px; /* Bo góc cho các liên kết */
+            color: #007bff; /* Màu chữ */
+        }
+
+        .pagination a:hover {
+            text-decoration: none; /* Bỏ gạch chân cho liên kết */
+            background-color: #007bff; /* Màu nền khi hover */
+            color: white; /* Màu chữ khi hover */
+        }
+
+        .pagination strong {
+            color: red; /* Màu chữ cho trang hiện tại */
+            border: 1px solid #007bff; /* Đường viền cho trang hiện tại */
+            padding: 8px 12px; /* Padding tương tự như các liên kết khác */
+            border-radius: 5px; /* Bo góc giống nhau */
         }
     </style>
 </head>
@@ -143,12 +197,12 @@ if (!$result) {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if ($result->num_rows === 0): ?>
+                            <?php if (empty($bills)): ?>
                                 <tr>
                                     <td colspan="5" class="text-center">Không có dữ liệu</td>
                                 </tr>
                             <?php else: ?>
-                                <?php while ($row = $result->fetch_assoc()): ?>
+                                <?php foreach ($bills as $row): ?>
                                     <tr>
                                         <td>
                                             <div class="form-check">
@@ -172,10 +226,15 @@ if (!$result) {
                                             </button>
                                         </td>
                                     </tr>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             <?php endif; ?>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Display pagination links -->
+                <div class="pagination">
+                    <?= $pager->getPaginationLinks() ?>
                 </div>
             </div>
         </div>

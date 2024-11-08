@@ -114,11 +114,11 @@ if ($userID) {
                 <?php endif; ?>
 
                 <?php if (in_array($usercategoriesID, [3])): ?>
-                    <a class="nav-link" href="#">Kết ca</a>
+                    <a class="nav-link" href="index_shaf.php">Kết ca</a>
                 <?php endif; ?>
 
                 <?php if (in_array($usercategoriesID, [1])): ?>
-                <a class="nav-link" href="#">Báo cáo kết ca</a>
+                <a class="nav-link" href="danhsach.php">Báo cáo kết ca</a>
                 <a class="nav-link dropdown-toggle" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Người dùng</a>
                 <ul class="dropdown-menu" aria-labelledby="userDropdown">
                     <li><a class="dropdown-item" href="index_users.php">Người dùng</a></li>
