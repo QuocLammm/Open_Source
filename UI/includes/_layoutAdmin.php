@@ -4,16 +4,19 @@ $userID = isset($_COOKIE['UserID']) ? $_COOKIE['UserID'] : null;
 $usercategoriesID = null;
 
 if ($userID) {
-    // Fetch the user's category ID
-    $queryCategory = "SELECT uc.UserCategoryID FROM users u 
-                      JOIN usercategories uc ON u.UserCategoryID = uc.UserCategoryID
-                      WHERE u.UserID = ?";
+    // Fetch the user's category IDs
+    $queryCategory = " SELECT users.FullName, users.UserImage, usercategories.UserCategoryName
+                        FROM users
+                        JOIN usercategories ON users.UsercategoryID = usercategories.UsercategoryID
+                        WHERE users.UserID = ?";
     $stmt = $conn->prepare($queryCategory);
     $stmt->bind_param("i", $userID);
     $stmt->execute();
     $resultCategory = $stmt->get_result();
     $userCategory = $resultCategory->fetch_assoc();
-    $usercategoriesID = $userCategory['UserCategoryID'];
+    $usercategoriesID = $userCategory['UserCategoryName'];
+    // Array of roles to check against
+    $validRoles = ["Quản Lý", "Thu Ngân"];
 }
 ?>
 <!DOCTYPE html>
@@ -97,11 +100,11 @@ if ($userID) {
                     </div>
                 </nav>
                 <!--Xử lí người quản lý hoặc thu ngân-->
-                <?php if (in_array($usercategoriesID, [1, 3])): ?>
+                <?php if (in_array(strtolower($usercategoriesID), array_map('strtolower', $validRoles))): ?>
                     <a class="nav-link" href="dashboard.php">Bán hàng</a>
                 <?php endif; ?>
 
-                <?php if (in_array($usercategoriesID, [1])): ?>
+                <?php if (in_array($usercategoriesID, ["Quản Lý"])): ?>
                 <a class="nav-link dropdown-toggle" id="drinkDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Đồ uống</a>
                 <ul class="dropdown-menu" aria-labelledby="drinkDropdown">
                     <li><a class="dropdown-item" href="index_drink.php">Đồ uống</a></li>
@@ -109,15 +112,15 @@ if ($userID) {
                 </ul>
                 <?php endif; ?>
 
-                <?php if (in_array($usercategoriesID, [1, 3])): ?>
+                <?php if (in_array(strtolower($usercategoriesID), array_map('strtolower', $validRoles))): ?>
                 <a class="nav-link" href="index_bills.php">Hóa đơn</a>
                 <?php endif; ?>
 
-                <?php if (in_array($usercategoriesID, [3])): ?>
+                <?php if (in_array($usercategoriesID, ["Thu ngân"])): ?>
                     <a class="nav-link" href="index_shaf.php">Kết ca</a>
                 <?php endif; ?>
 
-                <?php if (in_array($usercategoriesID, [1])): ?>
+                <?php if (in_array($usercategoriesID, ["Quản Lý"])): ?>
                 <a class="nav-link" href="danhsach.php">Báo cáo kết ca</a>
                 <a class="nav-link dropdown-toggle" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Người dùng</a>
                 <ul class="dropdown-menu" aria-labelledby="userDropdown">

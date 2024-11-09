@@ -6,7 +6,7 @@ include("includes/connectSQL.php");
 // Function to fetch user details
 function fetchUserDetails($conn, $userId) {
     $query = "
-        SELECT users.FullName, users.UserImage, usercategories.UsercategoryID
+        SELECT users.FullName, users.UserImage, usercategories.UserCategoryName
         FROM users
         JOIN usercategories ON users.UsercategoryID = usercategories.UsercategoryID
         WHERE users.UserID = ?
@@ -24,14 +24,14 @@ if (isset($_COOKIE['UserID'])) {
     $userId = $_COOKIE['UserID'];
     $user = fetchUserDetails($conn, $userId);
 
-    // Check user role based on UsercategoriesName
+    // Check user role based on UserCategoryName
     if ($user) {
-        $userRole = $user['UsercategoryID'];
+        $userRole = $user['UserCategoryName'];
 
         // Determine which interface to display based on role
-        if ($userRole == 3) {
+        if (strcasecmp($userRole, "Thu ngân") === 0) {
             $message = "Xin chào thu ngân!";
-        } elseif ($userRole == 1) {
+        } elseif (strcasecmp($userRole, "Quản lý") === 0) {
             $message = "Xin chào quản lý";
         } else {
             $message = "Chức vụ không xác định.";
