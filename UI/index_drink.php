@@ -211,9 +211,9 @@ $conn->close();
                                 <td><img src="images/drinks/<?php echo htmlspecialchars($drink['DrinkImage']); ?>" alt="Drink Image" width="50"></td>
                                 <td><?php echo number_format($drink['DrinkPrice'], 0, ',', '.'); ?>đ</td>
                                 <td>
+                                    <a href="view_drink.php?id=<?php echo $drink['DrinkID']; ?>" class="btn btn-sm btn-success">Xem</a>
                                     <a href="edit_drink.php?id=<?php echo $drink['DrinkID']; ?>" class="btn btn-sm btn-primary">Sửa</a>
                                     <a href="#" class="btn btn-sm btn-danger btnDelete" data-id="<?= $drink['DrinkID'] ?>">Xóa</a>
-
                                 </td>
                             </tr>
                         <?php endforeach; ?>

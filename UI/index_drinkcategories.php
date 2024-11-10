@@ -9,13 +9,7 @@ $drinkCategories = $controller->search($drinkCategoryName);
 
 if (isset($_GET['id'])) {
     $drinkCategoryId = (int)$_GET['id'];
-    if ($controller->delete($drinkCategoryId)) {
-        echo 'success';
-    } else {
-        echo 'error';
-    }
-} else {
-    echo 'error';
+    if ($controller->delete($drinkCategoryId));
 }
 ?>
 

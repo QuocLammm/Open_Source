@@ -6,6 +6,13 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // Initialize an error variable
 $error = '';
+$fullName = '';
+$userName = '';
+$password = '';
+$phoneNumber = '';
+$gender = '';
+$userCategoryID = '';
+$accountName = '';
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -17,31 +24,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $userCategoryID = mysqli_real_escape_string($conn, $_POST['user_category']);
     $accountName = mysqli_real_escape_string($conn, $_POST['accountname']);
     $userImage = $_FILES['image']['name']; // Get the uploaded file name
-    
 
     // Check for required fields
     if (empty($fullName) || empty($userName) || empty($password) || empty($phoneNumber) || empty($userCategoryID) || empty($accountName)) {
         $error = "Vui lòng điền tất cả các trường bắt buộc.";
     } else {
-        // Validate and move uploaded image
-        if ($_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            if (move_uploaded_file($_FILES['image']['tmp_name'], "images/users/" . $userImage)) {
-                // Prepare SQL statement
-                $stmt = $conn->prepare("INSERT INTO users (FullName, Username, Password, PhoneNumber, Gender, UserImage, UserCategoryID, AccountName) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("ssssssss", $fullName, $userName, $password, $phoneNumber, $gender, $targetPath, $userCategoryID, $accountName);
-
-                if ($stmt->execute()) {
-                    header("Location: index_users.php?success=1"); // Redirect on success
-                    exit();
-                } else {
-                    $error = "Lỗi khi thêm người dùng: " . $conn->error;
-                }
-                $stmt->close();
-            } else {
-                $error = "Có lỗi khi tải lên hình ảnh.";
-            }
+        // Password validation
+        if (strlen($password) < 10) {
+            
+        } elseif (!preg_match('/[A-Z]/', $password)) {
+            
+        } elseif (!preg_match('/[\W_]/', $password)) {
+            
         } else {
-            $error = "Lỗi khi tải lên hình ảnh: " . $_FILES['image']['error'];
+            // Validate and move uploaded image
+            if ($_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                if (move_uploaded_file($_FILES['image']['tmp_name'], "images/users/" . $userImage)) {
+                    // Prepare SQL statement
+                    $stmt = $conn->prepare("INSERT INTO users (FullName, Username, Password, PhoneNumber, Gender, UserImage, UserCategoryID, AccountName) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                    $stmt->bind_param("ssssssss", $fullName, $userName, $password, $phoneNumber, $gender, $userImage, $userCategoryID, $accountName);
+
+                    if ($stmt->execute()) {
+                        header("Location: index_users.php?success=1"); // Redirect on success
+                        exit();
+                    } else {
+                        $error = "Lỗi khi thêm người dùng: " . $conn->error;
+                    }
+                    $stmt->close();
+                } else {
+                    $error = "Có lỗi khi tải lên hình ảnh.";
+                }
+            } else {
+                $error = "Lỗi khi tải lên hình ảnh: " . $_FILES['image']['error'];
+            }
         }
     }
 }
@@ -71,36 +86,6 @@ if (!empty($error)) {
         background-color: #f8f9fa;
         border-radius: 8px;
     }
-    .form-label {
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-    }
-    .btnDelete {
-        cursor: pointer;
-    }
-    .pagination {
-        display: flex;
-        justify-content: center; /* Căn giữa các liên kết */
-        gap: 10px; /* Tạo khoảng cách giữa các liên kết */
-    }
-    .pagination a {
-        text-decoration: none; /* Bỏ gạch chân cho liên kết */
-        padding: 8px 12px; /* Thêm padding cho các liên kết */
-        border: 1px solid #007bff; /* Đường viền cho các liên kết */
-        border-radius: 5px; /* Bo góc cho các liên kết */
-        color: #007bff; /* Màu chữ */
-    }
-    .pagination a:hover {
-        text-decoration: none; /* Bỏ gạch chân cho liên kết */
-        background-color: #007bff; /* Màu nền khi hover */
-        color: white; /* Màu chữ khi hover */
-    }
-    .pagination strong {
-        color: red; /* Màu chữ cho trang hiện tại */
-        border: 1px solid #007bff; /* Đường viền cho trang hiện tại */
-        padding: 8px 12px; /* Padding tương tự như các liên kết khác */
-        border-radius: 5px; /* Bo góc giống nhau */
-    }
 </style>
 
 <body>
@@ -115,25 +100,26 @@ if (!empty($error)) {
                 <div class="col-md-6">
                     <div class="form-group">
                         <label for="fullname">Họ tên <span class="text-danger">*</span></label>
-                        <input type="text" id="fullname" name="fullname" class="form-control" required>
+                        <input type="text" id="fullname" name="fullname" class="form-control" value="<?php echo htmlspecialchars($fullName); ?>" required>
                     </div>
                     <div class="form-group">
                         <label for="username">Tên người dùng (Viết liền không dấu) <span class="text-danger">*</span></label>
-                        <input type="text" id="username" name="username" class="form-control" required>
+                        <input type="text" id="username" name="username" class="form-control" value="<?php echo htmlspecialchars($userName); ?>" required>
                     </div>
                     <div class="form-group">
                         <label for="password">Mật khẩu <span class="text-danger">*</span></label>
                         <input type="password" id="password" name="password" class="form-control" required>
+                        <small class="form-text text-muted">Mật khẩu tối đa 10 ký tự, bao gồm ít nhất một chữ cái viết hoa và một kí tự đặc biệt.</small>
                     </div>
                     <div class="form-group">
                         <label for="phone">Số điện thoại <span class="text-danger">*</span></label>
-                        <input type="text" id="phone" name="phone" class="form-control" required>
+                        <input type="text" id="phone" name="phone" class="form-control" value="<?php echo htmlspecialchars($phoneNumber); ?>" required>
                     </div>
                     <div class="form-group">
                         <label for="gender">Giới tính <span class="text-danger">*</span></label>
                         <select id="gender" name="gender" class="form-control" required>
-                            <option value="Male">Nam</option>
-                            <option value="Female">Nữ</option>
+                            <option value="Male" <?php if ($gender === "Male") echo "selected"; ?>>Nam</option>
+                            <option value="Female" <?php if ($gender === "Female") echo "selected"; ?>>Nữ</option>
                         </select>
                     </div>
                 </div>
@@ -147,7 +133,8 @@ if (!empty($error)) {
                             $categoryQuery = "SELECT UserCategoryID, UserCategoryName FROM UserCategories";
                             $categoryStmt = $conn->query($categoryQuery);
                             while ($row = $categoryStmt->fetch_assoc()) {
-                                echo "<option value='" . htmlspecialchars($row['UserCategoryID']) . "'>" . htmlspecialchars($row['UserCategoryName']) . "</option>";
+                                $selected = ($row['UserCategoryID'] == $userCategoryID) ? "selected" : "";
+                                echo "<option value='" . htmlspecialchars($row['UserCategoryID']) . "' $selected>" . htmlspecialchars($row['UserCategoryName']) . "</option>";
                             }
                             ?>
                         </select>
@@ -158,7 +145,7 @@ if (!empty($error)) {
                     </div>
                     <div class="form-group">
                         <label for="accountname">Tên tài khoản <span class="text-danger">*</span></label>
-                        <input type="text" id="accountname" name="accountname" class="form-control" required>
+                        <input type="text" id="accountname" name="accountname" class="form-control" value="<?php echo htmlspecialchars($accountName); ?>" required>
                     </div>
                     <button type="submit" name="submit" class="btn btn-success">Lưu</button>
                 </div>

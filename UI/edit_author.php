@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch the user category model from the database using UserCategoryID (passed as GET parameter)
 $userCategoryID = $_GET['id']; // Get the ID from the query string
-$query = "SELECT * FROM UserCategories WHERE UserCategoryID = ?";
+$query = "SELECT UserCategoryID, UserCategoryName, UserCategoryDescription FROM usercategories WHERE UserCategoryID = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $userCategoryID);
 $stmt->execute();
@@ -52,9 +52,7 @@ while ($row = $authorizations->fetch_assoc()) {
     $authorizedFunctionIDs[] = $row['FunctionID'];
 }
 $stmt->close();
-
-
-
+$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -139,12 +137,12 @@ $stmt->close();
                     <strong>Tên loại người dùng:</strong> <?php echo htmlspecialchars($userCategory['UserCategoryName']); ?>
                 </li>
                 <li class="list-group-item">
-                    <strong>Mô tả:</strong> <?php echo htmlspecialchars($userCategory['UserCategoryDescription']); ?>
+                    <strong>Mô tả:</strong> <?php echo htmlspecialchars($userCategory['UserCategoryDescription'] ?? 'Không có mô tả.'); ?>
                 </li>
             </ul>
             <hr />
             <form action="update_permissions.php" method="post">
-                <input type="hidden" name="UserCategoryID" value="<?php echo htmlspecialchars($userCategory['UserCategoryID']); ?>">
+                <input type="hidden" name="UserCategoryname" value="<?php echo htmlspecialchars($userCategory['UserCategoryName']); ?>">
                 <div class="row">
                     <?php
                     // Group functions if necessary, you can implement your own grouping logic

@@ -3,17 +3,27 @@ include('includes/connectSQL.php');
 if (isset($_POST['login'])) {
     $adminuser = $_POST['username'];
     $password = $_POST['password'];
-    $query = mysqli_query($conn, "SELECT UserID FROM users WHERE AccountName='$adminuser' AND Password='$password'");
-    $num_rows = mysqli_num_rows($query);
 
-    if ($num_rows > 0) {
-        $ret = mysqli_fetch_array($query);
-        // Set cookie for 1 hour
-        setcookie('UserID', $ret['UserID'], time() + 3600, "/"); // "/" allows cookie to be accessible site-wide
-        header('location:dashboard.php');
-        exit(); // Always exit after header redirection
+    // Password validation
+    if (strlen($password) < 10) {
+        $errorMessage = "Mật khẩu không được ngắn quá 10 ký tự!";
+    } elseif (!preg_match('/[A-Z]/', $password)) {
+        $errorMessage = "Mật khẩu phải có ít nhất một chữ cái viết hoa!";
+    } elseif (!preg_match('/[\W_]/', $password)) {
+        $errorMessage = "Mật khẩu phải có ít nhất một kí tự đặc biệt!";
     } else {
-        $errorMessage = "Tên đăng nhập hoặc mật khẩu không đúng!";
+        $query = mysqli_query($conn, "SELECT UserID FROM users WHERE AccountName='$adminuser' AND Password='$password'");
+        $num_rows = mysqli_num_rows($query);
+
+        if ($num_rows > 0) {
+            $ret = mysqli_fetch_array($query);
+            // Set cookie for 1 hour
+            setcookie('UserID', $ret['UserID'], time() + 3600, "/"); 
+            header('location:dashboard.php');
+            exit();
+        } else {
+            $errorMessage = "Tên đăng nhập hoặc mật khẩu không đúng!";
+        }
     }
 }
 
