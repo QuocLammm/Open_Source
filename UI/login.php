@@ -19,7 +19,7 @@ if (isset($_POST['login'])) {
             $ret = mysqli_fetch_array($query);
             // Set cookie for 1 hour
             setcookie('UserID', $ret['UserID'], time() + 3600, "/"); 
-            header('location:dashboard.php');
+            header('location:index_admin.php');
             exit();
         } else {
             $errorMessage = "Tên đăng nhập hoặc mật khẩu không đúng!";

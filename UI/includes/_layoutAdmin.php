@@ -100,6 +100,9 @@ if ($userID) {
                     </div>
                 </nav>
                 <!--Xử lí người quản lý hoặc thu ngân-->
+                <?php if (in_array($usercategoriesID, ["Quản Lý"])): ?>
+                    <a class="nav-link" href="index_admin.php">Bảng điều khiển</a>
+                <?php endif; ?>
                 <?php if (in_array(strtolower($usercategoriesID), array_map('strtolower', $validRoles))): ?>
                     <a class="nav-link" href="dashboard.php">Bán hàng</a>
                 <?php endif; ?>
