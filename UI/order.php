@@ -1,6 +1,6 @@
 <?php 
-
 require_once("includes/session_user.php");
+//session_start(); // Bắt đầu phiên
 
 // Handle table name from query string
 $tableName = isset($_GET['tableName']) ? htmlspecialchars($_GET['tableName']) : ""; 
@@ -13,11 +13,16 @@ if ($tableName !== "") {
     $result = $stmt->get_result();
     if ($result->num_rows > 0) {
         $row = $result->fetch_assoc();
-        $tableID = $row['TableID']; // Save tableID
+        $tableID = $row['TableID']; // Lưu tableID
     } else {
         echo "No tableID found for tableName: $tableName";
         exit;
     }
+}
+
+// Lưu trữ món đã chọn trong session
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['selectedDrinks'])) {
+    $_SESSION['selectedDrinks'] = $_POST['selectedDrinks'];
 }
 
 // Fetching data function
@@ -50,131 +55,6 @@ $conn->close();
     <link rel="stylesheet" href="path-to-your-css-file.css"> 
     <link rel="stylesheet" href="path/to/font-awesome/css/font-awesome.min.css">
     <script src="path-to-your-js-file.js"></script> 
-    <script>
-        let selectedDrinks = {};
-
-        function addToDrink(drinkID) {
-            if (!selectedDrinks[drinkID]) {
-                selectedDrinks[drinkID] = { quantity: 1 };
-            } else {
-                selectedDrinks[drinkID].quantity += 1;
-            }
-            updateDrinkInfo();
-        }
-
-        function decreaseDrink(drinkID) {
-            if (selectedDrinks[drinkID]) {
-                selectedDrinks[drinkID].quantity -= 1;
-                if (selectedDrinks[drinkID].quantity <= 0) {
-                    delete selectedDrinks[drinkID];
-                }
-            }
-            updateDrinkInfo();
-        }
-
-        function removeDrink(drinkID) {
-            delete selectedDrinks[drinkID];
-            updateDrinkInfo();
-        }
-
-        function updateDrinkInfo() {
-            let tableBody = document.querySelector("#bill-table tbody");
-            tableBody.innerHTML = "";
-
-            let total = 0;
-            for (let id in selectedDrinks) {
-                let quantity = selectedDrinks[id].quantity;
-                let drinkPrice = document.querySelector(`[data-drink-id='${id}']`).getAttribute("data-drink-price");
-                let drinkName = document.querySelector(`[data-drink-id='${id}']`).getAttribute("data-drink-name");
-
-                let price = quantity * drinkPrice;
-                total += price;
-
-                let row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${drinkName}</td>
-                    <td>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="decreaseDrink(${id})">
-                            -<i class="fa fa-minus"></i>
-                        </button>
-                        <span id="drink-quantity-${id}">${quantity}</span>
-                        <button type="button" class="btn btn-success btn-sm" onclick="addToDrink(${id})">
-                            +<i class="fa fa-plus"></i>
-                        </button>
-                    </td>
-                    <td>${price}₫</td>
-                    <td>
-                        <button type="button" class="btn btn-warning btn-sm" onclick="removeDrink(${id})">
-                            Xóa<i class="fa fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            }
-
-            document.getElementById("total-amount").textContent = total + "₫";
-            document.getElementById("payment-section").style.display = total > 0 ? "block" : "none";
-
-            // Update the link for the temporary invoice
-            document.getElementById("btnTemporaryInvoice").href = `hoadontamtinh.php?tableID=${<?= json_encode($tableID) ?>}&totalAmount=${total}`;
-        }
-
-        function processPayment() {
-            const items = Object.keys(selectedDrinks).map(id => ({
-                drinkID: id,
-                quantity: selectedDrinks[id].quantity
-            }));
-
-            const totalAmount = document.getElementById('total-amount').textContent.replace(/\./g, "").replace("₫", "").trim();
-
-            fetch('payment.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    tableID: <?= json_encode($tableID ?? null) ?>,
-                    userID: <?= json_encode($userID ?? null) ?>,
-                    items: items,
-                    totalAmount: totalAmount
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Thanh toán thành công!', '', 'success').then(() => {
-                        window.location.href = 'dashboard.php';
-                    });
-                } else {
-                    Swal.fire('Có lỗi xảy ra!', data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire('Có lỗi xảy ra!', 'Vui lòng thử lại sau.', 'error');
-            });
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            let drinkItems = document.querySelectorAll('.drink-item');
-            let categoryLinks = document.querySelectorAll('.category-link');
-
-            categoryLinks.forEach(link => {
-                link.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    let categoryId = this.getAttribute('data-category-id');
-                    drinkItems.forEach(item => {
-                        item.style.display = (item.getAttribute('data-category-id') === categoryId) ? 'block' : 'none';
-                    });
-                    categoryLinks.forEach(link => link.classList.remove('selected-drink'));
-                    this.classList.add('selected-drink');
-                });
-            });
-
-            // Click the first category link automatically to show drinks if present
-            if (categoryLinks.length > 0) categoryLinks[0].click();
-        });
-    </script>
     <style>
         .form-group label {
             display: block;
@@ -292,6 +172,144 @@ $conn->close();
             border-bottom: none;
         }
     </style>
+    <script>
+        let selectedDrinks = {};
+
+        function addToDrink(drinkID) {
+            if (!selectedDrinks[drinkID]) {
+                selectedDrinks[drinkID] = { quantity: 1 };
+            } else {
+                selectedDrinks[drinkID].quantity += 1;
+            }
+            updateDrinkInfo();
+        }
+
+        function decreaseDrink(drinkID) {
+            if (selectedDrinks[drinkID]) {
+                selectedDrinks[drinkID].quantity -= 1;
+                if (selectedDrinks[drinkID].quantity <= 0) {
+                    delete selectedDrinks[drinkID];
+                }
+            }
+            updateDrinkInfo();
+        }
+
+        function removeDrink(drinkID) {
+            delete selectedDrinks[drinkID];
+            updateDrinkInfo();
+        }
+
+        function updateDrinkInfo() {
+            let tableBody = document.querySelector("#bill-table tbody");
+            tableBody.innerHTML = "";
+
+            let total = 0;
+            for (let id in selectedDrinks) {
+                let quantity = selectedDrinks[id].quantity;
+                let drinkPrice = document.querySelector(`[data-drink-id='${id}']`).getAttribute("data-drink-price");
+                let drinkName = document.querySelector(`[data-drink-id='${id}']`).getAttribute("data-drink-name");
+
+                let price = quantity * drinkPrice;
+                total += price;
+
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${drinkName}</td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="decreaseDrink(${id})">
+                            -<i class="fa fa-minus"></i>
+                        </button>
+                        <span id="drink-quantity-${id}">${quantity}</span>
+                        <button type="button" class="btn btn-success btn-sm" onclick="addToDrink(${id})">
+                            +<i class="fa fa-plus"></i>
+                        </button>
+                    </td>
+                    <td>${price}₫</td>
+                    <td>
+                        <button type="button" class="btn btn-warning btn-sm" onclick="removeDrink(${id})">
+                            Xóa<i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            }
+
+            document.getElementById("total-amount").textContent = total + "₫";
+            document.getElementById("payment-section").style.display = total > 0 ? "block" : "none";
+
+            // Update the link for the temporary invoice
+            document.getElementById("btnTemporaryInvoice").href = `hoadontamtinh.php?tableID=${<?= json_encode($tableID) ?>}&totalAmount=${total}`;
+        }
+
+        function processPayment() {
+            const items = Object.keys(selectedDrinks).map(id => ({
+                drinkID: id,
+                quantity: selectedDrinks[id].quantity
+            }));
+
+            const totalAmount = document.getElementById('total-amount').textContent.replace(/\./g, "").replace("₫", "").trim();
+
+            fetch('payment.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    tableID: <?= json_encode($tableID ?? null) ?>,
+                    userID: <?= json_encode($userID ?? null) ?>,
+                    items: items,
+                    totalAmount: totalAmount
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear selected drinks from session
+                    fetch('clear_session.php', {
+                        method: 'POST',
+                    });
+                    Swal.fire('Thanh toán thành công!', '', 'success').then(() => {
+                        window.location.href = 'dashboard.php';
+                    });
+                } else {
+                    Swal.fire('Có lỗi xảy ra!', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Có lỗi xảy ra!', 'Vui lòng thử lại sau.', 'error');
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            let drinkItems = document.querySelectorAll('.drink-item');
+            let categoryLinks = document.querySelectorAll('.category-link');
+
+            // Load saved drinks from session on page load
+            <?php if (isset($_SESSION['selectedDrinks'])): ?>
+                selectedDrinks = <?= json_encode($_SESSION['selectedDrinks']) ?>;
+                for (let drinkID in selectedDrinks) {
+                    for (let i = 0; i < selectedDrinks[drinkID].quantity; i++) {
+                        addToDrink(drinkID);
+                    }
+                }
+            <?php endif; ?>
+
+            categoryLinks.forEach(link => {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    let categoryId = this.getAttribute('data-category-id');
+                    drinkItems.forEach(item => {
+                        item.style.display = (item.getAttribute('data-category-id') === categoryId) ? 'block' : 'none';
+                    });
+                    categoryLinks.forEach(link => link.classList.remove('selected-drink'));
+                    this.classList.add('selected-drink');
+                });
+            });
+
+            if (categoryLinks.length > 0) categoryLinks[0].click();
+        });
+    </script>
 </head>
 
 <body>
@@ -341,9 +359,6 @@ $conn->close();
                             <hr />
                             <p class="text-right" style="font-size: 24px;">
                                 Tổng tiền: <span id="total-amount">0₫</span>
-                                <a href="hoadontamtinh.php?tableID=<?= htmlspecialchars($tableID) ?>" id="btnTemporaryInvoice" class="btn btn-info btn-sm" style="margin-left: 20px;">
-                                    Hóa đơn tạm tính
-                                </a>
                             </p>
                             <button type="button" class="btn btn-success btn-lg w-100" onclick="processPayment()">
                                 Thanh toán
@@ -354,6 +369,5 @@ $conn->close();
             </div>
         </form>
     </div>
-    
 </body>
 </html>

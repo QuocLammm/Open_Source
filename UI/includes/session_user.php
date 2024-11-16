@@ -30,9 +30,9 @@ if (isset($_COOKIE['UserID'])) {
 
         // Determine which interface to display based on role
         if (strcasecmp($userRole, "Thu ngân") === 0) {
-            $message = "Xin chào thu ngân!";
+            $message = "Xin chào!";
         } elseif (strcasecmp($userRole, "Quản lý") === 0) {
-            $message = "Xin chào quản lý";
+            $message = "Xin chào!";
         } else {
             $message = "Chức vụ không xác định.";
         }

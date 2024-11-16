@@ -25,7 +25,8 @@ if ($userID) {
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link href="https://cdn.materialdesignicons.com/6.5.95/css/materialdesignicons.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="../UI/vendors/feather/feather.css">
     <link rel="stylesheet" href="../UI/vendors/ti-icons/css/themify-icons.css">
     <link rel="stylesheet" href="../UI/vendors/css/vendor.bundle.base.css">
@@ -59,7 +60,6 @@ if ($userID) {
             padding: 20px;
         }
         .content { padding: 20px; }
-        
     </style>
 </head>
 <body>
@@ -126,6 +126,7 @@ if ($userID) {
                 <ul class="dropdown-menu" aria-labelledby="userDropdown">
                     <li><a class="dropdown-item" href="index_users.php">Người dùng</a></li>
                     <li><a class="dropdown-item" href="index_usercategories.php">Loại người dùng</a></li>
+                    <li><a class="dropdown-item" href="index_customer.php">Khách hàng</a></li>
                 </ul>
                 <a class="nav-link" href="index_authorizations.php">Phân quyền</a>
                 <?php endif; ?>
@@ -152,6 +153,7 @@ if ($userID) {
 <script src="../UI/js/select2.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
 
 </body>
 </html>

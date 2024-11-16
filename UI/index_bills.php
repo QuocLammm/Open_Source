@@ -115,8 +115,11 @@ $pager = new Pager(range(1, $totalResults), $itemsPerPage); // Use a range to re
     <meta charset="UTF-8">
     <title>Danh sách hóa đơn</title>
     <link rel="stylesheet" href="path/to/bootstrap.css">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         .container {
             max-width: 900px;
@@ -316,4 +319,4 @@ $pager = new Pager(range(1, $totalResults), $itemsPerPage); // Use a range to re
 </body>
 </html>
 
-<?php $conn->close(); ?>s
+<?php $conn->close(); ?>
