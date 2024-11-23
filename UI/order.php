@@ -1,8 +1,5 @@
 <?php 
 require_once("includes/session_user.php");
-//session_start(); // Bắt đầu phiên
-
-// Handle table name from query string
 $tableName = isset($_GET['tableName']) ? htmlspecialchars($_GET['tableName']) : ""; 
 $tableID = null;
 
@@ -198,101 +195,75 @@ $conn->close();
             if (!selectedDrinks[drinkID]) {
                 selectedDrinks[drinkID] = { quantity: 1 };
             } else {
-                selectedDrinks[drinkID].quantity += 1;
+                selectedDrinks[drinkID].quantity++;
             }
             updateDrinkInfo();
         }
 
         function decreaseDrink(drinkID) {
             if (selectedDrinks[drinkID]) {
-                selectedDrinks[drinkID].quantity -= 1;
+                selectedDrinks[drinkID].quantity--;
+
+                // Nếu số lượng <= 0 thì xóa món khỏi danh sách
                 if (selectedDrinks[drinkID].quantity <= 0) {
                     delete selectedDrinks[drinkID];
                 }
+                updateDrinkInfo();
             }
-            updateDrinkInfo();
-        }
-
-        function removeDrink(drinkID) {
-            delete selectedDrinks[drinkID];
-            updateDrinkInfo();
         }
 
         function updateDrinkInfo() {
             let tableBody = document.querySelector("#bill-table tbody");
-            tableBody.innerHTML = "";
-
+            tableBody.innerHTML = ""; // Xóa nội dung cũ
             let total = 0;
+
             for (let id in selectedDrinks) {
                 let quantity = selectedDrinks[id].quantity;
-                let drinkPrice = document.querySelector(`[data-drink-id='${id}']`).getAttribute("data-drink-price");
-                let drinkName = document.querySelector(`[data-drink-id='${id}']`).getAttribute("data-drink-name");
-
+                let drinkElement = document.querySelector(`[data-drink-id="${id}"]`);
+                let drinkName = drinkElement.getAttribute("data-drink-name");
+                let drinkPrice = parseInt(drinkElement.getAttribute("data-drink-price"));
                 let price = quantity * drinkPrice;
                 total += price;
 
-                let row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${drinkName}</td>
-                    <td>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="decreaseDrink(${id})">
-                            -<i class="fa fa-minus"></i>
-                        </button>
-                        <span id="drink-quantity-${id}">${quantity}</span>
-                        <button type="button" class="btn btn-success btn-sm" onclick="addToDrink(${id})">
-                            +<i class="fa fa-plus"></i>
-                        </button>
-                    </td>
-                    <td>${price}₫</td>
-                    <td>
-                        <button type="button" class="btn btn-warning btn-sm" onclick="removeDrink(${id})">
-                            Xóa<i class="fa fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
+                let row = `
+                    <tr>
+                        <td>${drinkName}</td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="decreaseDrink(${id})">-</button>
+                            ${quantity}
+                            <button class="btn btn-danger btn-sm" onclick="addToDrink(${id})">+</button>
+                        </td>
+                        <td>${price}₫</td>
+                    </tr>`;
+                tableBody.innerHTML += row;
             }
 
+            // Cập nhật tổng tiền
             document.getElementById("total-amount").textContent = total + "₫";
-            document.getElementById("payment-section").style.display = total > 0 ? "block" : "none";
 
-            // Update the link for the temporary invoice
-            document.getElementById("btnTemporaryInvoice").href = `hoadontamtinh.php?tableID=${<?= json_encode($tableID) ?>}&totalAmount=${total}`;
+            // Hiện/ẩn phần thanh toán
+            document.getElementById("payment-section").style.display = total > 0 ? "block" : "none";
         }
 
         function processPayment() {
-            const customerName = document.getElementById('customerName').value.trim();
-            if (customerName === "") {
-                alert("Vui lòng nhập tên khách hàng!");
-                return;
-            }
-
+            const totalAmount = document.getElementById("total-amount").textContent.replace("₫", "").trim();
             const items = Object.keys(selectedDrinks).map(id => ({
                 drinkID: id,
-                quantity: selectedDrinks[id].quantity
+                quantity: selectedDrinks[id].quantity,
             }));
-
-            const totalAmount = document.getElementById('total-amount').textContent.replace(/\./g, "").replace("₫", "").trim();
 
             fetch('payment.php', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    tableID: <?= json_encode($tableID ?? null) ?>,
-                    userID: <?= json_encode($userID ?? null) ?>,
-                    //customerName: customerName, // Gửi tên khách hàng
-                    items: items,
-                    totalAmount: totalAmount
-                })
+                    tableID: <?= json_encode($tableID) ?>,
+                    items,
+                    totalAmount,
+                }),
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    fetch('clear_session.php', {
-                        method: 'POST',
-                    });
                     Swal.fire('Thanh toán thành công!', '', 'success').then(() => {
                         window.location.href = 'dashboard.php';
                     });
@@ -304,50 +275,37 @@ $conn->close();
                 console.error('Error:', error);
                 Swal.fire('Có lỗi xảy ra!', 'Vui lòng thử lại sau.', 'error');
             });
-        };
-
-
-        //-----------------Kiểm tra tên khách hàng----------------------//
-        function checkCustomer() {
-    const customerName = document.getElementById("customerName").value.trim();
-
-    if (customerName === "") {
-        alert("Vui lòng nhập tên khách hàng!");
-        return;
-    }
-
-    fetch("check_customer.php", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name: customerName }),
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        return response.json();
-    })
-    .then(data => {
-        const statusElement = document.getElementById("customer-status");
 
-        if (data.exists) {
-            statusElement.textContent = "Khách hàng đã tồn tại!";
-            statusElement.style.color = "green";
-        } else if (data.message) {
-            statusElement.textContent = data.message;
-            statusElement.style.color = "orange";
-        } else {
-            statusElement.textContent = "Khách hàng chưa tồn tại!";
-            statusElement.style.color = "red";
+        function filterCategory(event, categoryID) {
+            event.preventDefault(); // Ngăn link reload trang
+
+            // Ẩn tất cả các món
+            document.querySelectorAll('.drink-item').forEach(item => {
+                item.style.display = 'none';
+            });
+
+            // Hiển thị các món thuộc loại được chọn
+            document.querySelectorAll(`.drink-item[data-category-id="${categoryID}"]`).forEach(item => {
+                item.style.display = 'block';
+            });
+
+            // Làm nổi bật loại được chọn
+            document.querySelectorAll('.category-link').forEach(link => {
+                link.style.fontWeight = 'normal';
+                link.style.color = 'black';
+            });
+            event.target.style.fontWeight = 'bold';
+            event.target.style.color = 'dodgerblue';
         }
-    })
-    .catch(error => {
-        console.error("Error during fetch:", error);
-        alert("Có lỗi trong quá trình kiểm tra! Chi tiết: " + error.message);
-    });
-}
+
+        // Hiển thị mặc định loại đầu tiên khi load trang
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstCategory = document.querySelector('.category-link');
+            if (firstCategory) {
+                firstCategory.click();
+            }
+        });
 
     </script>
 </head>
@@ -362,11 +320,6 @@ $conn->close();
                         <!-- Thêm ô nhập tên khách hàng -->
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h2><?= htmlspecialchars($tableName) ?></h2>
-                            <div>
-                                <input type="text" id="customerName" placeholder="Nhập tên khách hàng">
-                                <button type="button" class="btn btn-info" onclick="checkCustomer()">Kiểm tra</button>
-                                <span id="customer-status"></span>
-                            </div>
                             <a href="dashboard.php" class="btn btn-primary" style="height: fit-content">
                                 <i class="ti-arrow-left"></i>
                             </a>
@@ -375,14 +328,18 @@ $conn->close();
                         <div class="row">
                             <div class="col-2">
                                 <?php foreach ($listDrinkCategories as $category): ?>
-                                    <a href="#" data-category-id="<?= $category['DrinkCategoryID'] ?>" class="py-3 d-block text-center category-link">
+                                    <a href="#" data-category-id="<?= $category['DrinkCategoryID'] ?>" 
+                                    class="py-3 d-block text-center category-link" 
+                                    onclick="filterCategory(event, <?= $category['DrinkCategoryID'] ?>)">
                                         <?= htmlspecialchars($category['DrinkCategoryName']) ?>
                                     </a>
                                 <?php endforeach; ?>
                             </div>
-                            <div class="col-10 row" style="border-radius: 20px">
+                            <div class="col-10 row drink-list" style="border-radius: 20px">
                                 <?php foreach ($listDrinks as $item): ?>
-                                    <div class="col-3 drink-item" data-category-id="<?= $item['DrinkCategoryID'] ?>">
+                                    <div class="col-3 drink-item" 
+                                        data-category-id="<?= $item['DrinkCategoryID'] ?>" 
+                                        style="display: none;"> <!-- Ẩn mặc định -->
                                         <div class="btn square-card card drink-select" 
                                             data-drink-id="<?= $item['DrinkID'] ?>" 
                                             data-drink-name="<?= htmlspecialchars($item['DrinkName']) ?>" 
@@ -394,8 +351,9 @@ $conn->close();
                                     </div>
                                 <?php endforeach; ?>
                             </div>
+                            </div>
                         </div>
-                    </div>
+                    
                     <div class="col-5">
                         <div id="selected-drink-info" class="h-75" style="overflow-y: auto;">
                             <table class="table table-striped table-hover" id="bill-table">
