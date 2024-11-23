@@ -26,6 +26,7 @@ if ($userID) {
             background-color: #f8f9fc;
             margin: 0;
             padding: 0;
+           
         }
 
         .container {
@@ -33,6 +34,7 @@ if ($userID) {
             justify-content: center;
             padding: 40px;
             width: 100%;
+            
         }
 
         .profile-card {
@@ -54,6 +56,7 @@ if ($userID) {
             align-items: center;
             border-right: 1px solid #ddd;
             padding: 30px;
+            margin-top:20px;
         }
 
         .profile-image img {
@@ -74,6 +77,8 @@ if ($userID) {
         .profile-info {
             width: 65%;
             padding: 30px;
+            margin-top:20px;
+
         }
 
         .profile-info h2 {

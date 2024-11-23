@@ -140,6 +140,25 @@ if ($userID) {
             border-radius: 15px; 
                  /* Màu nền khi hover */
         }
+
+        .welcome-message {
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            margin-top: 10px;
+            display: inline-block;
+            animation: fadeIn 1s ease-in-out forwards; /* Thêm hiệu ứng fadeIn khi bắt đầu */
+        }
+
+        /* Tạo hiệu ứng mờ dần */
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body>
@@ -208,7 +227,7 @@ if ($userID) {
                 <img src="images/lt.jpg" alt="logo" class="logo-image">
                 <span class="brand-name" style="color: #FFEDDF;">L&T Coffee</span>
             </div>
-            <h4>Chào mừng đến với hệ thống!</h4>
+            <h4 class="welcome-message" id="welcomeMessage">Chào mừng đến với hệ thống!</h4>
             <span>Xin chào, <?= htmlspecialchars($userCategory['FullName']) ?></span>
             <!-- Link to profile page when clicking on the avatar -->
             <a href="profile.php">

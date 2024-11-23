@@ -230,14 +230,14 @@ $recentOrders = getRecentOrders();
 
         .cardHeader {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+            justify-content: space-between;  /* Tách các phần tử ra hai đầu */
+            align-items: center; /* Căn giữa theo chiều dọc */
+            width: 100%;  /* Đảm bảo chiếm hết không gian của phần tử cha */
         }
 
         .cardHeader h2 {
-            font-size: 1.8rem;
-            margin: 0;
+            margin: 0; /* Loại bỏ margin mặc định của <h2> */
+            font-weight: 600;
         }
 
         .cardHeader .btn {
@@ -249,6 +249,8 @@ $recentOrders = getRecentOrders();
             font-size: 1rem;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            text-align: center; /* Căn giữa text trong button */
+            text-decoration: none; /* Loại bỏ gạch dưới mặc định của thẻ <a> */
         }
 
         .cardHeader .btn:hover {
@@ -316,6 +318,7 @@ $recentOrders = getRecentOrders();
         .status {
             padding: 3px 10px;
             border-radius: 5px;
+            font-weight: bold;
         }
         /* Responsive */
         @media (max-width: 768px) {
@@ -338,9 +341,9 @@ $recentOrders = getRecentOrders();
         }
         .row-hi{
             display: flex;
-    flex-wrap: wrap;
-    margin-right: -150px;
-    margin-left: 20px;
+            flex-wrap: wrap;
+            margin-right: -150px;
+            margin-left: 20px;
         }
     </style>
 </head>
@@ -409,15 +412,16 @@ $recentOrders = getRecentOrders();
         <div class="details">
             <div class="recentOrders">
                 <div class="cardHeader">
-                    <h2>Recent Orders</h2>
-                    <a href="#" class="btn">View All</a>
+                    <h2>Hóa đơn</h2>
+                    
+                    <a href="index_bills.php" class="btn">View All</a>
                 </div>
                 <table>
                     <thead>
                         <tr>
-                            <td>Khách hàng</td>
-                            <td>Tổng tiền</td>
-                            <td>Trạng thái</td>
+                            <td style="background-color: #3DD0BC">Khách hàng</td>
+                            <td style="background-color: #3DD0BC">Tổng tiền</td>
+                            <td style="background-color: #3DD0BC">Trạng thái</td>
                         </tr>
                     </thead>
                     <tbody>
