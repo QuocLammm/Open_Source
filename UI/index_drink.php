@@ -231,7 +231,7 @@ $conn->close();
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.btnDelete').forEach(function (btn) {
+    document.querySelectorAll('.btnDelete').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
             var itemId = this.getAttribute('data-id');
@@ -243,7 +243,7 @@ $conn->close();
                 cancelButtonText: 'Hủy',
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch('delete_drink.php', { // Ensure this points to your delete logic
+                    fetch('includes/delete_drink.php', { // Đảm bảo URL đúng với tệp xóa của bạn
                         method: 'POST',
                         body: JSON.stringify({ id: itemId }),
                         headers: { 'Content-Type': 'application/json' }
@@ -252,11 +252,11 @@ $conn->close();
                     .then(data => {
                         if (data.success) {
                             Swal.fire({
-                                title: 'Đã xóa thành công!',
+                                title: 'Xóa thành công!',
                                 icon: 'success',
                                 confirmButtonText: 'OK'
                             }).then(() => {
-                                location.reload(); // Reload the page to update the list
+                                location.reload(); // Tải lại trang để cập nhật danh sách
                             });
                         } else {
                             Swal.fire({
@@ -280,6 +280,8 @@ $conn->close();
         });
     });
 });
+
+
 
 function resetPage() {
     // Clear all search input fields
