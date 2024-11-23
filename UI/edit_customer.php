@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $offer = isset($_POST["offer"]) ? $_POST["offer"] : 'Khách hàng thường';
 
     // Cập nhật dữ liệu khách hàng
-    $sql = "UPDATE customer SET CustomerName = ?, Gender = ?, Address = ?, PhoneNumber = ?, Email = ?, offer = ? WHERE CustomerID = ?";
+    $sql = "UPDATE customer SET CustomerName = ?, Gender = ?, Address = ?, PhoneNumber = ?, Email = ?, Offer = ? WHERE CustomerID = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ssssssi", $customerName, $gender, $address, $phoneNumber, $email, $offer, $customerID);
 
@@ -114,12 +114,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             <div class="form-group">
                 <label for="offer">Loại thành viên:</label><br>
-                <input type="radio" name="offer" value="Thành viên thường" id="offer_normal" <?= ($customer['offer'] == 'Thành viên thường') ? 'checked' : '' ?>>
+                <input type="radio" name="offer" value="Thành viên thường" id="offer_normal" <?= ($customer['Offer'] == 'Thành viên thường') ? 'checked' : '' ?>>
                 <label for="offer_normal">Thành viên thường</label><br>
-                <input type="radio" name="offer" value="Thành viên VIP" id="offer_vip" <?= ($customer['offer'] == 'Thành viên VIP') ? 'checked' : '' ?>>
+                <input type="radio" name="offer" value="Thành viên VIP" id="offer_vip" <?= ($customer['Offer'] == 'Thành viên VIP') ? 'checked' : '' ?>>
                 <label for="offer_vip">Thành viên VIP</label>
             </div>
-            <button type="submit" class="btn btn-primary">Cập nhật Khách Hàng</button>
+            <button type="submit" class="btn btn-success">Cập nhật</button>
+            <a href="index_customer.php" class="btn btn-secondary">Quay Lại</a>
         </form>
     </div>
 

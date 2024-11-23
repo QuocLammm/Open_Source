@@ -17,6 +17,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($stmt->execute()) {
         echo "<div class='alert alert-success'>Khách hàng đã được thêm thành công!</div>";
+        // Thêm script để redirect sau khi hiển thị thông báo thành công
+        echo "<script>
+                alert('Khách hàng đã được thêm thành công!');
+                window.location.href = 'index_customer.php';
+              </script>";
     } else {
         echo "<div class='alert alert-danger'>Lỗi: " . $stmt->error . "</div>";
     }
@@ -57,7 +62,10 @@ $conn->close();
     <?php include("includes/_layoutAdmin.php");?>
     <div class="container">
         <form action="" method="POST" class="form-section">
-            <h1 class="text-center">Thêm Khách Hàng Mới</h1>
+            <h2 class="text-center">Thêm Khách Hàng Mới</h2>
+            <a href="index_customer.php" class="btn btn-back mb-3">
+                <i class="ti-arrow-left"></i> Quay lại
+            </a>
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
@@ -67,8 +75,8 @@ $conn->close();
                     <div class="mb-3">
                         <label for="Gender" class="form-label">Giới tính</label>
                         <select class="form-select" id="Gender" name="Gender" required>
-                            <option value="Male">Nam</option>
-                            <option value="Female">Nữ</option>
+                            <option value="Male" <?php echo isset($_POST['Gender']) && $_POST['Gender'] == 'Male' ? 'selected' : ''; ?>>Nam</option>
+                            <option value="Female" <?php echo isset($_POST['Gender']) && $_POST['Gender'] == 'Female' ? 'selected' : ''; ?>>Nữ</option>
                         </select>
                     </div>
                     <div class="mb-3">
