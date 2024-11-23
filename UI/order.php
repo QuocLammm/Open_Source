@@ -249,47 +249,44 @@ $conn->close();
         }
 
         function processPayment() {
-    const customerID = document.getElementById("customerName").value.trim();
-    if (!customerID) {
-        Swal.fire('Vui lòng chọn khách hàng', '', 'warning');
-        return;
-    }
+            const customerID = document.getElementById("customerName").value.trim();
+            if (!customerID) {
+                Swal.fire('Vui lòng chọn khách hàng', '', 'warning');
+                return;
+            }
 
-    const totalAmount = document.getElementById("total-amount").textContent.replace("₫", "").trim();
-    const items = Object.keys(selectedDrinks).map(id => ({
-        drinkID: id,
-        quantity: selectedDrinks[id].quantity,
-    }));
+            const totalAmount = document.getElementById("total-amount").textContent.replace("₫", "").trim();
+            const items = Object.keys(selectedDrinks).map(id => ({
+                drinkID: id,
+                quantity: selectedDrinks[id].quantity,
+            }));
 
-    // Send payment request with customerID included
-    fetch('payment.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            tableID: <?= json_encode($tableID) ?>,
-            items,
-            totalAmount,
-            customerID  // Send customerID
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            Swal.fire('Thanh toán thành công!', '', 'success').then(() => {
-                window.location.href = 'dashboard.php';
+            // Send payment request with customerID included
+            fetch('payment.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tableID: <?= json_encode($tableID) ?>,
+                    items,
+                    totalAmount,
+                    customerID  // Send customerID
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Thanh toán thành công!', '', 'success').then(() => {
+                        window.location.href = 'dashboard.php';
+                    });
+                } else {
+                    Swal.fire('Có lỗi xảy ra!', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Có lỗi xảy ra!', 'Vui lòng thử lại sau.', 'error');
             });
-        } else {
-            Swal.fire('Có lỗi xảy ra!', data.message, 'error');
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire('Có lỗi xảy ra!', 'Vui lòng thử lại sau.', 'error');
-    });
-}
-
-
-
 
         function filterCategory(event, categoryID) {
             event.preventDefault(); // Ngăn link reload trang
@@ -364,7 +361,6 @@ $conn->close();
                             <h2><?= htmlspecialchars($tableName) ?></h2>
                                 <!--Tên khách hàng -->
                                 <div class="form-group">
-                                    <label for="customerName">Tên khách hàng</label>
                                     <select id="customerName" class="form-control" required>
                                         <option value="">Chọn khách hàng</option>
                                         <?php foreach ($customers as $customer): ?>
