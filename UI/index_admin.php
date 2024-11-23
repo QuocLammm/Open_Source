@@ -431,8 +431,8 @@ $recentOrders = getRecentOrders();
                                 <td><?= number_format($order['TotalAmount'], 2) ?> VNĐ</td>
                                 <td>
                                     <span class="status 
-                                        <?= strtolower($order['Status']) === 'thành công' ? 'success' : (strtolower($order['Status']) === 'thất bại' ? 'failed' : '') ?>">
-                                        <?= htmlspecialchars($order['Status']) ?>
+                                        <?= strtolower($order['Status']) === '1' ? 'success' : (strtolower($order['Status']) === '0' ? 'failed' : '') ?>">
+                                        <?= strtolower($order['Status']) === '1' ? 'Thành Công' : (strtolower($order['Status']) === '0' ? 'Thất bại' : '') ?>
                                     </span>
                                 </td>
                             </tr>

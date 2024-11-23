@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 11, 2024 at 06:09 AM
+-- Generation Time: Nov 23, 2024 at 01:35 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.1.25
 
@@ -62,17 +62,18 @@ CREATE TABLE `billinfos` (
 --
 
 INSERT INTO `billinfos` (`BillID`, `DrinkID`, `DrinkCount`, `DrinkPrice`) VALUES
-('HD1108408e2a42', 4, 1, 35000.00),
-('HD1108408e2a42', 6, 1, 25000.00),
-('HD1108408e2a42', 11, 1, 30000.00),
-('HD110989a9d995', 1, 1, 24000.00),
-('HD110989a9d995', 2, 1, 50000.00),
-('HD110989a9d995', 3, 1, 50000.00),
-('HD1109eb42f84b', 1, 2, 48000.00),
-('HD1109eb42f84b', 2, 1, 50000.00),
-('HD1109eb42f84b', 3, 1, 50000.00),
-('HD1109eb42f84b', 4, 1, 35000.00),
-('HD1109eb42f84b', 6, 1, 25000.00);
+('HD2411232ed34', 4, 1, 0.00),
+('HD241123517b8', 1, 1, 0.00),
+('HD241123517b8', 3, 1, 0.00),
+('HD241123517b8', 4, 1, 0.00),
+('HD24112369144', 1, 1, 0.00),
+('HD24112369144', 2, 1, 0.00),
+('HD24112369144', 3, 1, 0.00),
+('HD2411239d692', 3, 1, 0.00),
+('HD2411239d692', 4, 1, 0.00),
+('HD241123a8829', 1, 2, 0.00),
+('HD241123a8829', 3, 11, 0.00),
+('HD241123f386e', 4, 1, 0.00);
 
 -- --------------------------------------------------------
 
@@ -85,17 +86,27 @@ CREATE TABLE `bills` (
   `CreateDate` datetime DEFAULT NULL,
   `TotalAmount` decimal(18,2) DEFAULT NULL,
   `TableID` int(11) DEFAULT NULL,
-  `UserID` int(11) DEFAULT NULL
+  `UserID` int(11) DEFAULT NULL,
+  `CustomerID` int(11) NOT NULL,
+  `Status` int(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `bills`
 --
 
-INSERT INTO `bills` (`BillID`, `CreateDate`, `TotalAmount`, `TableID`, `UserID`) VALUES
-('HD1108408e2a42', '2024-11-08 19:28:56', 90000.00, 52, 1),
-('HD110989a9d995', '2024-11-09 08:19:22', 124000.00, 49, 1),
-('HD1109eb42f84b', '2024-11-09 07:37:08', 208000.00, 45, 6);
+INSERT INTO `bills` (`BillID`, `CreateDate`, `TotalAmount`, `TableID`, `UserID`, `CustomerID`, `Status`) VALUES
+('HD1108408e2a42', '2024-11-08 19:28:56', 90000.00, 52, 1, 2, 1),
+('HD1109eb42f84b', '2024-11-09 07:37:08', 208000.00, 45, 6, 2, 0),
+('HD24112302d25', '2024-11-23 18:49:20', 85000.00, 45, 1, 0, 0),
+('HD241123049c9', '2024-11-23 18:01:20', 358000.00, 46, 1, 0, 0),
+('HD24112304f0e', '2024-11-23 19:07:54', 100000.00, 50, 1, 3, 1),
+('HD2411232ed34', '2024-11-23 18:40:04', 85000.00, 45, 1, 0, 0),
+('HD241123517b8', '2024-11-23 19:14:38', 109000.00, 47, 1, 2, 1),
+('HD24112369144', '2024-11-23 17:09:34', 124000.00, 49, 1, 0, 0),
+('HD2411239d692', '2024-11-23 19:12:59', 85000.00, 51, 1, 3, 0),
+('HD241123a8829', '2024-11-23 18:01:57', 598000.00, 51, 1, 0, 0),
+('HD241123f386e', '2024-11-23 19:05:30', 35000.00, 46, 1, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -336,18 +347,20 @@ CREATE TABLE `users` (
   `Username` varchar(255) DEFAULT NULL,
   `AccountName` varchar(255) DEFAULT NULL,
   `Password` varchar(255) DEFAULT NULL,
-  `UserCategoryID` int(11) DEFAULT NULL
+  `UserCategoryID` int(11) DEFAULT NULL,
+  `Email` varchar(100) NOT NULL,
+  `Address` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`UserID`, `FullName`, `PhoneNumber`, `UserImage`, `Gender`, `Username`, `AccountName`, `Password`, `UserCategoryID`) VALUES
-(1, 'Cao Nguyễn Quốc Lâm', '815597300', '1.jpg', 'Nam', 'quoclam', 'quoclam', 'Quoclam@1607', 1),
-(2, 'Nguyễn Ngọc Quỳnh Như', '092932832', 'quynhnhu.jpg', 'Nữ', 'quynhnhu', 'quynhnhu', 'Quynhnhu@1607', 3),
-(6, 'Lê Minh Thành', '0788432643', 'lam.png', 'Nam', 'minhthanh', 'minhthanh', '1234', 1),
-(7, 'Lữ Vũ Phúc', '0788432643', '2.jpg', 'Male', 'luvuphuc', 'vuphuc', 'Luvuphuc@1234', 1);
+INSERT INTO `users` (`UserID`, `FullName`, `PhoneNumber`, `UserImage`, `Gender`, `Username`, `AccountName`, `Password`, `UserCategoryID`, `Email`, `Address`) VALUES
+(1, 'Cao Nguyễn Quốc Lâm', '815597300', '1.jpg', 'Nam', 'quoclam', 'quoclam', 'Quoclam@1607', 1, 'quoclam010305@gmail.com', 'Chung cư Bình Phú II - Vĩnh Hòa - TP. Nha Trang - Khánh Hòa'),
+(2, 'Nguyễn Ngọc Quỳnh Như', '092932832', 'quynhnhu.jpg', 'Nữ', 'quynhnhu', 'quynhnhu', 'Quynhnhu@1607', 3, '', ''),
+(6, 'Lê Minh Thành', '0788432643', 'lam.png', 'Nam', 'minhthanh', 'minhthanh', '1234', 1, '', ''),
+(7, 'Lữ Vũ Phúc', '0788432643', '2.jpg', 'Male', 'luvuphuc', 'vuphuc', 'Luvuphuc@1234', 1, '', '');
 
 --
 -- Indexes for dumped tables

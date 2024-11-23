@@ -2,7 +2,7 @@
 require_once("includes/session_user.php");
 $userID = isset($_COOKIE['UserID']) ? $_COOKIE['UserID'] : null;
 
-// Fetch the tables data from the database
+// Lấy danh sách bàn từ cơ sở dữ liệu
 $query = "SELECT * FROM tables";
 $tables = mysqli_query($conn, $query);
 ?>
@@ -40,10 +40,10 @@ $tables = mysqli_query($conn, $query);
                                 </button>
                             </div>
                         </form>
-
                         <!-- Table display -->
                         <div class="row">
                             <?php while ($item = mysqli_fetch_assoc($tables)): ?>
+
                                 <?php
                                 $slot = ($item['Status'] == true) ? "Có người" : "Trống";
                                 $color = ($item['Status'] == true) ? "bg-success" : "bg-info";

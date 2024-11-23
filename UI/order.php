@@ -38,6 +38,9 @@ function fetchData($conn, $sql) {
 $listDrinkCategories = fetchData($conn, "SELECT * FROM drinkcategories");
 $listDrinks = fetchData($conn, "SELECT * FROM drinks");
 $billInfos = fetchData($conn, "SELECT * FROM billinfos");
+// Fetch customer names from the database
+$customers = fetchData($conn, "SELECT CustomerID, CustomerName FROM customer");
+
 
 // Close database connection
 $conn->close();
@@ -246,36 +249,47 @@ $conn->close();
         }
 
         function processPayment() {
-            const totalAmount = document.getElementById("total-amount").textContent.replace("₫", "").trim();
-            const items = Object.keys(selectedDrinks).map(id => ({
-                drinkID: id,
-                quantity: selectedDrinks[id].quantity,
-            }));
+    const customerID = document.getElementById("customerName").value.trim();
+    if (!customerID) {
+        Swal.fire('Vui lòng chọn khách hàng', '', 'warning');
+        return;
+    }
 
-            fetch('payment.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    tableID: <?= json_encode($tableID) ?>,
-                    items,
-                    totalAmount,
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Thanh toán thành công!', '', 'success').then(() => {
-                        window.location.href = 'dashboard.php';
-                    });
-                } else {
-                    Swal.fire('Có lỗi xảy ra!', data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire('Có lỗi xảy ra!', 'Vui lòng thử lại sau.', 'error');
+    const totalAmount = document.getElementById("total-amount").textContent.replace("₫", "").trim();
+    const items = Object.keys(selectedDrinks).map(id => ({
+        drinkID: id,
+        quantity: selectedDrinks[id].quantity,
+    }));
+
+    // Send payment request with customerID included
+    fetch('payment.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            tableID: <?= json_encode($tableID) ?>,
+            items,
+            totalAmount,
+            customerID  // Send customerID
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire('Thanh toán thành công!', '', 'success').then(() => {
+                window.location.href = 'dashboard.php';
             });
+        } else {
+            Swal.fire('Có lỗi xảy ra!', data.message, 'error');
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Có lỗi xảy ra!', 'Vui lòng thử lại sau.', 'error');
+    });
+}
+
+
+
 
         function filterCategory(event, categoryID) {
             event.preventDefault(); // Ngăn link reload trang
@@ -306,7 +320,35 @@ $conn->close();
                 firstCategory.click();
             }
         });
+        //
+        function resetTableStatus() {
+            // Gửi yêu cầu POST để cập nhật trạng thái bàn
+            fetch('reset_table_status.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tableID: <?= json_encode($tableID) ?> })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Có lỗi xảy ra! Mã trạng thái: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Trạng thái đã được cập nhật thành Trống!', '', 'success').then(() => {
+                        window.location.href = 'dashboard.php';
+                    });
+                } else {
+                    Swal.fire('Có lỗi xảy ra!', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Có lỗi xảy ra!', 'Vui lòng thử lại sau.', 'error');
+            });
 
+        }
     </script>
 </head>
 
@@ -320,10 +362,29 @@ $conn->close();
                         <!-- Thêm ô nhập tên khách hàng -->
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h2><?= htmlspecialchars($tableName) ?></h2>
-                            <a href="dashboard.php" class="btn btn-primary" style="height: fit-content">
-                                <i class="ti-arrow-left"></i>
-                            </a>
+                                <!--Tên khách hàng -->
+                                <div class="form-group">
+                                    <label for="customerName">Tên khách hàng</label>
+                                    <select id="customerName" class="form-control" required>
+                                        <option value="">Chọn khách hàng</option>
+                                        <?php foreach ($customers as $customer): ?>
+                                            <option value="<?= $customer['CustomerID'] ?>"><?= htmlspecialchars($customer['CustomerName']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
+
+                            <div>
+                                <!-- Nút Quay lại -->
+                                <a href="dashboard.php" class="btn btn-primary" style="height: fit-content">
+                                    <i class="ti-arrow-left"></i>
+                                </a>
+
+                                <!-- Nút Đổi lại trạng thái thành Trống -->
+                                <button type="button" class="btn btn-danger ml-2" onclick="resetTableStatus()">X</button>
+                            </div>
                         </div>
+
 
                         <div class="row">
                             <div class="col-2">
