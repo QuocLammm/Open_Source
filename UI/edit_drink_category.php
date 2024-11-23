@@ -1,6 +1,9 @@
 <?php
 include("includes/session_user.php"); // Kết nối cơ sở dữ liệu
 
+// Khởi tạo biến thành công
+$successMessage = false;
+
 // Lấy ID đồ uống từ URL
 if (isset($_GET['id'])) {
     $drinkcateId = intval($_GET['id']);
@@ -39,9 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $updateStmt->bind_param("ssi", $drinkName, $drinkDescription, $drinkcateId);
 
     if ($updateStmt->execute()) {
-        echo '<script>alert("Cập nhật loại đồ uống thành công.");</script>';
-        echo "<script>window.location.href = 'index_drinkcategories.php';</script>";
-        exit;
+        // Đặt biến successMessage = true khi cập nhật thành công
+        $successMessage = true;
     } else {
         echo '<script>alert("Có lỗi xảy ra: ' . $conn->error . '. Vui lòng thử lại.");</script>';
     }
@@ -59,8 +61,9 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chỉnh Sửa Loại Đồ Uống</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        .form-group label {
+         .form-group label {
             display: block;
             margin-bottom: 5px;
         }
@@ -130,5 +133,21 @@ $conn->close();
             </div>
         </form>
     </div>
+
+    <script>
+        // Đảm bảo rằng SweetAlert chỉ hiển thị khi cập nhật thành công
+        document.addEventListener('DOMContentLoaded', function () {
+            <?php if ($successMessage): ?>
+                Swal.fire({
+                    title: 'Cập nhật thành công!',
+                    text: 'Thông tin loại đồ uống đã được cập nhật.',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.href = 'index_drinkcategories.php'; // Redirect về trang danh sách sau khi cập nhật
+                });
+            <?php endif; ?>
+        });
+    </script>
 </body>
 </html>

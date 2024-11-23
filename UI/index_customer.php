@@ -40,7 +40,7 @@ $result = $stmt->get_result();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tạo Khách Hàng Mới</title>
+    <title>Danh sách khách hàng</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
 </head>
@@ -95,7 +95,7 @@ $result = $stmt->get_result();
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-2">
                         <p class="card-title">Danh sách khách hàng</p>
-                        <a href="create_drink.php" class="btn btn-success">Thêm</a>
+                        <a href="create_customer.php" class="btn btn-success">Thêm</a>
                     </div>
                     <form method="get" action="">
                         <div class="d-flex align-items-center mb-2 w-75">
@@ -153,7 +153,7 @@ $result = $stmt->get_result();
                                 <td><?= htmlspecialchars($item['Offer']) ?></td>
                                 <td>
                                     <a href="edit_customer.php?id=<?= $item['CustomerID'] ?>" class="btn btn-warning btn-sm">Sửa</a>
-                                    <a href="delete_customer.php?id=<?= $item['CustomerID'] ?>" class="btn btn-danger btn-sm">Xóa</a>
+                                    <button class="btn btn-danger btn-sm btnDelete" data-id="<?= $item['CustomerID'] ?>">Xóa</button>
                                     <a href="send_mail.php?id=<?= $item['CustomerID'] ?>" class="btn btn-primary btn-sm">Mail</a>
                                 </td>
                             </tr>
@@ -165,5 +165,59 @@ $result = $stmt->get_result();
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.btnDelete').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                var itemId = this.getAttribute('data-id');
+                Swal.fire({
+                    title: 'Bạn có chắc chắn muốn xóa bản ghi này?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'OK',
+                    cancelButtonText: 'Hủy',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('includes/delete_customer.php', {  // Đảm bảo URL đúng với tệp xóa của bạn
+                            method: 'POST',
+                            body: JSON.stringify({ id: itemId }),
+                            headers: { 'Content-Type': 'application/json' }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: 'Xóa thành công!',
+                                    icon: 'success',
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    location.reload();  // Tải lại trang để cập nhật danh sách
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Lỗi!',
+                                    text: data.message,
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire({
+                                title: 'Lỗi!',
+                                text: 'Đã xảy ra lỗi khi xóa.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        });
+                    }
+                });
+            });
+        });
+    });
+</script>
+
 </body>
 </html>
