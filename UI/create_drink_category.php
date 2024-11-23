@@ -6,19 +6,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $drinkCategoryName = isset($_POST['drinkCategoryName']) ? trim($_POST['drinkCategoryName']) : '';
     $description = isset($_POST['description']) ? trim($_POST['description']) : '';
 
+    // Kiểm tra xem tên loại đồ uống có trống không
     if (empty($drinkCategoryName)) {
         $error_message = "Tên loại đồ uống không được để trống.";
     } else {
-        $stmt = $conn->prepare("INSERT INTO DrinkCategories (DrinkCategoryName, DrinkCategoryDescription) VALUES (?, ?)");
-        $stmt->bind_param("ss", $drinkCategoryName, $description);
+        // Kiểm tra xem tên loại đồ uống đã tồn tại trong cơ sở dữ liệu chưa
+        $checkQuery = $conn->prepare("SELECT COUNT(*) FROM DrinkCategories WHERE DrinkCategoryName = ?");
+        $checkQuery->bind_param("s", $drinkCategoryName);
+        $checkQuery->execute();
+        $checkQuery->bind_result($count);
+        $checkQuery->fetch();
+        $checkQuery->close();
 
-        if ($stmt->execute()) {
-            header("Location: create_drink_category.php?success=1");
-            exit();
+        // Nếu loại đồ uống đã tồn tại, thông báo lỗi
+        if ($count > 0) {
+            $error_message = "Tên loại đồ uống đã tồn tại. Vui lòng chọn tên khác.";
         } else {
-            $error_message = "Lỗi khi thêm loại đồ uống: " . $stmt->error;
+            // Nếu chưa tồn tại, thực hiện thêm loại đồ uống mới
+            $stmt = $conn->prepare("INSERT INTO DrinkCategories (DrinkCategoryName, DrinkCategoryDescription) VALUES (?, ?)");
+            $stmt->bind_param("ss", $drinkCategoryName, $description);
+
+            if ($stmt->execute()) {
+                header("Location: create_drink_category.php?success=1");
+                exit();
+            } else {
+                $error_message = "Lỗi khi thêm loại đồ uống: " . $stmt->error;
+            }
+            $stmt->close();
         }
-        $stmt->close();
     }
 }
 
