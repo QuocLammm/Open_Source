@@ -16,24 +16,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($drinkName) || empty($drinkCategoryID) || empty($drinkPrice)) {
         $error = "Vui lòng điền tất cả các trường bắt buộc.";
     } else {
-        // Move uploaded image to desired folder
-        if (!empty($drinkImage)) {
-            $targetDir = "images/drinks/";
-            $targetFile = $targetDir . basename($drinkImage);
-            move_uploaded_file($_FILES['DrinkImage']['tmp_name'], $targetFile);
-        }
+        // Check if the drink name already exists
+        $checkQuery = $conn->prepare("SELECT COUNT(*) FROM Drinks WHERE DrinkName = ?");
+        $checkQuery->bind_param("s", $drinkName);
+        $checkQuery->execute();
+        $checkQuery->bind_result($count);
+        $checkQuery->fetch();
+        $checkQuery->close();
 
-        // Prepare SQL statement
-        $stmt = $conn->prepare("INSERT INTO Drinks (DrinkCategoryID, DrinkName, DrinkImage, DrinkPrice) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("sssd", $drinkCategoryID, $drinkName, $drinkImage, $drinkPrice);
-
-        if ($stmt->execute()) {
-            header("Location: create_drink.php?success=1"); // Redirect on success
-            exit();
+        if ($count > 0) {
+            // If the drink name already exists, show error
+            $error = "Tên đồ uống đã tồn tại. Vui lòng chọn tên khác.";
         } else {
-            $error = "Lỗi khi thêm đồ uống: " . $conn->error;
+            // Move uploaded image to desired folder
+            if (!empty($drinkImage)) {
+                $targetDir = "images/drinks/";
+                $targetFile = $targetDir . basename($drinkImage);
+                move_uploaded_file($_FILES['DrinkImage']['tmp_name'], $targetFile);
+            }
+
+            // Prepare SQL statement to insert new drink
+            $stmt = $conn->prepare("INSERT INTO Drinks (DrinkCategoryID, DrinkName, DrinkImage, DrinkPrice) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("sssd", $drinkCategoryID, $drinkName, $drinkImage, $drinkPrice);
+
+            if ($stmt->execute()) {
+                header("Location: create_drink.php?success=1"); // Redirect on success
+                exit();
+            } else {
+                $error = "Lỗi khi thêm đồ uống: " . $conn->error;
+            }
+            $stmt->close();
         }
-        $stmt->close();
     }
 }
 
