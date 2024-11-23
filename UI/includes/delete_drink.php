@@ -1,8 +1,7 @@
 <?php
 // Kết nối với cơ sở dữ liệu
 include("connectSQL.php");
-
-// Lấy ID từ yêu cầu
+//Lấy ID từ yêu cầu
 $data = json_decode(file_get_contents("php://input"), true);
 $id = $data['id'] ?? null;
 
@@ -19,6 +18,23 @@ if ($id) {
         $stmt->close();
     } else {
         echo json_encode(['success' => false, 'message' => 'Lỗi trong quá trình xóa sản phẩm.']);
+    }
+} else {
+    echo json_encode(['success' => false, 'message' => 'ID không hợp lệ.']);
+}
+/////
+$datas = json_decode(file_get_contents("php://inputs"), true);
+$ids = $datas['ids'] ?? null;
+
+if ($ids) {
+    // Nếu xóa một bản ghi
+    $sql = "DELETE FROM DrinkCategories WHERE DrinkCategoryID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $ids);
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true, 'message' => 'Xóa thành công!']);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Không thể xóa loại đồ uống.']);
     }
 } else {
     echo json_encode(['success' => false, 'message' => 'ID không hợp lệ.']);

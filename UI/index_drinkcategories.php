@@ -1,16 +1,28 @@
 <?php
-include("includes/DrinkCategoriesController.php"); // Include the controller
 require_once("includes/session_user.php");
 
-$controller = new DrinkCategoriesController($conn);
+// Lấy giá trị drinkCategoryName từ query string nếu có
 $drinkCategoryName = isset($_GET['drinkCategoryName']) ? $_GET['drinkCategoryName'] : '';
-$drinkCategories = $controller->search($drinkCategoryName);
 
+// Tạo truy vấn SQL để tìm kiếm các loại đồ uống, sử dụng LIKE cho tên loại đồ uống
+$query = "SELECT * FROM DrinkCategories WHERE DrinkCategoryName LIKE ?";
+$stmt = $conn->prepare($query);
 
-if (isset($_GET['id'])) {
-    $drinkCategoryId = (int)$_GET['id'];
-    if ($controller->delete($drinkCategoryId));
+if ($stmt === false) {
+    die('Error preparing query: ' . $conn->error); // Kiểm tra lỗi khi chuẩn bị truy vấn
 }
+
+$searchTerm = "%" . $drinkCategoryName . "%"; // Thêm dấu % để thực hiện tìm kiếm LIKE
+$stmt->bind_param('s', $searchTerm); // Ràng buộc tham số với truy vấn
+$stmt->execute(); // Thực thi truy vấn
+
+if ($stmt->error) {
+    die('Error executing query: ' . $stmt->error); // Kiểm tra lỗi khi thực thi truy vấn
+}
+
+$result = $stmt->get_result(); // Lấy kết quả từ truy vấn
+$drinkCategories = $result->fetch_all(MYSQLI_ASSOC);  // Lấy tất cả các bản ghi dưới dạng mảng
+
 ?>
 
 <!DOCTYPE html>
@@ -65,8 +77,10 @@ if (isset($_GET['id'])) {
         border-radius: 5px;
     }
 </style>
+
 <body>
     <?php include("includes/_layoutAdmin.php"); ?>
+
     <div class="container mt-4">
         <form action="" method="GET" class="form-section">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -95,70 +109,88 @@ if (isset($_GET['id'])) {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($drinkCategories)): ?>
-                        <tr>
-                            <td colspan="5" class="text-center">Không có dữ liệu</td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($drinkCategories as $index => $item): ?>
-                            <tr>
-                                <td><input type="checkbox" class="user-checkbox" data-id="<?= $item['DrinkCategoryID'] ?>"></td>
-                                <td><?= $index + 1 ?></td>
-                                <td><?= htmlspecialchars($item['DrinkCategoryName']) ?></td>
-                                <td><?= htmlspecialchars($item['DrinkCategoryDescription']) ?></td>
-                                <td>
-                                    <a href="edit_drink_category.php?id=<?= $item['DrinkCategoryID'] ?>" class="btn btn-sm btn-primary">Sửa</a>
-                                    <a href="javascript:void(0);" class="btn btn-sm btn-danger" onclick="removeDrink(<?= $item['DrinkCategoryID'] ?>)">Xóa</a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
+    <?php if (empty($drinkCategories)): ?>
+        <tr>
+            <td colspan="5" class="text-center">Không có dữ liệu</td>
+        </tr>
+    <?php else: ?>
+        <?php foreach ($drinkCategories as $index => $item): ?>
+            <tr data-id="<?= $item['DrinkCategoryID'] ?>">
+                <td><input type="checkbox" class="user-checkbox" data-id="<?= $item['DrinkCategoryID'] ?>"></td>
+                <td><?= $index + 1 ?></td>
+                <td><?= htmlspecialchars($item['DrinkCategoryName']) ?></td>
+                <td><?= htmlspecialchars($item['DrinkCategoryDescription']) ?></td>
+                <td>
+                    <a href="edit_drink_category.php?id=<?= $item['DrinkCategoryID'] ?>" class="btn btn-sm btn-primary">Sửa</a>
+                    <a href="#" class="btn btn-sm btn-danger btnDelete" data-id="<?= $item['DrinkCategoryID'] ?>">Xóa</a>
+
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</tbody>
+
             </table>
         </form>
     </div>
 
     <script>
-        function removeDrink(drinkCategoryId) {
+     document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.btnDelete').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            var itemId = this.getAttribute('data-id');
             Swal.fire({
-                title: 'Bạn có chắc chắn muốn xóa?',
-                text: "Bạn sẽ không thể khôi phục lại dữ liệu này!",
+                title: 'Bạn có chắc chắn muốn xóa bản ghi này?',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Có, xóa!',
-                cancelButtonText: 'Hủy'
+                confirmButtonText: 'OK',
+                cancelButtonText: 'Hủy',
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Send AJAX request to delete the category
-                    fetch(`delete_drink_category.php?id=${drinkCategoryId}`, {
-                        method: 'GET',
+                    fetch('includes/delete_drink.php', {
+                        method: 'POST',
+                        body: JSON.stringify({ ids: itemId }),
+                        headers: { 'Content-Type': 'application/json' }
                     })
-                    .then(response => response.text())
+                    .then(response => response.json())
                     .then(data => {
-                        if (data === 'success') {
-                            Swal.fire('Xóa thành công!', '', 'success');
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1500);
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Xóa thành công!',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                location.reload(); // Tải lại trang sau khi xóa
+                            });
                         } else {
-                            Swal.fire('Lỗi!', 'Xóa không thành công.', 'error');
+                            Swal.fire({
+                                title: 'Lỗi!',
+                                text: data.message,
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
                         }
                     })
                     .catch(error => {
-                        Swal.fire('Lỗi!', 'Có lỗi xảy ra khi xóa.', 'error');
+                        Swal.fire({
+                            title: 'Lỗi!',
+                            text: 'Đã xảy ra lỗi khi xóa.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
                     });
                 }
             });
-        }
-
+        });
+    });
+});
 
         function resetPage() {
             document.querySelector('input[name="drinkCategoryName"]').value = '';
             window.location.href = window.location.pathname;
         }
     </script>
+
 </body>
 </html>
-

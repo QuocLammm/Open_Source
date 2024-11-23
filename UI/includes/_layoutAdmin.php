@@ -74,6 +74,9 @@ if ($userID) {
             font-weight: bold;
             margin-top: 10px;
         }
+        .a{
+            color: red;
+        }
 
         .main-header {
             position: fixed; 
@@ -124,50 +127,78 @@ if ($userID) {
             margin-top: 60px; /* Điều chỉnh cho header không bị che khuất */
             padding: 20px;
         }
-        
+        /* Màu nền của mục đang được chọn */
+        .nav-link.active {
+            background-color: #D5C8C3;  /* Màu nền nổi bật */
+            color: white;
+            border-radius: 15px;               /* Màu chữ nổi bật */
+        }
+
+        /* Thêm hiệu ứng khi hover */
+        .nav-link:hover {
+            background-color: #F4E6CB;
+            border-radius: 15px; 
+                 /* Màu nền khi hover */
+        }
     </style>
 </head>
 <body>
 <div class="sidebar">
     <!-- Sidebar navigation items -->
     <nav class="nav flex-column">
+        <a class="nav-link" href=""></a>
         <?php 
+            // Kiểm tra xem đường dẫn hiện tại có khớp với liên kết không
+            $isActive = basename($_SERVER['PHP_SELF']) == 'index_admin.php' ? 'active' : '';
             if (in_array($usercategoriesID, ["Quản Lý"])): ?>
-            <a class="nav-link" href="index_admin.php" style="color: #1cc88a;">Dashboard</a>
+            <a class="nav-link <?= $isActive ?>" href="index_admin.php" >Dashboard</a>
         <?php endif; ?>
+        
         <?php 
+            $isActive = basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : '';
             if (in_array(strtolower($usercategoriesID), array_map('strtolower', $validRoles))): ?>
-            <a class="nav-link" href="dashboard.php" sty>Bán hàng</a>
+            <a class="nav-link <?= $isActive ?>" href="dashboard.php">Bán hàng</a>
         <?php endif; ?>
-        <?php if (in_array($usercategoriesID, ["Quản Lý"])): ?>
-            <a class="nav-link dropdown-toggle" id="drinkDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Đồ uống</a>
+        
+        <?php 
+            $isActive = basename($_SERVER['PHP_SELF']) == 'index_drink.php' || basename($_SERVER['PHP_SELF']) == 'index_drinkcategories.php' ? 'active' : '';
+            if (in_array($usercategoriesID, ["Quản Lý"])): ?>
+            <a class="nav-link dropdown-toggle <?= $isActive ?>" id="drinkDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Đồ uống</a>
             <ul class="dropdown-menu" aria-labelledby="drinkDropdown">
                 <li><a class="dropdown-item" href="index_drink.php">Đồ uống</a></li>
                 <li><a class="dropdown-item" href="index_drinkcategories.php">Loại đồ uống</a></li>
             </ul>
         <?php endif; ?>
 
-        <?php if (in_array(strtolower($usercategoriesID), array_map('strtolower', $validRoles))): ?>
-            <a class="nav-link" href="index_bills.php">Hóa đơn</a>
+        <?php 
+            $isActive = basename($_SERVER['PHP_SELF']) == 'index_bills.php' ? 'active' : '';
+            if (in_array(strtolower($usercategoriesID), array_map('strtolower', $validRoles))): ?>
+            <a class="nav-link <?= $isActive ?>" href="index_bills.php">Hóa đơn</a>
         <?php endif; ?>
 
-        <?php if (in_array($usercategoriesID, ["Thu ngân"])): ?>
-            <a class="nav-link" href="index_shaf.php">Kết ca</a>
+        <?php 
+            $isActive = basename($_SERVER['PHP_SELF']) == 'index_shaf.php' ? 'active' : '';
+            if (in_array($usercategoriesID, ["Thu ngân"])): ?>
+            <a class="nav-link <?= $isActive ?>" href="index_shaf.php">Kết ca</a>
         <?php endif; ?>
 
-        <?php if (in_array($usercategoriesID, ["Quản Lý"])): ?>
-            <a class="nav-link" href="danhsach.php">Báo cáo kết ca</a>
-            <a class="nav-link dropdown-toggle" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Người dùng</a>
-            <ul class="dropdown-menu" aria-labelledby="userDropdown">
-                <li><a class="dropdown-item" href="index_users.php">Người dùng</a></li>
-                <li><a class="dropdown-item" href="index_usercategories.php">Loại người dùng</a></li>
-                <li><a class="dropdown-item" href="index_customer.php">Khách hàng</a></li>
-            </ul>
+        <?php 
+            $isActive = basename($_SERVER['PHP_SELF']) == 'danhsach.php' ? 'active' : '';
+            if (in_array($usercategoriesID, ["Quản Lý"])): ?>
+            <a class="nav-link <?= $isActive ?>" href="danhsach.php">Báo cáo kết ca</a>
+            <a class="nav-link dropdown-toggle" <?= $isActive ?>id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Người dùng</a>
+                <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                    <li><a class="dropdown-item" href="index_users.php">Người dùng</a></li>
+                    <li><a class="dropdown-item" href="index_usercategories.php">Loại người dùng</a></li>
+                    <li><a class="dropdown-item" href="index_customer.php">Khách hàng</a></li>
+                </ul>
+            
             <a class="nav-link" href="index_authorizations.php">Phân quyền</a>
         <?php endif; ?>
         
     </nav>
 </div>
+
 
 <div class="main-header">
     <!-- Greeting and user actions -->
@@ -175,7 +206,7 @@ if ($userID) {
         <div class="user-info">
             <div class="logo">
                 <img src="images/lt.jpg" alt="logo" class="logo-image">
-                <span class="brand-name" style="color: #1cc88a;">L&T Coffee</span>
+                <span class="brand-name" style="color: #FFEDDF;">L&T Coffee</span>
             </div>
             <h4>Chào mừng đến với hệ thống!</h4>
             <span>Xin chào, <?= htmlspecialchars($userCategory['FullName']) ?></span>

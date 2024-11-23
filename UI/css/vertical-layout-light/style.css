@@ -9233,8 +9233,8 @@ pre code {
 .row {
   display: flex;
   flex-wrap: wrap;
-  margin-right: -15px;
-  margin-left: -15px;
+  margin-right: -150px;
+  margin-left: 20px;
 }
 
 .no-gutters {

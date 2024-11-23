@@ -1,5 +1,5 @@
 <?php
-include("includes/connectSQL.php"); // Kết nối đến cơ sở dữ liệu
+include("connectSQL.php"); // Kết nối đến cơ sở dữ liệu
 
 class DrinkCategoriesController
 {
@@ -49,20 +49,11 @@ class DrinkCategoriesController
     }
 
     public function delete($drinkCategoryId) {
-        $stmt = $this->conn->prepare("DELETE FROM drinkcategories WHERE DrinkCategoryID = ?");
-        $stmt->bind_param("i", $drinkCategoryId);
-        return $stmt->execute();
+        // Xóa bản ghi theo DrinkCategoryID
+        $stmt = $this->conn->prepare("DELETE FROM DrinkCategories WHERE DrinkCategoryID = ?");
+        $stmt->bind_param("i", $drinkCategoryId);  // Liên kết tham số với ID
+        return $stmt->execute();  // Trả về kết quả xóa
     }
-
-
-
-    public function deleteAll($ids)
-    {
-        $idsArray = explode(',', $ids);
-        $placeholders = implode(',', array_fill(0, count($idsArray), '?'));
-        $stmt = $this->conn->prepare("DELETE FROM DrinkCategories WHERE DrinkCategoryID IN ($placeholders)");
-        $stmt->bind_param(str_repeat('i', count($idsArray)), ...$idsArray);
-        return $stmt->execute(); // Trả về kết quả xóa nhiều
-    }
+    
 }
 ?>

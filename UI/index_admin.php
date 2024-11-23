@@ -158,10 +158,9 @@ $recentOrders = getRecentOrders();
         }
 
         .container {
-            width: 95%;
-            max-width: 1200px;
+            width: 105%;
             margin: 0 auto;
-            padding: 20px;
+
         }
 
         .dashboard-container {
@@ -176,7 +175,7 @@ $recentOrders = getRecentOrders();
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             text-align: center;
             transition: all 0.3s ease-in-out;
-            margin-top: 35px;
+            margin-top: 40px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -223,6 +222,10 @@ $recentOrders = getRecentOrders();
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-wrap: wrap;
+            margin-right: -150px;
+            margin-left: 20px;
         }
 
         .cardHeader {
@@ -333,7 +336,12 @@ $recentOrders = getRecentOrders();
                 font-size: 0.95rem;
             }
         }
-
+        .row-hi{
+            display: flex;
+    flex-wrap: wrap;
+    margin-right: -150px;
+    margin-left: 20px;
+        }
     </style>
 </head>
 
@@ -341,7 +349,7 @@ $recentOrders = getRecentOrders();
     <?php include_once('includes/_layoutAdmin.php'); ?>
 
     <div class="container dashboard-container">
-        <div class="row mb-4">
+        <div class="row-hi mb-4">
             <!-- Số bàn -->
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="dashboard-card" onclick="window.location.href='dashboard.php';">
@@ -380,7 +388,7 @@ $recentOrders = getRecentOrders();
             </div>
         </div>
 
-        <div class="row">
+        <div class="row-hi">
             <!-- Biểu đồ doanh thu -->
             <div class="col-lg-6">
                 <div class="chart-box">
