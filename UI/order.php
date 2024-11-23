@@ -368,8 +368,6 @@ $conn->close();
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-
-
                             <div>
                                 <!-- Nút Quay lại -->
                                 <a href="dashboard.php" class="btn btn-primary" style="height: fit-content">

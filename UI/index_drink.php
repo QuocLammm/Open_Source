@@ -40,48 +40,6 @@ $drinks = $result->fetch_all(MYSQLI_ASSOC);
 // Tạo đối tượng Pager với dữ liệu và số lượng sản phẩm mỗi trang
 $pager = new Pager($drinks, 3); // 3 sản phẩm mỗi trang
 $currentDrinks = $pager->getDataForCurrentPage(3); // Lấy dữ liệu cho trang hiện tại
-
-// Handle delete request
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $data = json_decode(file_get_contents("php://input"), true);
-    $id = $data['id'] ?? null;
-
-    if ($id) {
-        // Check if there are any associated categories before deletion
-        $checkSql = "SELECT COUNT(*) as count FROM Drinkcategories WHERE DrinkCategoryID IN (SELECT DrinkCategoryID FROM Drinks WHERE DrinkID = ?)";
-        if ($checkStmt = $conn->prepare($checkSql)) {
-            $checkStmt->bind_param("i", $id);
-            $checkStmt->execute();
-            $checkResult = $checkStmt->get_result();
-            $row = $checkResult->fetch_assoc();
-
-            if ($row['count'] > 0) {
-                echo json_encode(['success' => false, 'message' => 'Không thể xóa đồ uống này vì có loại đồ uống liên quan.']);
-                exit;
-            }
-            $checkStmt->close();
-        }
-
-        // Prepare and execute the delete statement
-        $sql = "DELETE FROM Drinks WHERE DrinkID = ?";
-        if ($stmt = $conn->prepare($sql)) {
-            $stmt->bind_param("i", $id);
-            if ($stmt->execute()) {
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Không thể xóa bản ghi.']);
-            }
-            $stmt->close();
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Lỗi truy vấn.']);
-        }
-    } else {
-        echo json_encode(['success' => false, 'message' => 'ID không hợp lệ.']);
-    }
-    exit; // Stop further processing after handling the delete request
-}
-
-
 $conn->close();
 ?>
 
