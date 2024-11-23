@@ -1,34 +1,44 @@
 <?php
 include('includes/connectSQL.php');
-if (isset($_POST['login'])) {
-    $adminuser = $_POST['username'];
-    $password = $_POST['password'];
 
-    // Password validation
-    if (strlen($password) < 10) {
-        $errorMessage = "Mật khẩu không được ngắn quá 10 ký tự!";
-    } elseif (!preg_match('/[A-Z]/', $password)) {
-        $errorMessage = "Mật khẩu phải có ít nhất một chữ cái viết hoa!";
-    } elseif (!preg_match('/[\W_]/', $password)) {
-        $errorMessage = "Mật khẩu phải có ít nhất một kí tự đặc biệt!";
+if (isset($_POST['change_password'])) {
+    $username = $_POST['username'];
+    $oldPassword = $_POST['old_password'];
+    $newPassword = $_POST['new_password'];
+    $confirmPassword = $_POST['confirm_password'];
+
+    // Xác minh mật khẩu mới
+    if ($newPassword !== $confirmPassword) {
+        $errorMessage = "Mật khẩu xác nhận không khớp!";
+    } elseif (strlen($newPassword) < 10) {
+        $errorMessage = "Mật khẩu mới phải ít nhất 10 ký tự!";
+    } elseif (!preg_match('/[A-Z]/', $newPassword)) {
+        $errorMessage = "Mật khẩu mới phải có ít nhất một chữ cái viết hoa!";
+    } elseif (!preg_match('/[\W_]/', $newPassword)) {
+        $errorMessage = "Mật khẩu mới phải có ít nhất một ký tự đặc biệt!";
     } else {
-        $query = mysqli_query($conn, "SELECT UserID FROM users WHERE AccountName='$adminuser' AND Password='$password'");
-        $num_rows = mysqli_num_rows($query);
-
-        if ($num_rows > 0) {
-            $ret = mysqli_fetch_array($query);
-            // Set cookie for 1 hour
-            setcookie('UserID', $ret['UserID'], time() + 3600, "/"); 
-            header('location:index_admin.php');
-            exit();
+        // Kiểm tra mật khẩu cũ
+        $query = mysqli_query($conn, "SELECT * FROM users WHERE AccountName='$username' AND Password='$oldPassword'");
+        if (mysqli_num_rows($query) == 0) {
+            $errorMessage = "Mật khẩu cũ không chính xác!";
         } else {
-            $errorMessage = "Tên đăng nhập hoặc mật khẩu không đúng!";
+            // Cập nhật mật khẩu mới
+            $updateQuery = mysqli_query($conn, "UPDATE users SET Password='$newPassword' WHERE AccountName='$username'");
+            if ($updateQuery) {
+                // Chuyển hướng đến trang login
+                header('Location: login.php');
+                exit();
+            } else {
+                $errorMessage = "Đã xảy ra lỗi, vui lòng thử lại!";
+            }
         }
     }
 }
 
 $conn->close();
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -63,7 +73,7 @@ $conn->close();
         .box{
             position: relative;
             width: 480px;
-            height: 620px;
+            height: 660px;
             background: #1c1c1c;
             border-radius: 8px;
             overflow: hidden;
@@ -209,22 +219,27 @@ $conn->close();
 
             <!-- Form đăng nhập -->
             <form action="" method="POST">
-                <div class="container">
-                    <div class="inputbox">
-                        <input type="text" name="username" required>
-                        <span>UserName</span>
-                        <i></i>
-                    </div>
-                    <div class="inputbox">
-                        <input type="password" name="password" required>
-                        <span>Password</span>
-                        <i></i>
-                    </div>
-                    <div class="links">
-                        <a href="forgot_password.php">Forgot password?</a>
-                    </div>
-                    <button type="submit" name="login">Login</button>
+                <div class="inputbox">
+                    <input type="text" name="username" required>
+                    <span>Username</span>
+                    <i></i>
                 </div>
+                <div class="inputbox">
+                    <input type="password" name="old_password" required>
+                    <span>Old Password</span>
+                    <i></i>
+                </div>
+                <div class="inputbox">
+                    <input type="password" name="new_password" required>
+                    <span>New Password</span>
+                    <i></i>
+                </div>
+                <div class="inputbox">
+                    <input type="password" name="confirm_password" required>
+                    <span>Confirm New Password</span>
+                    <i></i>
+                </div>
+                <button type="submit" name="change_password">Change Password</button>
             </form>
         </div>
     </div>

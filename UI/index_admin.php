@@ -72,7 +72,7 @@ function getOrderCountToday() {
     global $conn;
 
     // Truy vấn số lượng khách hàng đặt hàng hôm nay
-    $sql = "SELECT COUNT(DISTINCT UserID) as OrderCount FROM Bills WHERE DATE(CreateDate) = CURDATE()";
+    $sql = "SELECT COUNT(DISTINCT BillID) as OrderCount FROM Bills WHERE DATE(CreateDate) = CURDATE()";
     $result = $conn->query($sql);
 
     if ($result && $row = $result->fetch_assoc()) {
@@ -95,6 +95,33 @@ function getTotalCustomers() {
 
     return 0; // Trả về 0 nếu không có khách hàng hoặc xảy ra lỗi
 }
+
+function getRecentOrders() {
+    global $conn;
+
+    // Truy vấn lấy dữ liệu từ bảng Bills và Customer
+    $sql = "SELECT b.CustomerID, c.CustomerName, b.TotalAmount, b.Status 
+            FROM Bills b
+            JOIN Customer c ON b.CustomerID = c.CustomerID
+            ORDER BY b.CreateDate DESC
+            LIMIT 10";  // Giới hạn 10 đơn hàng gần nhất
+
+    $result = $conn->query($sql);
+
+    $orders = [];
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $orders[] = [
+                'CustomerName' => $row['CustomerName'],
+                'TotalAmount' => (float) $row['TotalAmount'],
+                'Status' => $row['Status']
+            ];
+        }
+    }
+
+    return $orders;
+}
+
 // Lấy dữ liệu doanh thu
 $revenueData = getRevenueData();
 // Lấy số lượng bàn
@@ -107,6 +134,9 @@ $drinkData = getDrinkCount();
 $orderCountToday = getOrderCountToday();
 // Lấy số lượng khách hàng
 $totalCustomers = getTotalCustomers();
+// Lấy thông tin đơn hàng gần nhất
+$recentOrders = getRecentOrders();
+
 
 ?>
 <!doctype html>
@@ -117,152 +147,305 @@ $totalCustomers = getTotalCustomers();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bảng điều khiển quản trị CCMS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Thư viện Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
         .container {
-        max-width: 900px;
-        height: auto;
-        margin-top: 10px;
-        }
-        .form-section {
-            width: 105%;
-            padding: 10px;
-            margin: 50px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-        .form-label {
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-        .dashboard-card {
-            display: block;
-            text-decoration: none;
-            color: #fff;
-            background-color: #e74c3c;
-            border-radius: 10px;
+            width: 95%;
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
-            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .dashboard-container {
+            padding: 30px;
+        }
+
+        .dashboard-card {
+            background-color: #4e73df;
+            color: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: all 0.3s ease-in-out;
+            margin-top: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
         }
 
         .dashboard-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .dashboard-card .icon {
-            font-size: 40px;
-            margin-right: 15px;
-            color: #fff;
+        .dashboard-card i {
+            font-size: 45px;
+            margin-bottom: 15px;
         }
 
-        .dashboard-card .data {
-            font-size: 24px;
+        .dashboard-card h2 {
+            font-size: 2.5rem;
+            margin: 0;
+        }
+
+        .dashboard-card p {
+            font-size: 1.1rem;
+            margin: 5px 0;
+        }
+
+        .chart-box {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .chart-box h3 {
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            color: #4e73df;
+        }
+
+        .recentOrders {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .cardHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .cardHeader h2 {
+            font-size: 1.8rem;
+            margin: 0;
+        }
+
+        .cardHeader .btn {
+            padding: 10px 20px;
+            background-color: #4e73df;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .cardHeader .btn:hover {
+            background-color: #365ac5;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th, table td {
+            padding: 15px;
+            text-align: left;
+            font-size: 1.1rem;
+        }
+
+        table th {
+            background-color: #4e73df;
             color: #fff;
         }
-        
-        
+
+        table td {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table tr:hover td {
+            background-color: #f1f3f7;
+        }
+
+        .status.delivered {
+            background-color: #28a745;
+        }
+
+        .status.pending {
+            background-color: #ffc107;
+        }
+
+        .status.inprogress {
+            background-color: #17a2b8;
+        }
+
+        .status.return {
+            background-color: #dc3545;
+        }
+        /* Trạng thái hoàn tất - màu xanh lá */
+        .status.success {
+            background-color: #28a745; /* Màu xanh lá */
+            color: white;
+            padding: 3px 10px;
+            border-radius: 5px;
+        }
+
+        /* Trạng thái Thất bại - màu đỏ */
+        .status.failed {
+            background-color: #dc3545; /* Màu đỏ */
+            color: white;
+            padding: 3px 10px;
+            border-radius: 5px;
+        }
+
+        /* Trạng thái mặc định (nếu có trạng thái khác) */
+        .status {
+            padding: 3px 10px;
+            border-radius: 5px;
+        }
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-card {
+                margin-bottom: 20px;
+                padding: 20px;
+            }
+
+            .chart-box {
+                padding: 20px;
+            }
+
+            table th, table td {
+                padding: 12px;
+            }
+
+            table {
+                font-size: 0.95rem;
+            }
+        }
+
     </style>
 </head>
 
 <body>
     <?php include_once('includes/_layoutAdmin.php'); ?>
-    <div class="container mt-2">
-        <form action="" method="POST" class="form-section">
-            <div class="container dashboard">
-                <h2 class="dashboard-title">Bảng điều khiển</h2>
-                    <div class="row">
-                        <!-----------------------------Số bàn----------------------------------->
-                        <div class="col-md-3">
-                            <a href="dashboard.php" class="dashboard-card" style="text-decoration: none;">
-                                <div class="d-flex align-items-center">
-                                    <!-- Biểu tượng -->
-                                    <i class="fas fa-table icon"></i>
-                                    <!-- Dữ liệu -->
-                                    <div class="data">
-                                        <h2><?php echo $tableCount; ?></h2>
-                                        <p>Bàn</p>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                        <!-----------------------------Sản phẩm----------------------------------->
-                        <div class="col-md-3">
-                            <a href="index_drink.php" class="dashboard-card" style="text-decoration: none; background-color: #EE82EE">
-                                <div class="d-flex align-items-center" >
-                                    <!-- Icon -->
-                                    <i class="fas fa-coffee icon" ></i>
-                                    <div class="data">
-                                        <h2><?php echo $drinkData; ?></h2>
-                                        <p>Sản phẩm</p>
-                                    </div>
-                                </div>                                   
-                            </a>
-                        </div>
-                        <!-----------------------------Nhân viên----------------------------------->
-                        <div class="col-md-3">
-                                <a href="index_users.php" class="dashboard-card" style="text-decoration: none; background-color: #00FFFF">
-                                    <div class="d-flex align-items-center">
-                                        <!-- Biểu tượng -->
-                                        <i class="fas fa-user-friends icon"></i>
-                                        <!-- Dữ liệu -->
-                                        <div class="data">
-                                            <h2><?php echo $totalEmployees; ?></h2>
-                                            <p>Nhân viên</p>
-                                        </div>
-                                    </div>
-                                </a>
-                        </div>
-                        <!-----------------------------Hihi----------------------------------->
-                        <div class="col-md-3">
-                                <a href="index_customer.php" class="dashboard-card" style="text-decoration: none; background-color: #00FF80">
-                                    <div class="d-flex align-items-center">
-                                        <!-- Biểu tượng -->
-                                        <i class="fas fa-users icon"></i>
-                                        <!-- Dữ liệu -->
-                                        <div class="data">
-                                            <h2><?php echo $totalCustomers; ?></h2>
-                                            <p>Khách hàng</p>
-                                        </div>
-                                    </div>
-                                </a>
-                        </div>
-                        <!-----------------------------Doanh thu theo ngày dựa trên bills----------------------------------->
-                        <div class="col-md-6">
-                            <h2>Doanh thu theo ngày</h2>
-                            <canvas id="revenueChart" width="500" height="400"></canvas>
-                        </div>
-                        <!-----------------------------Tổng số khách hàng đặt hàng hôm nay----------------------------------->
-                        <div class="col-md-6">
-                            <h2>Khách hàng đặt hôm nay</h2>
-                            <canvas id="orderTodayChart" width="500" height="400"></canvas>
-                        </div>
 
+    <div class="container dashboard-container">
+        <div class="row mb-4">
+            <!-- Số bàn -->
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="dashboard-card" onclick="window.location.href='dashboard.php';">
+                    <i class="fas fa-table"></i>
+                    <h2><?php echo $tableCount; ?></h2>
+                    <p>Bàn</p>
                 </div>
             </div>
-        </form>
+
+
+            <!-- Sản phẩm -->
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="dashboard-card" style="background-color: #1cc88a;" onclick="window.location.href='index_drink.php';">
+                    <i class="fas fa-coffee"></i>
+                    <h2><?php echo $drinkData; ?></h2>
+                    <p>Sản phẩm</p>
+                </div>
+            </div>
+
+            <!-- Nhân viên -->
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="dashboard-card" style="background-color: #36b9cc;" onclick="window.location.href='index_users.php';">
+                    <i class="fas fa-user-friends"></i>
+                    <h2><?php echo $totalEmployees; ?></h2>
+                    <p>Nhân viên</p>
+                </div>
+            </div>
+
+            <!-- Khách hàng -->
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="dashboard-card" style="background-color: #f6c23e;" onclick="window.location.href='index_customer.php';">
+                    <i class="fas fa-users"></i>
+                    <h2><?php echo $totalCustomers; ?></h2>
+                    <p>Khách hàng</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Biểu đồ doanh thu -->
+            <div class="col-lg-6">
+                <div class="chart-box">
+                    <h3>Doanh thu theo ngày</h3>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Biểu đồ khách hàng hôm nay -->
+            <div class="col-lg-6">
+                <div class="chart-box">
+                    <h3>Khách hàng đặt hôm nay</h3>
+                    <canvas id="orderTodayChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <!----->
+        <div class="details">
+            <div class="recentOrders">
+                <div class="cardHeader">
+                    <h2>Recent Orders</h2>
+                    <a href="#" class="btn">View All</a>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <td>Khách hàng</td>
+                            <td>Tổng tiền</td>
+                            <td>Trạng thái</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($recentOrders as $order): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($order['CustomerName']) ?></td>
+                                <td><?= number_format($order['TotalAmount'], 2) ?> VNĐ</td>
+                                <td>
+                                    <span class="status 
+                                        <?= strtolower($order['Status']) === 'thành công' ? 'success' : (strtolower($order['Status']) === 'thất bại' ? 'failed' : '') ?>">
+                                        <?= htmlspecialchars($order['Status']) ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-
     <script>
-        // Nhận dữ liệu từ PHP
+        // Dữ liệu doanh thu
         const revenueData = <?php echo json_encode($revenueData); ?>;
+        const revenueLabels = revenueData.map(item => item.date);
+        const revenueValues = revenueData.map(item => item.revenue);
 
-        // Trích xuất labels và data từ revenueData
-        const labels = revenueData.map(item => item.date);
-        const revenues = revenueData.map(item => item.revenue);
-
-        // Vẽ biểu đồ
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-        new Chart(ctx, {
+        // Biểu đồ doanh thu
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(revenueCtx, {
             type: 'bar',
             data: {
-                labels: labels, // Ngày
+                labels: revenueLabels,
                 datasets: [{
                     label: 'Doanh thu (VNĐ)',
-                    data: revenues, // Doanh thu
+                    data: revenueValues,
                     backgroundColor: 'rgba(54, 162, 235, 0.6)',
                     borderColor: 'rgba(54, 162, 235, 1)',
                     borderWidth: 1
@@ -277,41 +460,26 @@ $totalCustomers = getTotalCustomers();
             }
         });
 
-        // Nhận dữ liệu từ PHP cho số lượng khách hàng đã đặt hàng hôm nay
-        const orderCountToday = <?php echo json_encode($orderCountToday); ?>;
-
-        // Dữ liệu cho biểu đồ khách hàng đặt hàng hôm nay
-        const orderTodayData = {
-            labels: ['Hôm nay'], // Duy nhất một label "Hôm nay"
-            datasets: [{
-                label: 'Số khách hàng đã đặt hàng hôm nay',
-                data: [orderCountToday], // Số lượng khách hàng
-                backgroundColor: ['rgba(75, 192, 192, 0.6)'], // Màu nền cho biểu đồ hình tròn
-                borderColor: ['rgba(75, 192, 192, 1)'], // Màu viền
-                borderWidth: 1
-            }]
-        };
-
-        // Vẽ biểu đồ cho khách hàng đã đặt hàng hôm nay (biểu đồ hình tròn)
-        const ctxOrderToday = document.getElementById('orderTodayChart').getContext('2d');
-        new Chart(ctxOrderToday, {
-            type: 'pie',  // Thay đổi loại biểu đồ thành 'pie' (hình tròn)
-            data: orderTodayData,
+        // Dữ liệu khách đặt hôm nay
+        const orderToday = <?php echo json_encode($orderCountToday); ?>;
+        const orderCtx = document.getElementById('orderTodayChart').getContext('2d');
+        new Chart(orderCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Đặt hàng hôm nay', 'Chưa đặt hàng'],
+                datasets: [{
+                    data: [orderToday, 100 - orderToday],
+                    backgroundColor: ['#36b9cc', '#e0e0e0'],
+                }]
+            },
             options: {
-                responsive: true,
                 plugins: {
-                    legend: {
-                        position: 'top',  // Đặt vị trí của legend ở trên
-                    },
-                    tooltip: {
-                        enabled: true  // Bật tooltip khi hover
-                    }
+                    legend: { position: 'top' }
                 }
             }
         });
-
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
+

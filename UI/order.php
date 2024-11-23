@@ -171,6 +171,25 @@ $conn->close();
         .row .col-2 a:last-child {
             border-bottom: none;
         }
+        #customerName {
+            padding: 10px;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            font-size: 16px;
+            width: 300px;
+            margin-left: 20px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        #customerName:focus {
+            border-color: #0056b3; /* Màu sắc khi ô nhập đang được focus */
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Tạo bóng mờ khi focus */
+        }
+        #customer-status {
+            font-weight: bold;
+            margin-left: 10px;
+            font-size: 16px;
+        }
     </style>
     <script>
         let selectedDrinks = {};
@@ -242,6 +261,12 @@ $conn->close();
         }
 
         function processPayment() {
+            const customerName = document.getElementById('customerName').value.trim();
+            if (customerName === "") {
+                alert("Vui lòng nhập tên khách hàng!");
+                return;
+            }
+
             const items = Object.keys(selectedDrinks).map(id => ({
                 drinkID: id,
                 quantity: selectedDrinks[id].quantity
@@ -257,6 +282,7 @@ $conn->close();
                 body: JSON.stringify({
                     tableID: <?= json_encode($tableID ?? null) ?>,
                     userID: <?= json_encode($userID ?? null) ?>,
+                    //customerName: customerName, // Gửi tên khách hàng
                     items: items,
                     totalAmount: totalAmount
                 })
@@ -264,7 +290,6 @@ $conn->close();
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Clear selected drinks from session
                     fetch('clear_session.php', {
                         method: 'POST',
                     });
@@ -279,36 +304,51 @@ $conn->close();
                 console.error('Error:', error);
                 Swal.fire('Có lỗi xảy ra!', 'Vui lòng thử lại sau.', 'error');
             });
+        };
+
+
+        //-----------------Kiểm tra tên khách hàng----------------------//
+        function checkCustomer() {
+    const customerName = document.getElementById("customerName").value.trim();
+
+    if (customerName === "") {
+        alert("Vui lòng nhập tên khách hàng!");
+        return;
+    }
+
+    fetch("check_customer.php", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: customerName }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
         }
+        return response.json();
+    })
+    .then(data => {
+        const statusElement = document.getElementById("customer-status");
 
-        document.addEventListener("DOMContentLoaded", function () {
-            let drinkItems = document.querySelectorAll('.drink-item');
-            let categoryLinks = document.querySelectorAll('.category-link');
+        if (data.exists) {
+            statusElement.textContent = "Khách hàng đã tồn tại!";
+            statusElement.style.color = "green";
+        } else if (data.message) {
+            statusElement.textContent = data.message;
+            statusElement.style.color = "orange";
+        } else {
+            statusElement.textContent = "Khách hàng chưa tồn tại!";
+            statusElement.style.color = "red";
+        }
+    })
+    .catch(error => {
+        console.error("Error during fetch:", error);
+        alert("Có lỗi trong quá trình kiểm tra! Chi tiết: " + error.message);
+    });
+}
 
-            // Load saved drinks from session on page load
-            <?php if (isset($_SESSION['selectedDrinks'])): ?>
-                selectedDrinks = <?= json_encode($_SESSION['selectedDrinks']) ?>;
-                for (let drinkID in selectedDrinks) {
-                    for (let i = 0; i < selectedDrinks[drinkID].quantity; i++) {
-                        addToDrink(drinkID);
-                    }
-                }
-            <?php endif; ?>
-
-            categoryLinks.forEach(link => {
-                link.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    let categoryId = this.getAttribute('data-category-id');
-                    drinkItems.forEach(item => {
-                        item.style.display = (item.getAttribute('data-category-id') === categoryId) ? 'block' : 'none';
-                    });
-                    categoryLinks.forEach(link => link.classList.remove('selected-drink'));
-                    this.classList.add('selected-drink');
-                });
-            });
-
-            if (categoryLinks.length > 0) categoryLinks[0].click();
-        });
     </script>
 </head>
 
@@ -319,12 +359,19 @@ $conn->close();
             <div class="card p-3 h-100">
                 <div class="row h-100">
                     <div class="col-7">
+                        <!-- Thêm ô nhập tên khách hàng -->
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h2><?= htmlspecialchars($tableName) ?></h2>
+                            <div>
+                                <input type="text" id="customerName" placeholder="Nhập tên khách hàng">
+                                <button type="button" class="btn btn-info" onclick="checkCustomer()">Kiểm tra</button>
+                                <span id="customer-status"></span>
+                            </div>
                             <a href="dashboard.php" class="btn btn-primary" style="height: fit-content">
                                 <i class="ti-arrow-left"></i>
                             </a>
                         </div>
+
                         <div class="row">
                             <div class="col-2">
                                 <?php foreach ($listDrinkCategories as $category): ?>

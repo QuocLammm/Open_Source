@@ -25,7 +25,6 @@ if ($userID) {
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="../UI/vendors/feather/feather.css">
     <link rel="stylesheet" href="../UI/vendors/ti-icons/css/themify-icons.css">
@@ -33,110 +32,165 @@ if ($userID) {
     <link rel="stylesheet" href="../UI/vendors/select2/select2.min.css">
     <link rel="stylesheet" href="../UI/vendors/select2-bootstrap-theme/select2-bootstrap.min.css">
     <link rel="stylesheet" href="../UI/vendors/datatables.net-bs4/dataTables.bootstrap4.css">
-    <link rel="stylesheet" type="text/css" href="../UI/js/select.dataTables.min.css">
     <link rel="stylesheet" href="../UI/css/vertical-layout-light/style.css">
     <link rel="shortcut icon" href="../UI/images/favicon.png" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
-            overflow-x: hidden; /* Prevent horizontal scroll */
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden; /* Ngăn cuộn ngang */
         }
-        .nav-link { color: #000; }
-        .table td, .table th { vertical-align: middle; }
-        .mdi-pencil, .mdi-delete { font-size: 1.2em; cursor: pointer; }
-        .mdi-pencil { color: #4CAF50; }
-        .mdi-delete { color: #F44336; }
-        
+
         .sidebar {
-            
-            height: 100vh;
             position: fixed;
-            width: 220px; /* Fixed width for sidebar */
-            padding-top: 56px; /* Ensure the content starts below the navbar */
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 180px;
+            background-color: #23242a;
+            border-right: 1px solid #ddd;
+            padding-top: 20px;
+            z-index: 1000; /* Sidebar có z-index thấp hơn header */
         }
+        .sidebar .logo-image {
+            width: 60px;
+            height: auto;
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .sidebar .logo-image {
+            width: 60px;
+            height: auto;
+        }
+
+        .sidebar .brand-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .main-header {
+            position: fixed; 
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #23242a;
+            color: white;
+            padding: 10px;
+            z-index: 1050; /* Đảm bảo header luôn nằm trên cùng */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between; /* Phân bố không gian giữa các phần tử con */
+            align-items: center; /* Căn giữa các phần tử con theo chiều dọc */
+            width: 100%; /* Đảm bảo phần tử này chiếm toàn bộ chiều rộng */
+        }
+
+        .user-info h4 {
+            flex: 1; /* Chiếm toàn bộ không gian còn lại */
+            text-align: center; /* Căn giữa nội dung */
+        }
+
+        .user-info span, .user-info img {
+            margin-left: 10px; /* Khoảng cách giữa span và img */
+        }
+
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .logout-btn {
+            color: #45f3ff; /* Màu cho nút đăng xuất */
+            text-decoration: none;
+            font-weight: bold;
+            padding: 5px 10px;
+            background-color: #333;
+            border-radius: 5px;
+            
+        }
+
         .main-content {
-            margin-left: 220px; /* Same as sidebar width */
+            margin-left: 180px; /* Điều chỉnh để tránh sidebar che khuất */
+            margin-top: 60px; /* Điều chỉnh cho header không bị che khuất */
             padding: 20px;
         }
-        .content { padding: 20px; }
+        
     </style>
 </head>
 <body>
-<div class="container-fluid">
-        <!-- Sidebar -->
-        <div class="col-md-2 sidebar">
-            <nav class="nav flex-column">
-                <!-- Logo -->
-                <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
-                    <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
-                        <div class="navbar-brand brand-logo h-100">
-                            <img src="images/lt.jpg" alt="logo" class="h-100" />
-                        </div>
-                    </div>
-                    <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end" style="background-color: dodgerblue; color: white">
-                        <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
-                            <span class="icon-menu"></span>
-                        </button>
+<div class="sidebar">
+    <!-- Sidebar navigation items -->
+    <nav class="nav flex-column">
+        <?php 
+            if (in_array($usercategoriesID, ["Quản Lý"])): ?>
+            <a class="nav-link" href="index_admin.php" style="color: #1cc88a;">Dashboard</a>
+        <?php endif; ?>
+        <?php 
+            if (in_array(strtolower($usercategoriesID), array_map('strtolower', $validRoles))): ?>
+            <a class="nav-link" href="dashboard.php" sty>Bán hàng</a>
+        <?php endif; ?>
+        <?php if (in_array($usercategoriesID, ["Quản Lý"])): ?>
+            <a class="nav-link dropdown-toggle" id="drinkDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Đồ uống</a>
+            <ul class="dropdown-menu" aria-labelledby="drinkDropdown">
+                <li><a class="dropdown-item" href="index_drink.php">Đồ uống</a></li>
+                <li><a class="dropdown-item" href="index_drinkcategories.php">Loại đồ uống</a></li>
+            </ul>
+        <?php endif; ?>
 
-                        <?php if ($user) { ?>
-                            <ul class="navbar-nav navbar-nav-right">
-                            
-                                <li class="nav-item" id="greeting">
-                                    <?= $message ?> <?php echo htmlspecialchars($user['FullName']); ?>
-                                </li>
-                                <li class="nav-item nav-profile dropdown">
-                                    <?php if (!empty($user['UserImage'])) { ?>
-                                        <img src="images/users/<?php echo htmlspecialchars($user['UserImage']); ?>" alt="profile" />
-                                    <?php } else { ?>
-                                        <img src="images/avatar.jpg" alt="profile" />
-                                    <?php } ?>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="btn btn-danger" href="login.php">Đăng xuất</a>
-                                </li>
-                            </ul>
-                        <?php } ?>
-                    </div>
-                </nav>
-                <!--Xử lí người quản lý hoặc thu ngân-->
-                <?php if (in_array($usercategoriesID, ["Quản Lý"])): ?>
-                    <a class="nav-link" href="index_admin.php">Bảng điều khiển</a>
-                <?php endif; ?>
-                <?php if (in_array(strtolower($usercategoriesID), array_map('strtolower', $validRoles))): ?>
-                    <a class="nav-link" href="dashboard.php">Bán hàng</a>
-                <?php endif; ?>
+        <?php if (in_array(strtolower($usercategoriesID), array_map('strtolower', $validRoles))): ?>
+            <a class="nav-link" href="index_bills.php">Hóa đơn</a>
+        <?php endif; ?>
 
-                <?php if (in_array($usercategoriesID, ["Quản Lý"])): ?>
-                <a class="nav-link dropdown-toggle" id="drinkDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Đồ uống</a>
-                <ul class="dropdown-menu" aria-labelledby="drinkDropdown">
-                    <li><a class="dropdown-item" href="index_drink.php">Đồ uống</a></li>
-                    <li><a class="dropdown-item" href="index_drinkcategories.php">Loại đồ uống</a></li>
-                </ul>
-                <?php endif; ?>
+        <?php if (in_array($usercategoriesID, ["Thu ngân"])): ?>
+            <a class="nav-link" href="index_shaf.php">Kết ca</a>
+        <?php endif; ?>
 
-                <?php if (in_array(strtolower($usercategoriesID), array_map('strtolower', $validRoles))): ?>
-                <a class="nav-link" href="index_bills.php">Hóa đơn</a>
-                <?php endif; ?>
-
-                <?php if (in_array($usercategoriesID, ["Thu ngân"])): ?>
-                    <a class="nav-link" href="index_shaf.php">Kết ca</a>
-                <?php endif; ?>
-
-                <?php if (in_array($usercategoriesID, ["Quản Lý"])): ?>
-                <a class="nav-link" href="danhsach.php">Báo cáo kết ca</a>
-                <a class="nav-link dropdown-toggle" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Người dùng</a>
-                <ul class="dropdown-menu" aria-labelledby="userDropdown">
-                    <li><a class="dropdown-item" href="index_users.php">Người dùng</a></li>
-                    <li><a class="dropdown-item" href="index_usercategories.php">Loại người dùng</a></li>
-                    <li><a class="dropdown-item" href="index_customer.php">Khách hàng</a></li>
-                </ul>
-                <a class="nav-link" href="index_authorizations.php">Phân quyền</a>
-                <?php endif; ?>
-            </nav>
-        </div>
+        <?php if (in_array($usercategoriesID, ["Quản Lý"])): ?>
+            <a class="nav-link" href="danhsach.php">Báo cáo kết ca</a>
+            <a class="nav-link dropdown-toggle" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Người dùng</a>
+            <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                <li><a class="dropdown-item" href="index_users.php">Người dùng</a></li>
+                <li><a class="dropdown-item" href="index_usercategories.php">Loại người dùng</a></li>
+                <li><a class="dropdown-item" href="index_customer.php">Khách hàng</a></li>
+            </ul>
+            <a class="nav-link" href="index_authorizations.php">Phân quyền</a>
+        <?php endif; ?>
+        
+    </nav>
 </div>
 
+<div class="main-header">
+    <!-- Greeting and user actions -->
+    <?php if ($userID): ?>
+        <div class="user-info">
+            <div class="logo">
+                <img src="images/lt.jpg" alt="logo" class="logo-image">
+                <span class="brand-name" style="color: #1cc88a;">L&T Coffee</span>
+            </div>
+            <h4>Chào mừng đến với hệ thống!</h4>
+            <span>Xin chào, <?= htmlspecialchars($userCategory['FullName']) ?></span>
+            <!-- Link to profile page when clicking on the avatar -->
+            <a href="profile.php">
+                <img src="images/users/<?= !empty($userCategory['UserImage']) ? htmlspecialchars($userCategory['UserImage']) : 'avatar.jpg' ?>" alt="profile">
+            </a>
+            <a class="logout-btn" href="login.php">Đăng xuất</a>
+        </div>
+    <?php endif; ?>
+</div>
+
+
+
+<script src="../UI/vendors/js/vendor.bundle.base.js"></script>
 <script src="../UI/vendors/js/vendor.bundle.base.js"></script>
 <script src="../UI/vendors/chart.js/Chart.min.js"></script>
 <script src="../UI/vendors/datatables.net/jquery.dataTables.js"></script>

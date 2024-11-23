@@ -92,7 +92,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Danh sách đồ uống</title>
-    <link rel="stylesheet" href="path-to-your-css-file.css"> <!-- Add your CSS file for styling -->
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .container {

@@ -10,12 +10,15 @@ if (isset($_GET['BillID'])) {
 }
 
 // Truy vấn thông tin hóa đơn từ cơ sở dữ liệu
-$query = "SELECT BillInfos.BillID, BillInfos.DrinkCount, BillInfos.DrinkPrice, Drinks.DrinkName, Bills.CreateDate, Users.FullName 
+$query = "SELECT BillInfos.BillID, BillInfos.DrinkCount, BillInfos.DrinkPrice, Drinks.DrinkName, 
+                 Bills.CreateDate, Users.FullName AS UserName, Customer.CustomerName
           FROM BillInfos 
           JOIN Bills ON BillInfos.BillID = Bills.BillID 
+          JOIN Customer ON Bills.CustomerID = Customer.CustomerID -- Đúng quan hệ khóa ngoại
           JOIN Users ON Bills.UserID = Users.UserID 
           JOIN Drinks ON BillInfos.DrinkID = Drinks.DrinkID 
           WHERE BillInfos.BillID = ?";
+
 $stmt = $conn->prepare($query);
 $stmt->bind_param("s", $billID); // Sử dụng 's' vì BillID có thể là chuỗi
 $stmt->execute();
@@ -28,7 +31,9 @@ if (empty($billInfos)) {
 }
 
 // Lấy thông tin người dùng
-$userFullName = htmlspecialchars($billInfos[0]['FullName']);
+$userFullName = htmlspecialchars($billInfos[0]['UserName']);
+$customerFullName = htmlspecialchars($billInfos[0]['CustomerName']); // Sửa lại cho đúng tên cột
+
 
 // Tính tổng tiền
 $total = 0;
@@ -122,6 +127,7 @@ $conn->close();
             </div>
             <p>Mã hóa đơn: <?= htmlspecialchars($billInfos[0]['BillID']); ?></p>
             <p>Ngày lập hóa đơn: <?= date('Y-m-d H:i', strtotime($billInfos[0]['CreateDate'])); ?></p>
+            <p>Khách hàng: <?= $customerFullName; ?></p>
             <p>Nhân viên: <?= $userFullName; ?></p>
             <div class="invoice-box">
                 <table>
