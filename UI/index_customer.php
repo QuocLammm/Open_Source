@@ -95,9 +95,8 @@ $result = $stmt->get_result();
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-2">
                         <p class="card-title">Danh sách khách hàng</p>
-                        <a href="create_customer.php" class="btn btn-success">Thêm</a>  
+                        <a href="create_drink.php" class="btn btn-success">Thêm</a>
                     </div>
-                    <!--Tìm kiếm-->
                     <form method="get" action="">
                         <div class="d-flex align-items-center mb-2 w-75">
                             <!-- Tìm kiếm theo tên khách hàng -->

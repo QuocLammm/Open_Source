@@ -1,5 +1,5 @@
 <?php
-include('includes/session_user.php');
+include("includes/connectSQL.php");
 if (isset($_POST['login'])) {
     $adminuser = $_POST['username'];
     $password = $_POST['password'];
@@ -21,12 +21,12 @@ if (isset($_POST['login'])) {
             // Kiểm tra nếu UserID khác 1
             if ($ret['UserID'] != 1) {
                 // Nếu UserID không phải là 1, chuyển hướng về trang dashboard
-                setcookie('UserID', $ret['UserID'], time() + 3600, "/");
+                setcookie('UserID', $ret['UserID'], time() + 36000, "/");
                 header('location:dashboard.php');
                 exit();
             } else {
                 // Nếu UserID là 1, chuyển hướng về trang quản trị
-                setcookie('UserID', $ret['UserID'], time() + 3600, "/");
+                setcookie('UserID', $ret['UserID'], time() + 36000, "/");
                 header('location:index_admin.php');
                 exit();
             }
@@ -38,7 +38,6 @@ if (isset($_POST['login'])) {
 
 $conn->close();
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
