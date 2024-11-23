@@ -1,28 +1,61 @@
 <?php
-require_once("includes/UsersController.php");
 require_once("includes/session_user.php");
-//
-$controller = new UsersController();
+
+// Khởi tạo mảng để chứa người dùng
 $users = [];
 $fullName = $gender = $userCategoryName = '';
-$data = json_decode(file_get_contents("php://input"), true);
 
-if (isset($data['delete_id'])) {
-    // Xóa một người dùng
-    $controller->delete($data['delete_id']);
-} elseif (isset($data['delete_ids'])) {
-    // Xóa nhiều người dùng
-    $ids = $data['delete_ids'];
-    $controller->deleteAll($ids);
-} 
-
+// Xử lý tìm kiếm người dùng
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fullName = $_POST['fullName'] ?? '';
     $gender = $_POST['gender'] ?? '';
     $userCategoryName = $_POST['userCategoryName'] ?? '';
-    $users = $controller->search($fullName, $gender, $userCategoryName);
+    
+    // Truy vấn lấy người dùng theo điều kiện
+    $sql = "SELECT u.UserID, u.FullName, u.Gender, u.UserCategoryID, u.UserImage, u.PhoneNumber, u.Username, u.Password, uc.UserCategoryName
+            FROM Users u
+            LEFT JOIN UserCategories uc ON u.UserCategoryID = uc.UserCategoryID
+            WHERE 1=1";
+    
+    if ($fullName) {
+        $sql .= " AND u.FullName LIKE ?";
+        $params[] = '%' . $fullName . '%';
+    }
+    
+    if ($gender) {
+        $sql .= " AND u.Gender = ?";
+        $params[] = $gender;
+    }
+
+    if ($userCategoryName) {
+        $sql .= " AND uc.UserCategoryName LIKE ?";
+        $params[] = '%' . $userCategoryName . '%';
+    }
+
+    $stmt = $conn->prepare($sql);
+
+    // Gắn các tham số vào câu truy vấn
+    if (!empty($params)) {
+        $stmt->bind_param(str_repeat('s', count($params)), ...$params);
+    }
+
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    while ($row = $result->fetch_assoc()) {
+        $users[] = $row;
+    }
+
+    $stmt->close();
 } else {
-    $users = $controller->index();
+    // Lấy tất cả người dùng
+    $sql = "SELECT u.UserID, u.FullName, u.Gender, u.UserCategoryID, u.UserImage, u.PhoneNumber, u.Username, u.Password, uc.UserCategoryName
+            FROM Users u
+            LEFT JOIN UserCategories uc ON u.UserCategoryID = uc.UserCategoryID";
+    $result = $conn->query($sql);
+    while ($row = $result->fetch_assoc()) {
+        $users[] = $row;
+    }
 }
 ?>
 
@@ -56,29 +89,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     .pagination {
         display: flex;
-        justify-content: center; /* Căn giữa các liên kết */
-        gap: 10px; /* Tạo khoảng cách giữa các liên kết */
+        justify-content: center;
+        gap: 10px;
     }
 
     .pagination a {
-        text-decoration: none; /* Bỏ gạch chân cho liên kết */
-        padding: 8px 12px; /* Thêm padding cho các liên kết */
-        border: 1px solid #007bff; /* Đường viền cho các liên kết */
-        border-radius: 5px; /* Bo góc cho các liên kết */
-        color: #007bff; /* Màu chữ */
+        text-decoration: none;
+        padding: 8px 12px;
+        border: 1px solid #007bff;
+        border-radius: 5px;
+        color: #007bff;
     }
 
     .pagination a:hover {
-        text-decoration: none; /* Bỏ gạch chân cho liên kết */
-        background-color: #007bff; /* Màu nền khi hover */
-        color: white; /* Màu chữ khi hover */
+        text-decoration: none;
+        background-color: #007bff;
+        color: white;
     }
 
     .pagination strong {
-        color: red; /* Màu chữ cho trang hiện tại */
-        border: 1px solid #007bff; /* Đường viền cho trang hiện tại */
-        padding: 8px 12px; /* Padding tương tự như các liên kết khác */
-        border-radius: 5px; /* Bo góc giống nhau */
+        color: red;
+        border: 1px solid #007bff;
+        padding: 8px 12px;
+        border-radius: 5px;
     }
 </style>
 <body>
@@ -102,8 +135,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <button type="button" class="btn btn-secondary" onclick="window.location.href='index_users.php';">Load</button>
                 </div>
             </div>
-                        <!--table-->
-        
 
             <table class="table table-bordered">
                 <thead>
@@ -124,27 +155,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php
     if (!empty($users)) {
         foreach ($users as $row) {
-            // Kiểm tra UserID có tồn tại không
-            if (isset($row['UserID'])) {
-                echo "<tr>";
-                echo "<td><input type='checkbox' class='user-checkbox' data-id='{$row['UserID']}'></td>";
-                echo "<td>" . htmlspecialchars($row['UserID']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['FullName']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['UserCategoryName']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['Gender']) . "</td>";
-                echo "<td><img src='images/users/" . htmlspecialchars($row['UserImage']) . "' alt='image' style='width: 50px;'></td>";
-                echo "<td>" . htmlspecialchars($row['PhoneNumber']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['Username']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['Password']) . "</td>";
-                echo "<td>
-                        <a href='edit_users.php?id=" . $row['UserID'] . "' class='btn btn-sm btn-primary'>Sửa</a>
-                        <a href='#' class='btn btn-sm btn-danger btnDelete' data-id='" . $row['UserID'] . "'>Xóa</a>
-                    </td>";
-                echo "</tr>";
-            } else {
-                // Xử lý trường hợp không có UserID
-                echo "<tr><td colspan='10' class='text-center'>Bản ghi không hợp lệ</td></tr>";
-            }
+            echo "<tr>";
+            echo "<td><input type='checkbox' class='user-checkbox' data-id='{$row['UserID']}'></td>";
+            echo "<td>" . htmlspecialchars($row['UserID']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['FullName']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['UserCategoryName']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['Gender']) . "</td>";
+            echo "<td><img src='images/users/" . htmlspecialchars($row['UserImage']) . "' alt='image' style='width: 50px;'></td>";
+            echo "<td>" . htmlspecialchars($row['PhoneNumber']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['Username']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['Password']) . "</td>";
+            echo "<td>
+                    <a href='edit_users.php?id=" . $row['UserID'] . "' class='btn btn-sm btn-primary'>Sửa</a>
+                    <a href='#' class='btn btn-sm btn-danger btnDelete' data-id='" . $row['UserID'] . "'>Xóa</a>
+                </td>";
+            echo "</tr>";
         }
     } else {
         echo "<tr><td colspan='10' class='text-center'>Không có dữ liệu</td></tr>";
@@ -156,138 +181,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script>
-        // Confirm delete action
-        function confirmDelete() {
-            return confirm("Bạn có chắc chắn muốn xóa không?");
-        }
-
-        // "Select all" checkbox
-        document.getElementById('select-all').addEventListener('change', function() {
-            const checkboxes = document.querySelectorAll('.user-checkbox');
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
-            });
-        });
-
-        
         document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.btnDelete').forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
-            e.preventDefault();
-            var itemId = this.getAttribute('data-id');
-            Swal.fire({
-                title: 'Bạn có chắc chắn muốn xóa bản ghi này?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'OK',
-                cancelButtonText: 'Hủy',
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Send a POST request to delete the user
-                    fetch('index_users.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ delete_id: itemId })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                title: 'Đã xóa thành công!',
-                                icon: 'success',
-                                confirmButtonText: 'OK'
-                            }).then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire({
-                                title: 'Lỗi!',
-                                text: data.message,
-                                icon: 'error',
-                                confirmButtonText: 'OK'
+            document.querySelectorAll('.btnDelete').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var itemId = this.getAttribute('data-id');
+                    Swal.fire({
+                        title: 'Bạn có chắc chắn muốn xóa bản ghi này?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'OK',
+                        cancelButtonText: 'Hủy',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch('includes/delete_user.php', { // Đảm bảo URL đúng với tệp xóa của bạn
+                                method: 'POST',
+                                body: JSON.stringify({ delete_id: itemId }),  // Sửa từ 'id' thành 'delete_id'
+                                headers: { 'Content-Type': 'application/json' }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: 'Xóa thành công!',
+                                        icon: 'success',
+                                        confirmButtonText: 'OK'
+                                    }).then(() => {
+                                        location.reload(); // Tải lại trang để cập nhật danh sách
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        title: 'Lỗi!',
+                                        text: data.message,
+                                        icon: 'error',
+                                        confirmButtonText: 'OK'
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                Swal.fire({
+                                    title: 'Lỗi!',
+                                    text: 'Đã xảy ra lỗi khi xóa.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
                             });
                         }
-                    })
-                    .catch(error => {
-                        Swal.fire({
-                            title: 'Lỗi!',
-                            text: 'Đã xảy ra lỗi khi xóa.',
-                            icon: 'error',
-                            confirmButtonText: 'OK'
-                        });
                     });
-                }
+                });
             });
         });
-    });
 
-    // Thêm nút xóa nhiều người dùng
-    document.getElementById('delete-selected').addEventListener('click', function () {
-        const selectedIds = Array.from(document.querySelectorAll('.user-checkbox:checked'))
-            .map(checkbox => checkbox.getAttribute('data-id'))
-            .join(',');
-
-        if (selectedIds) {
-            Swal.fire({
-                title: 'Bạn có chắc chắn muốn xóa các bản ghi đã chọn?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'OK',
-                cancelButtonText: 'Hủy',
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch('delete_users.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ delete_ids: selectedIds })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                title: 'Đã xóa thành công!',
-                                icon: 'success',
-                                confirmButtonText: 'OK'
-                            }).then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire({
-                                title: 'Lỗi!',
-                                text: data.message,
-                                icon: 'error',
-                                confirmButtonText: 'OK'
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        Swal.fire({
-                            title: 'Lỗi!',
-                            text: 'Đã xảy ra lỗi khi xóa.',
-                            icon: 'error',
-                            confirmButtonText: 'OK'
-                        });
-                    });
-                }
+            document.getElementById('select-all').addEventListener('change', function () {
+                var checkboxes = document.querySelectorAll('.user-checkbox');
+                checkboxes.forEach(function (checkbox) {
+                    checkbox.checked = this.checked;
+                });
             });
-        } else {
-            Swal.fire({
-                title: 'Chưa chọn người dùng!',
-                icon: 'info',
-                confirmButtonText: 'OK'
-            });
-        }
-    });
-});
-
     </script>
+
 </body>
 </html>
-
-<?php
-$conn->close();
-?>

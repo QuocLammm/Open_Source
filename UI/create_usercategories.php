@@ -1,24 +1,26 @@
 <?php
-include("includes/session_user.php");// Kết nối đến cơ sở dữ liệu
-include("includes/UsersCategoriesController.php"); // Bao gồm lớp UserCategoriesController
-
-$controller = new UserCategoriesController();
+include("includes/session_user.php"); // Kết nối cơ sở dữ liệu
 
 // Xử lý form submit để thêm loại người dùng mới
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $newUserCategory = [
-        'UserCategoryName' => htmlspecialchars($_POST['userCategoryName']),
-        'UserCategoryDescription' => htmlspecialchars($_POST['userCategoryDescription'])
-    ];
+    $userCategoryName = htmlspecialchars($_POST['userCategoryName']);
+    $userCategoryDescription = htmlspecialchars($_POST['userCategoryDescription']);
 
-    // Gọi phương thức create để thêm loại người dùng
-    if ($controller->create($newUserCategory)) {
+    // Truy vấn chèn loại người dùng mới vào bảng UserCategories
+    $stmt = $conn->prepare("INSERT INTO UserCategories (UserCategoryName, UserCategoryDescription) VALUES (?, ?)");
+    $stmt->bind_param("ss", $userCategoryName, $userCategoryDescription);
+
+    if ($stmt->execute()) {
         echo "<script>alert('Thêm loại người dùng thành công!'); window.location.href='index_usercategories.php';</script>";
     } else {
-        echo "Lỗi khi thêm loại người dùng: " . $conn->error;
+        echo "Lỗi khi thêm loại người dùng: " . $stmt->error;
     }
+
+    $stmt->close();
 }
 
+// Đóng kết nối cơ sở dữ liệu
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -40,17 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: 8px;
         }
         .btn-info {
-            background-color: #DEB887; /* Màu nền mới */
-            color: white; /* Màu chữ */
+            background-color: #DEB887;
+            color: white;
         }
         .form-label {
             margin-bottom: 0.5rem;
             font-weight: 500;
         }
-        .btnDelete {
-            cursor: pointer;
-        }
-        /* Các styles khác... */
     </style>
 </head>
 <body>
@@ -80,8 +78,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="../UI/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-<?php
-// Đóng kết nối
-$conn->close();
-?>

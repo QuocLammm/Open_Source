@@ -1,31 +1,27 @@
 <?php
-include("includes/session_user.php");
-include("includes/DrinkCategoriesController.php"); // Bao gồm lớp điều khiển
-
-$controller = new DrinkCategoriesController($conn);
+include("includes/session_user.php"); // Kết nối cơ sở dữ liệu
 
 // Kiểm tra xem có gửi dữ liệu từ biểu mẫu không
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Fetch form data
-    $drinkCategoryName = isset($_POST['drinkCategoryName']) ? $_POST['drinkCategoryName'] : '';
-    $description = isset($_POST['description']) ? $_POST['description'] : '';
+    // Lấy dữ liệu từ biểu mẫu
+    $drinkCategoryName = isset($_POST['drinkCategoryName']) ? trim($_POST['drinkCategoryName']) : '';
+    $description = isset($_POST['description']) ? trim($_POST['description']) : '';
 
     // Kiểm tra các trường bắt buộc
     if (empty($drinkCategoryName)) {
         $error_message = "Tên loại đồ uống không được để trống.";
     } else {
-        $drinkCategory = [
-            'DrinkCategoryName' => $drinkCategoryName,
-            'DrinkCategoryDescription' => $description
-        ];
+        // Thực hiện thêm loại đồ uống mới
+        $stmt = $conn->prepare("INSERT INTO DrinkCategories (DrinkCategoryName, DrinkCategoryDescription) VALUES (?, ?)");
+        $stmt->bind_param("ss", $drinkCategoryName, $description);
 
-        // Gọi phương thức tạo mới
-        if ($controller->create($drinkCategory)) {
+        if ($stmt->execute()) {
             header("Location: index_drinkcategories.php?success=1");
             exit();
         } else {
-            $error_message = "Lỗi khi thêm loại đồ uống.";
+            $error_message = "Lỗi khi thêm loại đồ uống: " . $stmt->error;
         }
+        $stmt->close();
     }
 }
 
@@ -33,7 +29,7 @@ $conn->close();
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -69,39 +65,10 @@ $conn->close();
             margin-bottom: 0.5rem;
             font-weight: 500;
         }
-        .btnDelete {
-            cursor: pointer;
-        }
-        .pagination {
-            display: flex;
-            justify-content: center; /* Căn giữa các liên kết */
-            gap: 10px; /* Tạo khoảng cách giữa các liên kết */
-        }
-
-        .pagination a {
-            text-decoration: none; /* Bỏ gạch chân cho liên kết */
-            padding: 8px 12px; /* Thêm padding cho các liên kết */
-            border: 1px solid #007bff; /* Đường viền cho các liên kết */
-            border-radius: 5px; /* Bo góc cho các liên kết */
-            color: #007bff; /* Màu chữ */
-        }
-
-        .pagination a:hover {
-            text-decoration: none; /* Bỏ gạch chân cho liên kết */
-            background-color: #007bff; /* Màu nền khi hover */
-            color: white; /* Màu chữ khi hover */
-        }
-
-        .pagination strong {
-            color: red; /* Màu chữ cho trang hiện tại */
-            border: 1px solid #007bff; /* Đường viền cho trang hiện tại */
-            padding: 8px 12px; /* Padding tương tự như các liên kết khác */
-            border-radius: 5px; /* Bo góc giống nhau */
-        }
     </style>
 </head>
 <body>
-    <?php include("includes/_layoutAdmin.php");?>
+    <?php include("includes/_layoutAdmin.php"); ?>
     <div class="container">
         <form action="" method="POST" enctype="multipart/form-data" class="form-section">
             <h3>Thêm Loại Đồ Uống Mới</h3>

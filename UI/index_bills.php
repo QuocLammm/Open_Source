@@ -2,112 +2,83 @@
 require_once("includes/session_user.php");
 include("includes/Pager.php");
 
-function deleteBill($idBill) {
-    global $conn;
+$itemsPerPage = 5; // Số hóa đơn trên mỗi trang
 
-    // Delete the bill
-    $stmt = $conn->prepare("DELETE FROM Bills WHERE BillID = ?");
-    $stmt->bind_param("i", $idBill);
-    $stmt->execute();
-
-    // Check if deletion was successful
-    if ($stmt->affected_rows > 0) {
-        echo json_encode(["success" => true]);
-    } else {
-        echo json_encode(["success" => false, "message" => "Failed to delete bill."]);
-    }
-
-    $stmt->close();
-}
-
-function deleteBillItem($idDrink, $idBill) {
-    global $conn;
-
-    // Delete the item from BillInfos based on BillID and DrinkID
-    $stmt = $conn->prepare("DELETE FROM BillInfos WHERE BillID = ? AND DrinkID = ?");
-    $stmt->bind_param("ii", $idBill, $idDrink);
-    $stmt->execute();
-
-    // Check if there are any remaining BillInfos for this BillID
-    $checkStmt = $conn->prepare("SELECT COUNT(*) as count FROM BillInfos WHERE BillID = ?");
-    $checkStmt->bind_param("i", $idBill);
-    $checkStmt->execute();
-    $result = $checkStmt->get_result();
-    $row = $result->fetch_assoc();
-
-    if ($row['count'] == 0) {
-        // If no items left in BillInfos, delete the Bill from Bills table
-        $deleteBillStmt = $conn->prepare("DELETE FROM Bills WHERE BillID = ?");
-        $deleteBillStmt->bind_param("i", $idBill);
-        $deleteBillStmt->execute();
-    } else {
-        // If there are still items, update the TotalAmount in Bills
-        $updateStmt = $conn->prepare("UPDATE Bills SET TotalAmount = (SELECT SUM(DrinkCount * DrinkPrice) FROM BillInfos WHERE BillID = ?) WHERE BillID = ?");
-        $updateStmt->bind_param("ii", $idBill, $idBill);
-        $updateStmt->execute();
-    }
-
-    // Return JSON confirmation of success
-    echo json_encode(["success" => true]);
-
-    // Close statements
-    $stmt->close();
-    $checkStmt->close();
-    $deleteBillStmt->close();
-    $updateStmt->close();
-}
-
+// Kiểm tra xem có yêu cầu xóa hóa đơn không
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Xóa một hóa đơn
     if (isset($_POST['idBill'])) {
-        $idBill = $_POST['idBill'];
-        deleteBill($idBill);
-    } elseif (isset($_POST['idDrink']) && isset($_POST['idBill'])) {
-        $idDrink = $_POST['idDrink'];
-        $idBill = $_POST['idBill'];
-        deleteBillItem($idDrink, $idBill);
-    } elseif (isset($_POST['ids'])) {
-        // Handle multiple deletion
-        $ids = $_POST['ids'];
-        $idArray = explode(',', $ids);
-        $idList = implode(',', array_map('intval', $idArray));
-        if (!$conn->query("DELETE FROM Bills WHERE BillID IN ($idList)")) {
-            echo "Lỗi khi xóa nhiều hóa đơn: " . $conn->error;
+        $idBill = intval($_POST['idBill']);
+
+        // Bắt đầu xóa sản phẩm trong `billinfos`
+        $sqlDeleteBillInfos = "DELETE FROM billinfos WHERE BillID = ?";
+        $stmt = $conn->prepare($sqlDeleteBillInfos);
+        $stmt->bind_param("i", $idBill);
+
+        if ($stmt->execute()) {
+            // Tiếp tục xóa hóa đơn trong `bills`
+            $sqlDeleteBill = "DELETE FROM bills WHERE BillID = ?";
+            $stmt = $conn->prepare($sqlDeleteBill);
+            $stmt->bind_param("i", $idBill);
+            if ($stmt->execute()) {
+                echo json_encode(["success" => true, "message" => "Xóa hóa đơn thành công."]);
+            } else {
+                echo json_encode(["success" => false, "message" => "Lỗi xóa hóa đơn: " . $conn->error]);
+            }
+        } else {
+            echo json_encode(["success" => false, "message" => "Lỗi xóa sản phẩm trong hóa đơn: " . $conn->error]);
         }
-        header("Location: index_bills.php");
-        exit();
+        exit;
+    }
+
+    // Xóa nhiều hóa đơn
+    if (isset($_POST['ids'])) {
+        $ids = array_map('intval', explode(',', $_POST['ids']));
+
+        // Xóa các sản phẩm trong `billinfos`
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $sqlDeleteBillInfos = "DELETE FROM billinfos WHERE BillID IN ($placeholders)";
+        $stmt = $conn->prepare($sqlDeleteBillInfos);
+        $stmt->bind_param(str_repeat('i', count($ids)), ...$ids);
+
+        if ($stmt->execute()) {
+            // Tiếp tục xóa các hóa đơn trong `bills`
+            $sqlDeleteBills = "DELETE FROM bills WHERE BillID IN ($placeholders)";
+            $stmt = $conn->prepare($sqlDeleteBills);
+            $stmt->bind_param(str_repeat('i', count($ids)), ...$ids);
+            if ($stmt->execute()) {
+                echo json_encode(["success" => true, "message" => "Xóa nhiều hóa đơn thành công."]);
+            } else {
+                echo json_encode(["success" => false, "message" => "Lỗi xóa hóa đơn: " . $conn->error]);
+            }
+        } else {
+            echo json_encode(["success" => false, "message" => "Lỗi xóa sản phẩm trong hóa đơn: " . $conn->error]);
+        }
+        exit;
     }
 }
 
-$itemsPerPage = 5; // Define the number of items per page
-
-// Get the current page from the URL, default is 1
+// Lấy hóa đơn và xử lý phân trang
 $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($currentPage < 1) {
     $currentPage = 1;
 }
-
-// Calculate the offset for the SQL query
 $offset = ($currentPage - 1) * $itemsPerPage;
 
-// Modify SQL query to fetch only the data for the current page
 $sql = "SELECT bills.BillID, users.FullName, bills.CreateDate 
         FROM bills 
         JOIN users ON bills.UserID = users.UserID 
         LIMIT $itemsPerPage OFFSET $offset";
 $result = $conn->query($sql);
+$bills = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 
-// Fetch data and check for SQL errors
-if (!$result) {
-    echo "Error: " . $conn->error;
-} else {
-    $bills = $result->fetch_all(MYSQLI_ASSOC);
-}
-
-// Get total count for pagination
 $totalResults = $conn->query("SELECT COUNT(*) as count FROM bills")->fetch_assoc()['count'];
-$pager = new Pager(range(1, $totalResults), $itemsPerPage); // Use a range to represent the total pages
+$pager = new Pager(range(1, $totalResults), $itemsPerPage);
 
+$conn->close();
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="en">

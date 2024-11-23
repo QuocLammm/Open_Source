@@ -1,39 +1,35 @@
 <?php
-require_once("includes/UsersCategoriesController.php");
 require_once("includes/session_user.php");
-//
-$controller = new UserCategoriesController();
+
 $userCategories = [];
 $userCategoryName = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Check if it's a delete request
-    if (isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['id'])) {
-        $id = $_POST['id'];
 
-        // Assuming there's a method in the controller to handle deletion
-        $deleteSuccess = $controller->delete($id);
-        
-        if ($deleteSuccess) {
-            echo json_encode(['success' => true]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Delete failed']);
-        }
-        exit;
+// Xử lý yêu cầu xóa
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Tìm kiếm theo tên loại người dùng
+    $userCategoryName = $_POST['userCategoryName'] ?? '';
+    $sql = "SELECT * FROM UserCategories WHERE UserCategoryName LIKE ?";
+    $stmt = $conn->prepare($sql);
+    $searchTerm = '%' . $userCategoryName . '%';
+    $stmt->bind_param('s', $searchTerm);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    while ($row = $result->fetch_assoc()) {
+        $userCategories[] = $row;
     }
 
-    // Search functionality
-    $userCategoryName = $_POST['userCategoryName'] ?? '';
-    $userCategories = $controller->search($userCategoryName);
+    $stmt->close();
 } else {
-    // Load all user categories on initial page load
-    $userCategories = $controller->index();
+    // Load tất cả loại người dùng khi trang tải lần đầu
+    $sql = "SELECT * FROM UserCategories";
+    $result = $conn->query($sql);
+    while ($row = $result->fetch_assoc()) {
+        $userCategories[] = $row;
+    }
 }
-
-
-
-
-// Hiển thị dữ liệu
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -70,29 +66,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     .pagination {
         display: flex;
-        justify-content: center; /* Căn giữa các liên kết */
-        gap: 10px; /* Tạo khoảng cách giữa các liên kết */
+        justify-content: center;
+        gap: 10px;
     }
 
     .pagination a {
-        text-decoration: none; /* Bỏ gạch chân cho liên kết */
-        padding: 8px 12px; /* Thêm padding cho các liên kết */
-        border: 1px solid #007bff; /* Đường viền cho các liên kết */
-        border-radius: 5px; /* Bo góc cho các liên kết */
-        color: #007bff; /* Màu chữ */
+        text-decoration: none;
+        padding: 8px 12px;
+        border: 1px solid #007bff;
+        border-radius: 5px;
+        color: #007bff;
     }
 
     .pagination a:hover {
-        text-decoration: none; /* Bỏ gạch chân cho liên kết */
-        background-color: #007bff; /* Màu nền khi hover */
-        color: white; /* Màu chữ khi hover */
+        background-color: #007bff;
+        color: white;
     }
 
     .pagination strong {
-        color: red; /* Màu chữ cho trang hiện tại */
-        border: 1px solid #007bff; /* Đường viền cho trang hiện tại */
-        padding: 8px 12px; /* Padding tương tự như các liên kết khác */
-        border-radius: 5px; /* Bo góc giống nhau */
+        color: red;
+        border: 1px solid #007bff;
+        padding: 8px 12px;
+        border-radius: 5px;
     }
 </style>
 
@@ -106,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="row mb-3">
                 <div class="col">
-                    <input type="text" name="userCategoryName" class="form-control" placeholder="Tên loại người dùng">
+                    <input type="text" name="userCategoryName" class="form-control" placeholder="Tên loại người dùng" value="<?php echo htmlspecialchars($userCategoryName); ?>">
                 </div>
                 <div class="col">
                     <button type="submit" class="btn btn-primary">Tìm kiếm</button>
@@ -157,62 +152,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         });
 
-        // Xóa bản ghi
         document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.btnDelete').forEach(function (btn) {
-        btn.addEventListener('click', async function (e) {
-            e.preventDefault();
-            var itemId = this.getAttribute('data-id');
-            const result = await Swal.fire({
-                title: 'Bạn có chắc chắn muốn xóa bản ghi này?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'OK',
-                cancelButtonText: 'Hủy',
+            document.querySelectorAll('.btnDelete').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var itemId = this.getAttribute('data-id');
+                    Swal.fire({
+                        title: 'Bạn có chắc chắn muốn xóa bản ghi này?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'OK',
+                        cancelButtonText: 'Hủy',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch('includes/delete_user_cate.php', { // Đảm bảo URL đúng với tệp xóa của bạn
+                                method: 'POST',
+                                body: JSON.stringify({ delete_id: itemId }),  // Sửa từ 'id' thành 'delete_id'
+                                headers: { 'Content-Type': 'application/json' }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: 'Xóa thành công!',
+                                        icon: 'success',
+                                        confirmButtonText: 'OK'
+                                    }).then(() => {
+                                        location.reload(); // Tải lại trang để cập nhật danh sách
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        title: 'Lỗi!',
+                                        text: data.message,
+                                        icon: 'error',
+                                        confirmButtonText: 'OK'
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                Swal.fire({
+                                    title: 'Lỗi!',
+                                    text: 'Đã xảy ra lỗi khi xóa.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                            });
+                        }
+                    });
+                });
             });
-            if (result.isConfirmed) {
-                try {
-                    const response = await fetch('', {
-                        method: 'POST',
-                        body: JSON.stringify({ 
-                            action: 'delete', 
-                            id: itemId 
-                        }),
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        await Swal.fire({
-                            title: 'Đã xóa thành công!',
-                            icon: 'success',
-                            confirmButtonText: 'OK'
-                        });
-                        location.reload(); // Reload the page to update the list
-                    } else {
-                        await Swal.fire({
-                            title: 'Lỗi!',
-                            text: data.message,
-                            icon: 'error',
-                            confirmButtonText: 'OK'
-                        });
-                    }
-                } catch (error) {
-                    await Swal.fire({
-                        title: 'Lỗi!',
-                        text: 'Có lỗi xảy ra. Vui lòng thử lại sau.',
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    });
-                }
-            }
         });
-    });
-});
+
 
     </script>
 </body>
 </html>
 
-<?php
-$conn->close();
-?>

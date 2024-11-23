@@ -1,8 +1,6 @@
 <?php
-include("includes/session_user.php");
-include("includes/UsersCategoriesController.php"); // Bao gồm lớp UserCategoriesController
+include("includes/session_user.php"); // Kết nối cơ sở dữ liệu
 
-$controller = new UserCategoriesController();
 $userCategoryID = null;
 $userCategoryName = '';
 $userCategoryDescription = '';
@@ -10,16 +8,18 @@ $userCategoryDescription = '';
 // Lấy UserCategoryID từ URL và kiểm tra hợp lệ
 if (isset($_GET['id']) && is_numeric($_GET['id'])) {
     $userCategoryID = $_GET['id'];
-    
+
     // Lấy thông tin loại người dùng
-    $category = $controller->getCategory($userCategoryID);
-    if ($category) {
-        $userCategoryName = $category['name'];
-        $userCategoryDescription = $category['description'];
-    } else {
+    $stmt = $conn->prepare("SELECT UserCategoryName, UserCategoryDescription FROM UserCategories WHERE UserCategoryID = ?");
+    $stmt->bind_param("i", $userCategoryID);
+    $stmt->execute();
+    $stmt->bind_result($userCategoryName, $userCategoryDescription);
+
+    if (!$stmt->fetch()) {
         echo "Không tìm thấy loại người dùng.";
         exit();
     }
+    $stmt->close();
 } else {
     echo "No valid UserCategoryID provided!";
     exit();
@@ -27,15 +27,19 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
 
 // Xử lý form submit để lưu thông tin sau khi chỉnh sửa
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $updatedName = htmlspecialchars($_POST['name']);  // Sử dụng htmlspecialchars để tránh XSS
+    $updatedName = htmlspecialchars($_POST['name']);  // Tránh XSS
     $updatedDescription = htmlspecialchars($_POST['description']);
 
     // Cập nhật thông tin loại người dùng
-    if ($controller->updateCategory($userCategoryID, $updatedName, $updatedDescription)) {
+    $stmt = $conn->prepare("UPDATE UserCategories SET UserCategoryName = ?, UserCategoryDescription = ? WHERE UserCategoryID = ?");
+    $stmt->bind_param("ssi", $updatedName, $updatedDescription, $userCategoryID);
+
+    if ($stmt->execute()) {
         echo "<script>alert('Cập nhật thành công!'); window.location.href='index_usercategories.php';</script>";
     } else {
-        echo "Lỗi khi cập nhật bản ghi: " . $conn->error;
+        echo "Lỗi khi cập nhật bản ghi: " . $stmt->error;
     }
+    $stmt->close();
 }
 
 $conn->close();
@@ -43,7 +47,7 @@ $conn->close();
 
 <!-- Trang hiển thị form chỉnh sửa -->
 <!doctype html>
-<html lang="en">
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
@@ -51,43 +55,6 @@ $conn->close();
     <title>Chỉnh sửa loại người dùng</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .container{
-            max-width: 900px;
-            margin-top: 20px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-        }
-        .form-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px; /* Space between columns */
-        }
-        .form-column {
-            flex: 1; /* Equal width columns */
-        }
-        .text-center {
-            text-align: center;
-        }
-        .btn {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn:hover {
-            background-color: #0056b3;
-        }
-
         .container {
             max-width: 900px;
             margin-top: 20px;
@@ -102,34 +69,21 @@ $conn->close();
             margin-bottom: 0.5rem;
             font-weight: 500;
         }
-        .btnDelete {
-            cursor: pointer;
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
         }
-        .pagination {
-            display: flex;
-            justify-content: center; /* Căn giữa các liên kết */
-            gap: 10px; /* Tạo khoảng cách giữa các liên kết */
+        .btn-success {
+            background-color: #007bff;
+            color: white;
         }
-
-        .pagination a {
-            text-decoration: none; /* Bỏ gạch chân cho liên kết */
-            padding: 8px 12px; /* Thêm padding cho các liên kết */
-            border: 1px solid #007bff; /* Đường viền cho các liên kết */
-            border-radius: 5px; /* Bo góc cho các liên kết */
-            color: #007bff; /* Màu chữ */
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
         }
-
-        .pagination a:hover {
-            text-decoration: none; /* Bỏ gạch chân cho liên kết */
-            background-color: #007bff; /* Màu nền khi hover */
-            color: white; /* Màu chữ khi hover */
-        }
-
-        .pagination strong {
-            color: red; /* Màu chữ cho trang hiện tại */
-            border: 1px solid #007bff; /* Đường viền cho trang hiện tại */
-            padding: 8px 12px; /* Padding tương tự như các liên kết khác */
-            border-radius: 5px; /* Bo góc giống nhau */
+        .btn:hover {
+            opacity: 0.9;
         }
     </style>
 </head>
