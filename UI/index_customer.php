@@ -2,6 +2,10 @@
 // Kết nối cơ sở dữ liệu
 include 'includes/session_user.php'; // Giả sử file này chứa kết nối với biến $conn
 
+// Khởi tạo thông báo
+$messages = '';
+$message_type = ''; // alert-success hoặc alert-danger
+
 // Kiểm tra xem có yêu cầu xóa không
 if (isset($_POST['delete_id'])) {
     $customerID = $_POST['delete_id'];
@@ -17,14 +21,17 @@ if (isset($_POST['delete_id'])) {
         // Thực hiện câu lệnh SQL
         if ($stmt->execute()) {
             $messages = "Đã xóa thành công!";
+            $message_type = "alert-success";
         } else {
             $messages = "Lỗi khi xóa: " . $stmt->error;
+            $message_type = "alert-danger";
         }
 
         // Đóng statement
         $stmt->close();
     } else {
         $messages = "Lỗi chuẩn bị câu lệnh SQL: " . $conn->error;
+        $message_type = "alert-danger";
     }
 }
 
@@ -38,23 +45,18 @@ $result = $conn->query($sql);
 <head>
     <meta charset="UTF-8">
     <title>Danh Sách Khách Hàng</title>
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.5.0/dist/sweetalert2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.5.0/dist/sweetalert2.all.min.js"></script>
     <style>
-        .container {
-        max-width: 900px;
-        margin-top: 20px;
+        ..container {
+            max-width: 900px;
+            margin-top: 20px;
         }
         .form-section {
-            width: 105%;
             padding: 10px;
             margin: 70px;
             background-color: #f8f9fa;
             border-radius: 8px;
-        }
-        .form-label {
-            margin-bottom: 0.5rem;
-            font-weight: 500;
         }
         table {
             width: 100%;
@@ -76,12 +78,20 @@ $result = $conn->query($sql);
         <form method="GET" class="form-section">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3>Danh sách khách hàng</h3>
-                <?php if (isset($messages)) echo "<p>$messages</p>"; ?>
                 <a href="create_customer.php" class="btn btn-success">Thêm</a>
-            </div> 
+            </div>
+
+            <!-- Hiển thị thông báo nếu có -->
+            <?php if (!empty($messages)) : ?>
+                <div class="alert <?= $message_type ?> alert-dismissible fade show" role="alert">
+                    <?= $messages ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+
             <table class="table table-bordered">
                 <thead>
-                    <tr> 
+                    <tr>
                         <th>#</th>
                         <th>Mã khách hàng</th>
                         <th>Tên khách hàng</th>
@@ -128,6 +138,8 @@ $result = $conn->query($sql);
             </table>
         </form>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 

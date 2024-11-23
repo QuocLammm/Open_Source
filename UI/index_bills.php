@@ -4,79 +4,91 @@ include("includes/Pager.php");
 
 $itemsPerPage = 5; // Số hóa đơn trên mỗi trang
 
-// Kiểm tra xem có yêu cầu xóa hóa đơn không
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Xóa một hóa đơn
-    if (isset($_POST['idBill'])) {
-        $idBill = intval($_POST['idBill']);
+// Lấy dữ liệu tìm kiếm từ GET (sử dụng $_GET thay vì $_POST để giữ dữ liệu khi tải lại trang)
+$search = isset($_GET['search']) ? $_GET['search'] : '';
+$date = isset($_GET['date']) ? $_GET['date'] : '';
 
-        // Bắt đầu xóa sản phẩm trong `billinfos`
-        $sqlDeleteBillInfos = "DELETE FROM billinfos WHERE BillID = ?";
-        $stmt = $conn->prepare($sqlDeleteBillInfos);
-        $stmt->bind_param("i", $idBill);
-
-        if ($stmt->execute()) {
-            // Tiếp tục xóa hóa đơn trong `bills`
-            $sqlDeleteBill = "DELETE FROM bills WHERE BillID = ?";
-            $stmt = $conn->prepare($sqlDeleteBill);
-            $stmt->bind_param("i", $idBill);
-            if ($stmt->execute()) {
-                echo json_encode(["success" => true, "message" => "Xóa hóa đơn thành công."]);
-            } else {
-                echo json_encode(["success" => false, "message" => "Lỗi xóa hóa đơn: " . $conn->error]);
-            }
-        } else {
-            echo json_encode(["success" => false, "message" => "Lỗi xóa sản phẩm trong hóa đơn: " . $conn->error]);
-        }
-        exit;
-    }
-
-    // Xóa nhiều hóa đơn
-    if (isset($_POST['ids'])) {
-        $ids = array_map('intval', explode(',', $_POST['ids']));
-
-        // Xóa các sản phẩm trong `billinfos`
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $sqlDeleteBillInfos = "DELETE FROM billinfos WHERE BillID IN ($placeholders)";
-        $stmt = $conn->prepare($sqlDeleteBillInfos);
-        $stmt->bind_param(str_repeat('i', count($ids)), ...$ids);
-
-        if ($stmt->execute()) {
-            // Tiếp tục xóa các hóa đơn trong `bills`
-            $sqlDeleteBills = "DELETE FROM bills WHERE BillID IN ($placeholders)";
-            $stmt = $conn->prepare($sqlDeleteBills);
-            $stmt->bind_param(str_repeat('i', count($ids)), ...$ids);
-            if ($stmt->execute()) {
-                echo json_encode(["success" => true, "message" => "Xóa nhiều hóa đơn thành công."]);
-            } else {
-                echo json_encode(["success" => false, "message" => "Lỗi xóa hóa đơn: " . $conn->error]);
-            }
-        } else {
-            echo json_encode(["success" => false, "message" => "Lỗi xóa sản phẩm trong hóa đơn: " . $conn->error]);
-        }
-        exit;
-    }
-}
-
-// Lấy hóa đơn và xử lý phân trang
+// Lấy trang hiện tại và tính toán offset
 $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($currentPage < 1) {
     $currentPage = 1;
 }
 $offset = ($currentPage - 1) * $itemsPerPage;
 
-$sql = "SELECT bills.BillID, users.FullName, bills.CreateDate 
-        FROM bills 
-        JOIN users ON bills.UserID = users.UserID 
-        LIMIT $itemsPerPage OFFSET $offset";
-$result = $conn->query($sql);
-$bills = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+// Xây dựng câu lệnh SQL với điều kiện tìm kiếm
+$sql = "SELECT bills.BillID, users.FullName, bills.CreateDate
+        FROM bills
+        JOIN users ON bills.UserID = users.UserID
+        WHERE 1";
 
-$totalResults = $conn->query("SELECT COUNT(*) as count FROM bills")->fetch_assoc()['count'];
+if (!empty($search)) {
+    // Tìm kiếm theo mã hóa đơn
+    $sql .= " AND bills.BillID LIKE ?";
+}
+
+if (!empty($date)) {
+    // Tìm kiếm theo ngày lập hóa đơn
+    $sql .= " AND DATE(bills.CreateDate) = ?";
+}
+
+$sql .= " LIMIT $itemsPerPage OFFSET $offset";
+
+// Chuẩn bị câu lệnh và thực hiện tìm kiếm
+$stmt = $conn->prepare($sql);
+
+// Bind các tham số tìm kiếm
+if (!empty($search) && !empty($date)) {
+    $searchTerm = "%$search%";
+    $stmt->bind_param("ss", $searchTerm, $date);
+} elseif (!empty($search)) {
+    $searchTerm = "%$search%";
+    $stmt->bind_param("s", $searchTerm);
+} elseif (!empty($date)) {
+    $stmt->bind_param("s", $date);
+}
+
+$stmt->execute();
+
+// Sử dụng `bind_result()` thay vì `get_result()`
+$stmt->bind_result($billID, $fullName, $createDate);
+
+$bills = [];
+while ($stmt->fetch()) {
+    $bills[] = [
+        'BillID' => $billID,
+        'FullName' => $fullName,
+        'CreateDate' => $createDate,
+    ];
+}
+
+// Lấy tổng số kết quả tìm kiếm để phân trang
+$totalResultsQuery = "SELECT COUNT(*) as count FROM bills WHERE 1";
+if (!empty($search)) {
+    $totalResultsQuery .= " AND BillID LIKE ?";
+}
+if (!empty($date)) {
+    $totalResultsQuery .= " AND DATE(CreateDate) = ?";
+}
+$stmt = $conn->prepare($totalResultsQuery);
+if (!empty($search) && !empty($date)) {
+    $stmt->bind_param("ss", $searchTerm, $date);
+} elseif (!empty($search)) {
+    $stmt->bind_param("s", $searchTerm);
+} elseif (!empty($date)) {
+    $stmt->bind_param("s", $date);
+}
+$stmt->execute();
+
+// Lấy kết quả tổng số lượng
+$stmt->bind_result($totalResults);
+$stmt->fetch();
+
 $pager = new Pager(range(1, $totalResults), $itemsPerPage);
 
 $conn->close();
 ?>
+
+
 
 
 
@@ -85,12 +97,10 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <title>Danh sách hóa đơn</title>
-    <link rel="stylesheet" href="path/to/bootstrap.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <style>
         .container {
             max-width: 900px;
@@ -136,67 +146,130 @@ $conn->close();
             padding: 8px 12px; /* Padding tương tự như các liên kết khác */
             border-radius: 5px; /* Bo góc giống nhau */
         }
+
+        /* Điều chỉnh icon không có border */
+        .btn {
+            border: none; /* Bỏ border cho nút */
+            background-color: transparent; /* Đảm bảo màu nền trong suốt */
+            padding: 5px 10px; /* Cung cấp padding để tạo không gian cho icon */
+        }
+
+        .btn i {
+            font-size: 20px; /* Kích thước icon vừa phải */
+            margin-right: 5px; /* Khoảng cách giữa icon và text nếu có */
+        }
+
+        /* Giữ khoảng cách giữa các nút mà không đóng khung */
+        .table td .btn {
+            margin-right: 10px; /* Thêm khoảng cách giữa các nút */
+        }
+
+        /* Tạo hiệu ứng hover cho các nút */
+        .btn:hover {
+            background-color: #007bff; /* Thay đổi màu nền khi hover */
+            color: white; /* Đổi màu chữ khi hover */
+        }
+
+        /* Điều chỉnh kích thước của biểu tượng */
+        .mdi {
+            font-size: 18px; /* Đảm bảo kích thước icon phù hợp */
+        }
+
+
+                /* CSS cho form tìm kiếm */
+        form .d-flex {
+            display: flex;
+            flex-wrap: wrap;  /* Cho phép các phần tử nằm trên nhiều dòng khi không đủ không gian */
+            gap: 10px;  /* Thêm khoảng cách giữa các phần tử */
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        /* Đảm bảo các label và input có khoảng cách đều */
+        form .form-label {
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+
+        form .form-control {
+            max-width: 250px;  /* Đặt chiều rộng tối đa cho các input */
+        }
+
+        /* Điều chỉnh khoảng cách giữa các nút */
+        form .btn {
+            margin-top: 0; /* Đảm bảo nút không có khoảng cách thừa trên */
+        }
+
+        /* Thêm khoảng cách giữa các phần tử để không bị chật chội */
+        form .ms-3 {
+            margin-left: 1rem;  /* Thêm khoảng cách cho phần tử thứ hai trở đi */
+        }
+
+        form .w-25 {
+            width: 25% !important; /* Đảm bảo input có chiều rộng linh hoạt */
+        }
+
+        /* Điều chỉnh kích thước icon */
+        .mdi {
+            font-size: 20px;
+        }
     </style>
 </head>
 <body>
 <?php include("includes/_layoutAdmin.php"); ?>
 <div class="container mt-4">
-    <form action="" method="POST" class="form-section">
+    <form action="" method="GET" class="form-section">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-2">
                     <p class="card-title">Danh sách hóa đơn</p>
-                    <div>
-                        <button class="btn btn-danger" id="btnDeleteAll" style="display:none;">
-                            <i class="ti-trash"></i>
-                        </button>
-                    </div>
+                </div>
+                
+                <!-- Form tìm kiếm -->
+                <div class="d-flex align-items-center mb-3 w-100">
+                    <label for="createDate" class="form-label me-2">Ngày lập hóa đơn:</label>
+                    <input class="form-control w-25" type="date" name="date" id="createDate" value="<?= htmlspecialchars($date) ?>">
+                    
+                    <label for="billID" class="form-label me-2 ms-3">Mã hóa đơn:</label>
+                    <input class="form-control w-25" type="text" name="search" id="billID" value="<?= htmlspecialchars($search) ?>">
+                    
+                    <button class="btn btn-info ms-3" type="submit">
+                        Tìm kiếm
+                    </button>
+                    
+                    <a href="index_bills.php" class="btn btn-secondary ms-2">
+                        <i class="mdi mdi-autorenew"></i>
+                    </a>
                 </div>
 
+                <!-- Hiển thị danh sách hóa đơn -->
                 <div>
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr style="background-color: dodgerblue; color: white;">
-                                <th>
-                                    <div class="form-check">
-                                        <label class="form-check-label">
-                                            <input type="checkbox" class="form-check-input" id="SelectAll">
-                                        </label>
-                                    </div>
-                                </th>
                                 <th>Mã hóa đơn</th>
                                 <th>Họ và tên</th>
                                 <th>Ngày Lập</th>
-                                <th></th>
+                                <th>Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($bills)): ?>
                                 <tr>
-                                    <td colspan="5" class="text-center">Không có dữ liệu</td>
+                                    <td colspan="4" class="text-center">Không có dữ liệu</td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($bills as $row): ?>
                                     <tr>
-                                        <td>
-                                            <div class="form-check">
-                                                <label class="form-check-label">
-                                                    <input type="checkbox" class="form-check-input cbkItem" value="<?= htmlspecialchars($row['BillID']) ?>">
-                                                </label>
-                                            </div>
-                                        </td>
                                         <td><?= htmlspecialchars($row['BillID']) ?></td>
                                         <td><?= htmlspecialchars($row['FullName']) ?></td>
                                         <td><?= htmlspecialchars($row['CreateDate']) ?></td>
-                                        <td style="display: flex; align-items: center;">
-                                            <a href="detail_bills.php?BillID=<?= urlencode($row['BillID']) ?>" 
-                                               style="text-decoration: none; padding: 10px;">
-                                                <i class="mdi mdi-eye" style="font-size: 25px; color: blue;"></i>
+                                        <td>
+                                            <a href="detail_bills.php?BillID=<?= urlencode($row['BillID']) ?>" class="btn btn-primary">
+                                                <i class="mdi mdi-eye"></i>
                                             </a>
-                                            <button class="action-button btnDelete" 
-                                                    data-bill-id="<?= htmlspecialchars($row['BillID']) ?>" 
-                                                    style="border:none; background:none; cursor:pointer; padding: 10px;">
-                                                <i class="mdi mdi-delete" style="font-size: 25px; color: red;"></i>
+                                            <button class="btn btn-danger btnDelete" data-id="<?= $row['BillID'] ?>">
+                                                <i class="mdi mdi-delete"></i>
                                             </button>
                                         </td>
                                     </tr>
@@ -206,7 +279,7 @@ $conn->close();
                     </table>
                 </div>
 
-                <!-- Display pagination links -->
+                <!-- Phân trang -->
                 <div class="pagination">
                     <?= $pager->getPaginationLinks() ?>
                 </div>
@@ -216,78 +289,64 @@ $conn->close();
 </div>
 
 <script>
-    function checkDeleteButtonVisibility() {
-        var anyChecked = $('.cbkItem:checked').length > 0 || $('#SelectAll').prop('checked');
-        $('#btnDeleteAll').toggle(anyChecked);
-    }
-
-    $(document).ready(function () {
-        checkDeleteButtonVisibility();
-
-        // Show delete button when at least one item is checked
-        $('body').on('change', '.cbkItem', function () {
-            checkDeleteButtonVisibility();
-        });
-
-        // Handle multiple bill deletions
-        $('body').on('click', '#btnDeleteAll', function (e) {
+    document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.btnDelete').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
             e.preventDefault();
-            var idList = [];
-            $('.cbkItem:checked').each(function () {
-                idList.push($(this).val());
-            });
-
-            if (idList.length > 0) {
-                Swal.fire({
-                    title: 'Bạn có chắc chắn muốn xóa các bản ghi này?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Xóa',
-                    cancelButtonText: 'Hủy',
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.post('index_bills.php', { ids: idList.join(',') }, function (response) {
-                            console.log("Phản hồi từ server:", response);
-                            location.reload();
-                        });
-                    }
-                });
-            }
-        });
-
-        // Handle single bill deletion
-        $('body').on('click', '.btnDelete', function (e) {
-            e.preventDefault();
-            var idBill = $(this).data('bill-id'); // Get the BillID from data attribute
+            var billID = this.getAttribute('data-id'); // Lấy ID hóa đơn từ data-id của nút xóa
 
             Swal.fire({
                 title: 'Bạn có chắc chắn muốn xóa bản ghi này?',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Xóa',
+                confirmButtonText: 'OK',
                 cancelButtonText: 'Hủy',
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $.post('index_bills.php', { idBill: idBill }, function (response) {
-                        console.log("Phản hồi từ server:", response);
-                        location.reload();
-                    }).fail(function (jqXHR, textStatus, errorThrown) {
-                        console.error("Error deleting bill:", textStatus, errorThrown);
+                    // Gửi yêu cầu xóa qua fetch API
+                    fetch('includes/delete_bills.php', {
+                        method: 'POST',
+                        body: JSON.stringify({ id: billID }), // Gửi dữ liệu JSON
+                        headers: { 'Content-Type': 'application/json' } // Đặt header cho dữ liệu JSON
+                    })
+                    .then(response => response.json()) // Nhận dữ liệu trả về từ server
+                    .then(data => {
+                        if (data.success) {
+                            // Hiển thị thông báo thành công và làm mới trang
+                            Swal.fire({
+                                title: 'Xóa thành công!',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                location.reload(); // Làm mới trang để cập nhật danh sách
+                            });
+                        } else {
+                            // Hiển thị thông báo lỗi
+                            Swal.fire({
+                                title: 'Lỗi!',
+                                text: data.message,
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        // Hiển thị thông báo lỗi nếu có vấn đề khi gửi yêu cầu
+                        Swal.fire({
+                            title: 'Lỗi!',
+                            text: 'Đã xảy ra lỗi khi xóa.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
                     });
                 }
             });
         });
-
-        // Select all checkboxes
-        $('#SelectAll').change(function () {
-            var checkStatus = this.checked;
-            $('.cbkItem').prop('checked', checkStatus);
-            checkDeleteButtonVisibility();
-        });
     });
+});
+
 </script>
 
 </body>
 </html>
 
-<?php $conn->close(); ?>

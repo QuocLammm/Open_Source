@@ -1,5 +1,5 @@
 <?php
-include('includes/connectSQL.php');
+include('includes/session_user.php');
 if (isset($_POST['login'])) {
     $adminuser = $_POST['username'];
     $password = $_POST['password'];
@@ -17,10 +17,19 @@ if (isset($_POST['login'])) {
 
         if ($num_rows > 0) {
             $ret = mysqli_fetch_array($query);
-            // Set cookie for 1 hour
-            setcookie('UserID', $ret['UserID'], time() + 3600, "/"); 
-            header('location:index_admin.php');
-            exit();
+
+            // Kiểm tra nếu UserID khác 1
+            if ($ret['UserID'] != 1) {
+                // Nếu UserID không phải là 1, chuyển hướng về trang dashboard
+                setcookie('UserID', $ret['UserID'], time() + 3600, "/");
+                header('location:dashboard.php');
+                exit();
+            } else {
+                // Nếu UserID là 1, chuyển hướng về trang quản trị
+                setcookie('UserID', $ret['UserID'], time() + 3600, "/");
+                header('location:index_admin.php');
+                exit();
+            }
         } else {
             $errorMessage = "Tên đăng nhập hoặc mật khẩu không đúng!";
         }
@@ -29,6 +38,7 @@ if (isset($_POST['login'])) {
 
 $conn->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 

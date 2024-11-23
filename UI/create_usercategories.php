@@ -11,9 +11,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param("ss", $userCategoryName, $userCategoryDescription);
 
     if ($stmt->execute()) {
-        echo "<script>alert('Thêm loại người dùng thành công!'); window.location.href='index_usercategories.php';</script>";
+        // Hiển thị thông báo SweetAlert2 bằng JavaScript
+        echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    title: 'Thành công!',
+                    text: 'Thêm loại người dùng thành công!',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.href = 'index_usercategories.php';
+                });
+            });
+        </script>";
     } else {
-        echo "Lỗi khi thêm loại người dùng: " . $stmt->error;
+        echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    title: 'Lỗi!',
+                    text: 'Lỗi khi thêm loại người dùng: " . $stmt->error . "',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            });
+        </script>";
     }
 
     $stmt->close();
@@ -30,6 +51,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thêm loại người dùng</title>
     <link rel="stylesheet" href="../UI/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.5.0/dist/sweetalert2.all.min.js"></script>
     <style>
         .container {
             max-width: 900px;
