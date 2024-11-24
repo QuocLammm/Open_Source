@@ -36,7 +36,7 @@ function fetchData($conn, $sql) {
 
 // Fetch required data
 $listDrinkCategories = fetchData($conn, "SELECT * FROM drinkcategories");
-$listDrinks = fetchData($conn, "SELECT * FROM drinks");
+$listDrinks = fetchData($conn, "SELECT * FROM drinks LIMIT 7");
 $billInfos = fetchData($conn, "SELECT * FROM billinfos");
 // Fetch customer names from the database
 $customers = fetchData($conn, "SELECT CustomerID, CustomerName FROM customer");
@@ -52,145 +52,252 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thêm hóa đơn</title>
-    <link rel="stylesheet" href="path-to-your-css-file.css"> 
     <link rel="stylesheet" href="path/to/font-awesome/css/font-awesome.min.css">
-    <script src="path-to-your-js-file.js"></script> 
-    <style>
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-        }
-        .form-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px; /* Space between columns */
-        }
-        .form-column {
-            flex: 1; /* Equal width columns */
-        }
-        .text-center {
-            text-align: center;
-        }
-        .btn {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn:hover {
-            background-color: #0056b3;
-        }
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>/* Bảng thanh toán */
+#bill-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
 
-        .container {
-            max-width: 75%;
-            margin-top: 20px;
-        }
-        .form-section {
-            width: 110%;
-            padding: 10px;
-            margin: 60px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-        .btnDelete {
-            cursor: pointer;
-        }
-        .pagination {
-            display: flex;
-            justify-content: center; /* Căn giữa các liên kết */
-            gap: 10px; /* Tạo khoảng cách giữa các liên kết */
-        }
+#bill-table th, #bill-table td {
+    padding: 12px;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #ddd;
+}
 
-        .pagination a {
-            text-decoration: none; /* Bỏ gạch chân cho liên kết */
-            padding: 8px 12px; /* Thêm padding cho các liên kết */
-            border: 1px solid #007bff; /* Đường viền cho các liên kết */
-            border-radius: 5px; /* Bo góc cho các liên kết */
-            color: #007bff; /* Màu chữ */
-        }
+#bill-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    color: #333;
+    font-size: 16px;
+}
 
-        .pagination a:hover {
-            text-decoration: none; /* Bỏ gạch chân cho liên kết */
-            background-color: #007bff; /* Màu nền khi hover */
-            color: white; /* Màu chữ khi hover */
-        }
+#bill-table tr:hover {
+    background-color: #f1f1f1;
+}
 
-        .pagination strong {
-            color: red; /* Màu chữ cho trang hiện tại */
-            border: 1px solid #007bff; /* Đường viền cho trang hiện tại */
-            padding: 8px 12px; /* Padding tương tự như các liên kết khác */
-            border-radius: 5px; /* Bo góc giống nhau */
-        }
-        .square-card {
-            width: 100%;
-            padding-top: 100%;
-            position: relative;
-            overflow: hidden;
-        }
-        .card-img-top {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .card-body {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            text-align: center;
-            background-color: rgba(0, 0, 0, 0.5);
-            color: white;
-            padding: 10px;
-            transition: height 0.5s ease-in-out;
-        }
-        .square-card:hover .card-body {
-            height: 100%;
-        }
-        .row .category-link {
-            text-decoration: none;
-            color: black;
-        }
-        .row .selected-drink {
-            color: dodgerblue;
-        }
-        .row .col-2 a {
-            border-bottom: 1px solid black;
-        }
-        .row .col-2 a:last-child {
-            border-bottom: none;
-        }
-        #customerName {
-            padding: 10px;
-            border: 2px solid #007bff;
-            border-radius: 5px;
-            font-size: 16px;
-            width: 300px;
-            margin-left: 20px;
-            outline: none;
-            transition: border-color 0.3s ease;
-        }
-        #customerName:focus {
-            border-color: #0056b3; /* Màu sắc khi ô nhập đang được focus */
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Tạo bóng mờ khi focus */
-        }
-        #customer-status {
-            font-weight: bold;
-            margin-left: 10px;
-            font-size: 16px;
-        }
-    </style>
+
+/* Thêm cuộn khi danh sách món vượt quá 4 */
+#bill-table tbody {
+    max-height: 250px; /* Điều chỉnh chiều cao tối đa tùy ý */
+    overflow-y: auto; /* Kích hoạt cuộn dọc */
+    display: block;
+    width: 100%;
+}
+
+/* Giữ cố định header của bảng */
+#bill-table thead {
+    display: table;
+    width: 100%;
+}
+
+
+/* Phần thanh toán */
+.payment-section {
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.payment-section button {
+    width: 100%;
+    padding: 12px;
+    font-size: 18px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+.payment-section button:hover {
+    background-color: #218838;
+}
+
+.payment-section select {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    margin-top: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.payment-section h5 {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.payment-section label {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Form Input và Select */
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+/* Layout */
+.category-filter {
+    margin-left: 100px;
+}
+
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.form-column {
+    flex: 1;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* Nút */
+.btn {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+/* Container */
+.container {
+    max-width: 75%;
+    margin-top: 20px;
+}
+
+/* Form Section */
+.form-section {
+    width: 110%;
+    padding: 10px;
+    margin: 40px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+/* Xóa item */
+.btnDelete {
+    cursor: pointer;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.pagination a {
+    text-decoration: none;
+    padding: 8px 12px;
+    border: 1px solid #007bff;
+    border-radius: 5px;
+    color: #007bff;
+}
+
+.pagination a:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+.pagination strong {
+    color: red;
+    border: 1px solid #007bff;
+    padding: 8px 12px;
+    border-radius: 5px;
+}
+
+/* Hình ảnh món uống */
+.drink-image {
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.drink-image:hover {
+    opacity: 0.8;
+}
+
+/* Menu Grid */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 20px;
+}
+
+.menu-item {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.menu-item:hover {
+    transform: scale(1.05);
+}
+
+.menu-item-image {
+    width: 100%;
+    height: 80%;
+    overflow: hidden;
+}
+
+.menu-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.menu-item-info {
+    padding: 10px;
+    text-align: center;
+}
+
+.menu-item-name {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 5px 0;
+}
+
+.menu-item-price {
+    font-size: 14px;
+    color: #f75c5c;
+}
+</style>
     <script>
         let selectedDrinks = {};
 
@@ -237,6 +344,11 @@ $conn->close();
                             <button class="btn btn-danger btn-sm" onclick="addToDrink(${id})">+</button>
                         </td>
                         <td>${price}₫</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="removeDrink(${id})">
+                                <i class="fa fa-trash"></i> <!-- Thêm icon xóa -->
+                            </button>
+                        </td>
                     </tr>`;
                 tableBody.innerHTML += row;
             }
@@ -261,7 +373,7 @@ $conn->close();
                 quantity: selectedDrinks[id].quantity,
             }));
 
-            // Send payment request with customerID included
+            // Gửi yêu cầu thanh toán với customerID đã bao gồm
             fetch('payment.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -269,7 +381,7 @@ $conn->close();
                     tableID: <?= json_encode($tableID) ?>,
                     items,
                     totalAmount,
-                    customerID  // Send customerID
+                    customerID  // Gửi customerID
                 })
             })
             .then(response => response.json())
@@ -289,140 +401,94 @@ $conn->close();
         }
 
         function filterCategory(event, categoryID) {
-            event.preventDefault(); // Ngăn link reload trang
+            event.preventDefault(); // Prevent page reload when clicking a button
 
-            // Ẩn tất cả các món
-            document.querySelectorAll('.drink-item').forEach(item => {
+            // Hide all drinks
+            document.querySelectorAll('.menu-item').forEach(item => {
                 item.style.display = 'none';
             });
 
-            // Hiển thị các món thuộc loại được chọn
-            document.querySelectorAll(`.drink-item[data-category-id="${categoryID}"]`).forEach(item => {
+            // Show drinks of the selected category
+            document.querySelectorAll(`.menu-item[data-category-id="${categoryID}"]`).forEach(item => {
                 item.style.display = 'block';
             });
 
-            // Làm nổi bật loại được chọn
-            document.querySelectorAll('.category-link').forEach(link => {
-                link.style.fontWeight = 'normal';
-                link.style.color = 'black';
+            // Highlight the selected category button
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
             });
-            event.target.style.fontWeight = 'bold';
-            event.target.style.color = 'dodgerblue';
+
+            document.querySelector(`#category-${categoryID}`).classList.remove('btn-secondary');
+            document.querySelector(`#category-${categoryID}`).classList.add('btn-primary');
         }
-
-        // Hiển thị mặc định loại đầu tiên khi load trang
-        document.addEventListener('DOMContentLoaded', () => {
-            const firstCategory = document.querySelector('.category-link');
-            if (firstCategory) {
-                firstCategory.click();
+        function removeDrink(drinkID) {
+            if (selectedDrinks[drinkID]) {
+                delete selectedDrinks[drinkID]; // Xóa món khỏi danh sách
+                updateDrinkInfo(); // Cập nhật lại bảng
             }
-        });
-        //
-        function resetTableStatus() {
-            // Gửi yêu cầu POST để cập nhật trạng thái bàn
-            fetch('reset_table_status.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tableID: <?= json_encode($tableID) ?> })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Có lỗi xảy ra! Mã trạng thái: ' + response.status);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Trạng thái đã được cập nhật thành Trống!', '', 'success').then(() => {
-                        window.location.href = 'dashboard.php';
-                    });
-                } else {
-                    Swal.fire('Có lỗi xảy ra!', data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire('Có lỗi xảy ra!', 'Vui lòng thử lại sau.', 'error');
-            });
-
         }
     </script>
 </head>
-
 <body>
     <?php include("includes/_layoutAdmin.php"); ?>
-    <div class="container mt-4">
-        <form enctype="multipart/form-data" class="form-section full-page-wrapper">
-            <div class="card p-3 h-100">
-                <div class="row h-100">
-                    <div class="col-7">
-                        <!-- Thêm ô nhập tên khách hàng -->
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h2><?= htmlspecialchars($tableName) ?></h2>
-                                <!--Tên khách hàng -->
-                                <div class="form-group">
-                                    <select id="customerName" class="form-control" required>
-                                        <option value="">Chọn khách hàng</option>
-                                        <?php foreach ($customers as $customer): ?>
-                                            <option value="<?= $customer['CustomerID'] ?>"><?= htmlspecialchars($customer['CustomerName']) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                            <div>
-                                <!-- Nút Quay lại -->
-                                <a href="dashboard.php" class="btn btn-primary" style="height: fit-content">
-                                    <i class="ti-arrow-left"></i>
-                                </a>
-
-                                <!-- Nút Đổi lại trạng thái thành Trống -->
-                                <button type="button" class="btn btn-danger ml-2" onclick="resetTableStatus()">X</button>
-                            </div>
-                        </div>
-
-
-                        <div class="row">
-                            <div class="col-2">
-                                <?php foreach ($listDrinkCategories as $category): ?>
-                                    <a href="#" data-category-id="<?= $category['DrinkCategoryID'] ?>" 
-                                    class="py-3 d-block text-center category-link" 
-                                    onclick="filterCategory(event, <?= $category['DrinkCategoryID'] ?>)">
-                                        <?= htmlspecialchars($category['DrinkCategoryName']) ?>
-                                    </a>
-                                <?php endforeach; ?>
-                            </div>
-                            <div class="col-10 row drink-list" style="border-radius: 20px">
-                                <?php foreach ($listDrinks as $item): ?>
-                                    <div class="col-3 drink-item" 
-                                        data-category-id="<?= $item['DrinkCategoryID'] ?>" 
-                                        style="display: none;"> <!-- Ẩn mặc định -->
-                                        <div class="btn square-card card drink-select" 
-                                            data-drink-id="<?= $item['DrinkID'] ?>" 
-                                            data-drink-name="<?= htmlspecialchars($item['DrinkName']) ?>" 
-                                            data-drink-price="<?= $item['DrinkPrice'] ?>"
-                                            onclick="addToDrink(<?= $item['DrinkID'] ?>)">
-                                            <img src="images/drinks/<?= htmlspecialchars($item['DrinkImage']) ?>" class="card-img-top" />
-                                            <div class="card-body"><?= htmlspecialchars($item['DrinkName']) ?></div>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                            </div>
-                        </div>
-                    
-                    <div class="col-5">
-                        <div id="selected-drink-info" class="h-75" style="overflow-y: auto;">
-                            <table class="table table-striped table-hover" id="bill-table">
-                                <tbody>Hóa đơn <?= htmlspecialchars($tableName) ?></tbody>
-                            </table>
-                        </div>
-                        <div id="payment-section" style="display: none;">
-                            <hr />
-                            <p class="text-right" style="font-size: 24px;">
-                                Tổng tiền: <span id="total-amount">0₫</span>
-                            </p>
-                            <button type="button" class="btn btn-success btn-lg w-100" onclick="processPayment()">
-                                Thanh toán
+    <div class="container">
+        <form method="POST">
+            <div class="form-section">
+                <div class="text-center">
+                    <br>
+                    <h2>Chọn món cho <?= $tableName ?></h2>
+                </div>
+                <!-- Category Filter -->
+                <div class="category-filter">
+                    <div class="btn-group">
+                        <?php foreach ($listDrinkCategories as $category): ?>
+                            <button 
+                                type="button" 
+                                class="btn btn-secondary category-btn" 
+                                id="category-<?= $category['DrinkCategoryID'] ?>"
+                                onclick="filterCategory(event, <?= $category['DrinkCategoryID'] ?>)">
+                                <?= $category['DrinkCategoryName'] ?>
                             </button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <br>
+                <div class="form-row">
+                    <div class="form-column">
+                        <div class="menu-grid">
+                            <?php foreach ($listDrinks as $drink): ?>
+                                <div class="menu-item" data-category-id="<?= $drink['DrinkCategoryID'] ?>" data-drink-id="<?= $drink['DrinkID'] ?>" data-drink-name="<?= $drink['DrinkName'] ?>" data-drink-price="<?= $drink['DrinkPrice'] ?>" data-drink-image="<?= $drink['DrinkImage'] ?>">
+                                    <div class="menu-item-image">
+                                        <img src="images/drinks/<?= $drink['DrinkImage'] ?>" alt="<?= $drink['DrinkName'] ?>" class="drink-image" onclick="addToDrink(<?= $drink['DrinkID'] ?>)">
+                                    </div>
+                                    <div class="menu-item-info">
+                                        <p class="menu-item-name"><?= $drink['DrinkName'] ?></p>
+                                        <p class="menu-item-price"><?= $drink['DrinkPrice'] ?>₫</p>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <div class="form-column">
+                        <h5>Danh sách món đã chọn</h5>
+                        <table id="bill-table" class="table-bordered">
+                            <tbody></tbody>
+                        </table>
+                        <div class="payment-section">
+                            <h5>Tổng tiền: <span id="total-amount">0₫</span></h5>
+                            <div class="form-group">
+                                <label for="customerName">Khách hàng</label>
+                                <select id="customerName" class="form-control" required>
+                                    <option value="">Chọn khách hàng</option>
+                                    <?php foreach ($customers as $customer): ?>
+                                        <option value="<?= $customer['CustomerID'] ?>"><?= $customer['CustomerName'] ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <button type="button" class="btn" onclick="processPayment()">Thanh toán</button>
                         </div>
                     </div>
                 </div>

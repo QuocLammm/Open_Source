@@ -6,38 +6,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $userCategoryName = htmlspecialchars($_POST['userCategoryName']);
     $userCategoryDescription = htmlspecialchars($_POST['userCategoryDescription']);
 
-    // Truy vấn chèn loại người dùng mới vào bảng UserCategories
-    $stmt = $conn->prepare("INSERT INTO UserCategories (UserCategoryName, UserCategoryDescription) VALUES (?, ?)");
-    $stmt->bind_param("ss", $userCategoryName, $userCategoryDescription);
+    // Kiểm tra xem tên loại người dùng đã tồn tại chưa
+    $checkCategoryQuery = $conn->prepare("SELECT COUNT(*) FROM UserCategories WHERE UserCategoryName = ?");
+    $checkCategoryQuery->bind_param("s", $userCategoryName);
+    $checkCategoryQuery->execute();
+    $checkCategoryQuery->bind_result($categoryCount);
+    $checkCategoryQuery->fetch();
+    $checkCategoryQuery->close();
 
-    if ($stmt->execute()) {
-        // Hiển thị thông báo SweetAlert2 bằng JavaScript
-        echo "<script>
-            document.addEventListener('DOMContentLoaded', function() {
-                Swal.fire({
-                    title: 'Thành công!',
-                    text: 'Thêm loại người dùng thành công!',
-                    icon: 'success',
-                    confirmButtonText: 'OK'
-                }).then(() => {
-                    window.location.href = 'index_usercategories.php';
-                });
-            });
-        </script>";
-    } else {
+    if ($categoryCount > 0) {
+        // Nếu tên loại người dùng đã tồn tại, hiển thị thông báo lỗi
         echo "<script>
             document.addEventListener('DOMContentLoaded', function() {
                 Swal.fire({
                     title: 'Lỗi!',
-                    text: 'Lỗi khi thêm loại người dùng: " . $stmt->error . "',
+                    text: 'Tên loại người dùng đã tồn tại. Vui lòng chọn tên khác.',
                     icon: 'error',
                     confirmButtonText: 'OK'
                 });
             });
         </script>";
-    }
+    } else {
+        // Truy vấn chèn loại người dùng mới vào bảng UserCategories
+        $stmt = $conn->prepare("INSERT INTO UserCategories (UserCategoryName, UserCategoryDescription) VALUES (?, ?)");
+        $stmt->bind_param("ss", $userCategoryName, $userCategoryDescription);
 
-    $stmt->close();
+        if ($stmt->execute()) {
+            // Hiển thị thông báo SweetAlert2 bằng JavaScript
+            echo "<script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    Swal.fire({
+                        title: 'Thành công!',
+                        text: 'Thêm loại người dùng thành công!',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        window.location.href = 'index_usercategories.php';
+                    });
+                });
+            </script>";
+        } else {
+            echo "<script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    Swal.fire({
+                        title: 'Lỗi!',
+                        text: 'Lỗi khi thêm loại người dùng: " . $stmt->error . "',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                });
+            </script>";
+        }
+
+        $stmt->close();
+    }
 }
 
 // Đóng kết nối cơ sở dữ liệu
