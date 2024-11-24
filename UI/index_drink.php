@@ -42,8 +42,6 @@ $pager = new Pager($drinks, 3); // 3 sản phẩm mỗi trang
 $currentDrinks = $pager->getDataForCurrentPage(3); // Lấy dữ liệu cho trang hiện tại
 $conn->close();
 ?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -52,6 +50,7 @@ $conn->close();
     <title>Danh sách đồ uống</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
     <style>
         .container {
             max-width: 900px;
@@ -73,29 +72,52 @@ $conn->close();
         }
         .pagination {
             display: flex;
-            justify-content: center; /* Căn giữa các liên kết */
-            gap: 10px; /* Tạo khoảng cách giữa các liên kết */
+            justify-content: center;
+            gap: 10px;
         }
 
         .pagination a {
-            text-decoration: none; /* Bỏ gạch chân cho liên kết */
-            padding: 8px 12px; /* Thêm padding cho các liên kết */
-            border: 1px solid #007bff; /* Đường viền cho các liên kết */
-            border-radius: 5px; /* Bo góc cho các liên kết */
-            color: #007bff; /* Màu chữ */
+            text-decoration: none;
+            padding: 8px 12px;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            color: #007bff;
         }
 
         .pagination a:hover {
-            text-decoration: none; /* Bỏ gạch chân cho liên kết */
-            background-color: #007bff; /* Màu nền khi hover */
-            color: white; /* Màu chữ khi hover */
+            background-color: #007bff;
+            color: white;
         }
 
         .pagination strong {
-            color: red; /* Màu chữ cho trang hiện tại */
-            border: 1px solid #007bff; /* Đường viền cho trang hiện tại */
-            padding: 8px 12px; /* Padding tương tự như các liên kết khác */
-            border-radius: 5px; /* Bo góc giống nhau */
+            color: red;
+            border: 1px solid #007bff;
+            padding: 8px 12px;
+            border-radius: 5px;
+        }
+
+        /* Điều chỉnh chiều rộng của các ô tìm kiếm */
+        #drinkName, #category {
+            width: 100%;
+            max-width: 220px;
+        }
+
+        /* Đảm bảo cả ô "Giá" và "Đến" nằm trên cùng một hàng */
+        #min_price, #max_price {
+            width: 100%;
+            max-width: 120px;
+            margin-right: 10px;
+        }
+
+        /* Các nút "Tìm kiếm" và "Tải lại" nằm cạnh nhau */
+        .form-section .col-md-6 button {
+            max-width: 130px;
+        }
+
+        /* Đảm bảo các ô input tìm kiếm và nút tìm kiếm đều sát nhau */
+        .d-flex .col-md-6 {
+            display: flex;
+            gap: 10px;
         }
     </style>
 </head>
@@ -109,42 +131,37 @@ $conn->close();
             </div>
 
             <div class="row mb-3">
-                <div class="col-md-6">
-                    <!-- Tìm kiếm theo tên đồ uống -->
-                    
-                        <div class="mb-3">
-                            <label for="drink" class="form-label">Tên đồ uống:</label>
-                            <input type="text" name="drinkName" id="drinkName" class="form-control" placeholder="Tên đồ uống" value="<?php echo htmlspecialchars($searchDrink); ?>">
-                        </div>
-                    
+                <div class="col-md-6 d-flex gap-3">
+                    <div class="mb-3">
+                        <label for="drink" class="form-label">Tên đồ uống:</label>
+                        <input type="text" name="drinkName" id="drinkName" class="form-control" placeholder="Tên đồ uống" value="<?php echo htmlspecialchars($searchDrink); ?>">
+                    </div>
                     <div class="mb-3">
                         <label for="category" class="form-label">Loại đồ uống:</label>
                         <input type="text" name="category" id="category" class="form-control" placeholder="Loại đồ uống" value="<?php echo htmlspecialchars($searchCategory); ?>">
                     </div>
                 </div>
-
-                <div class="col-md-3">
+                
+                <div class="col-md-6 d-flex gap-3">
                     <div class="mb-3">
                         <label for="min_price" class="form-label">Giá:</label>
                         <input type="number" name="min_price" id="min_price" class="form-control" placeholder="Giá thấp nhất" value="<?php echo htmlspecialchars($minPrice); ?>">
                     </div>
                     <div class="mb-3">
-                        <button type="submit" class="btn btn-primary">Tìm kiếm</button>
-                    </div>
-                </div>
-                
-                <div class="col-md-3">
-                    <div class="mb-3">
                         <label for="max_price" class="form-label">Đến:</label>
                         <input type="number" name="max_price" id="max_price" class="form-control" placeholder="Giá cao nhất" value="<?php echo htmlspecialchars($maxPrice); ?>">
-                    </div>
-                    <div class="mb-3">
-                        <button type="button" class="btn btn-secondary" onclick="resetPage();">Làm mới</button>
                     </div>
                 </div>
             </div>
 
-            <table class="table table-bordered">
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                <a href="index_drink.php" class="btn btn-secondary ms-2">
+                        <i class="mdi mdi-autorenew"></i>
+                    </a>
+            </div>
+
+            <table class="table table-bordered mt-4">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -179,11 +196,9 @@ $conn->close();
                 </tbody>
             </table>
 
-            <!-- Hiển thị liên kết phân trang -->
             <div class="pagination justify-content-center mt-4">
                 <?php echo $pager->getPaginationLinks(); ?>
             </div>
-
         </form>
     </div>
 
@@ -238,22 +253,17 @@ $conn->close();
         });
     });
 });
-
-
-
-function resetPage() {
-    // Clear all search input fields
-    document.querySelector('input[name="drinkName"]').value = '';
-    document.querySelector('input[name="category"]').value = '';
-    document.querySelector('input[name="min_price"]').value = '';
-    document.querySelector('input[name="max_price"]').value = '';
-    
-    // Reload the page without any query parameters
-    window.location.href = window.location.pathname;
-}
-
-
-</script>
+        function resetPage() {
+            // Clear all search input fields
+            document.querySelector('input[name="drinkName"]').value = '';
+            document.querySelector('input[name="category"]').value = '';
+            document.querySelector('input[name="min_price"]').value = '';
+            document.querySelector('input[name="max_price"]').value = '';
+            
+            // Reload the page without any query parameters
+            window.location.href = window.location.pathname;
+        }
+    </script>
 
 </body>
 </html>

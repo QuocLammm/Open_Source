@@ -45,7 +45,8 @@ if ($result->num_rows > 0) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Danh Sách Loại Người Dùng</title>
+    <title>Danh Sách Phân Quyền</title>
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
@@ -114,7 +115,9 @@ if ($result->num_rows > 0) {
                 </div>
                 <div class="col">
                     <button type="submit" class="btn btn-primary">Tìm kiếm</button>
-                    <button type="button" class="btn btn-secondary" onclick="window.location.reload();">Làm mới</button>
+                    <a href="index_bills.php" class="btn btn-secondary ms-2">
+                        <i class="mdi mdi-autorenew"></i>
+                    </a>
                 </div>
             </div>
 

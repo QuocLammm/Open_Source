@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Danh Sách Loại Người Dùng</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Thêm SweetAlert2 -->
 </head>
 
@@ -105,7 +106,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div class="col">
                     <button type="submit" class="btn btn-primary">Tìm kiếm</button>
-                    <button type="button" class="btn btn-secondary" onclick="window.location.href='index_usercategories.php';">Làm mới</button>
+                    <a href="index_usercategories.php" class="btn btn-secondary ms-2">
+                        <i class="mdi mdi-autorenew"></i>
+                    </a>
                 </div>
             </div>
 

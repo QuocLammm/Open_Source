@@ -32,6 +32,7 @@ $drinkCategories = $result->fetch_all(MYSQLI_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Danh sách loại đồ uống</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 </head>
 
@@ -94,7 +95,9 @@ $drinkCategories = $result->fetch_all(MYSQLI_ASSOC);
                 </div>
                 <div class="col">
                     <button type="submit" class="btn btn-primary">Tìm kiếm</button>
-                    <button type="button" class="btn btn-secondary" onclick="resetPage();">Làm mới</button>
+                    <a href="index_drinkcategories.php" class="btn btn-secondary ms-2">
+                        <i class="mdi mdi-autorenew"></i>
+                    </a>
                 </div>
             </div>
 
