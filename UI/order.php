@@ -297,6 +297,33 @@ $conn->close();
     font-size: 14px;
     color: #f75c5c;
 }
+.payment-section .btn-group {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.payment-section .btn-group .btn {
+    flex: 1;
+    padding: 12px;
+    font-size: 18px;
+    border-radius: 5px;
+}
+
+.payment-section .btn-group .btn-danger {
+    background-color: red;
+    color: white;
+}
+
+.payment-section .btn-group .btn-danger:hover {
+    background-color: red;
+}
+
+.payment-section .btn-group .btn:hover {
+    background-color: #218838;
+}
+
 </style>
     <script>
         let selectedDrinks = {};
@@ -428,6 +455,48 @@ $conn->close();
                 updateDrinkInfo(); // Cập nhật lại bảng
             }
         }
+
+        function cancelTable() {
+    // Confirm cancellation with SweetAlert
+            Swal.fire({
+                title: 'Bạn có chắc muốn hủy bàn này?',
+                text: "Bàn này sẽ được thay đổi trạng thái thành không hoạt động.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Hủy bàn',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Make an AJAX request to cancel the table
+                    fetch('reset_table_status.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            tableID: <?= json_encode($tableID) ?> // Send tableID to the backend
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data); // In ra để kiểm tra kết quả từ server
+                        if (data.success) {
+                            Swal.fire('Thành công!', 'Bàn đã được hủy!', 'success').then(() => {
+                                window.location.href = 'dashboard.php';
+                            });
+                        } else {
+                            Swal.fire('Có lỗi xảy ra!', data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error); // Kiểm tra lỗi trong phần này
+                        Swal.fire('Có lỗi xảy ra!', 'Vui lòng thử lại sau.', 'error');
+                    });
+
+                }
+            });
+        }
+
+
     </script>
 </head>
 <body>
@@ -488,8 +557,12 @@ $conn->close();
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <button type="button" class="btn" onclick="processPayment()">Thanh toán</button>
+                            <div class="btn-group" style="width: 100%; display: flex; gap: 10px;">
+                                <button type="button" class="btn" onclick="processPayment()" style="flex: 1;">Thanh toán</button>
+                                <button type="button" class="btn btn-danger" onclick="cancelTable()" style="flex: 1;">Hủy bàn</button>
+                            </div>
                         </div>
+
                     </div>
                 </div>
             </div>

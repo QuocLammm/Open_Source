@@ -3,7 +3,7 @@ require_once("includes/session_user.php");
 
 // Lấy thông tin từ POST
 $data = json_decode(file_get_contents('php://input'), true);
-$tableID = $data['tableID'];
+$tableID = isset($data['tableID']) ? $data['tableID'] : null;
 
 // Kiểm tra nếu tableID hợp lệ
 if ($tableID) {
@@ -11,18 +11,17 @@ if ($tableID) {
     $stmt = $conn->prepare("UPDATE tables SET Status = 0 WHERE TableID = ?");
     $stmt->bind_param("i", $tableID);
     if ($stmt->execute()) {
-        echo json_encode(['success' => true]);
+        echo json_encode(['success' => true]); // Trả về phản hồi thành công
     } else {
-        error_log("Error executing query: " . $stmt->error);  // Ghi lại lỗi vào log
+        // Ghi lỗi vào log để kiểm tra
+        error_log("Error executing query: " . $stmt->error);
         echo json_encode(['success' => false, 'message' => 'Không thể cập nhật trạng thái bàn']);
     }
-    
     $stmt->close();
-} if (!isset($tableID) || empty($tableID)) {
+} else {
     echo json_encode(['success' => false, 'message' => 'Không có tableID hợp lệ']);
     exit;
 }
-
 
 $conn->close();
 ?>
