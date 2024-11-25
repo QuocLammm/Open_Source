@@ -141,7 +141,7 @@ if ($result->num_rows > 0) {
                             echo "<td>" . htmlspecialchars($row['UserCategoryName']) . "</td>";
                             echo "<td>" . htmlspecialchars($row['UserCategoryDescription']) . "</td>";
                             echo "<td>
-                                    <a href='edit_author.php?id=" . $row['UserCategoryID'] . "' class='btn btn-sm btn-primary'>Sửa</a>                                   
+                                    <a href='edit_author.php?id=" . $row['UserCategoryID'] . "' class='btn btn-sm btn-primary'>Phân quyền</a>                                   
                                 </td>";
                             echo "</tr>";
                         }

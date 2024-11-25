@@ -88,7 +88,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="container mt-4">
         <form method="POST" class="form-section">
             <h3>Chỉnh Sửa Khách Hàng</h3>
-
             <div class="form-group">
                 <label for="customerName">Tên khách hàng:</label>
                 <input type="text" name="customerName" id="customerName" class="form-control" value="<?= $customer['CustomerName'] ?>" required>

@@ -118,6 +118,13 @@ $conn->close();
             padding: 8px 12px; /* Padding tương tự như các liên kết khác */
             border-radius: 5px; /* Bo góc giống nhau */
         }
+        .card-body-1{
+            flex: 1 1 auto;
+            min-height: 1px;
+            padding: 1.25rem;
+            width: 90%;
+
+        }
     </style>
 </head>
 <body>
@@ -125,7 +132,7 @@ $conn->close();
     <div class="container mb-4">
     <form method="" class="form-section">
     <div class="card">
-        <div class="card-body">
+        <div class="card-body-1">
             <div class="d-flex justify-content-between mb-2">
                 <h5 class="card-title">Phân quyền từng loại người dùng</h5>
                 <a href="index_authorizations.php" class="btn btn-primary">
