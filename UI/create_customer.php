@@ -40,22 +40,49 @@ $conn->close();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .container {
-            max-width: 900px;
+            max-width: 1000px;
             margin-top: 20px;
         }
         .form-section {
+            width: 100%;
             padding: 10px;
             margin: 70px;
             background-color: #f8f9fa;
             border-radius: 8px;
         }
+        .form-control-1{
+            display: block;
+            width: 80%;
+            height: 2.875rem;
+            padding: 0.875rem 1.375rem;
+            font-size: 0.875rem;
+            font-weight: 400;
+            line-height: 1;
+            color: #495057;
+            background-color: #ffffff;
+            background-clip: padding-box;
+            border: 1px solid #ced4da;
+            border-radius: 2px;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
         .form-label {
             margin-bottom: 0.5rem;
-            font-weight: 500;
+            font-weight: 300;
         }
         .row > div {
-            padding: 0 10px;
+            padding-left: 5px;
+            padding-right: 5px;
         }
+
+        .container {
+            max-width: 100%; /* Đảm bảo khung chính vừa đủ */
+        }
+
+        .form-control, .form-select {
+            max-width: 100%; /* Đảm bảo không tràn cột */
+            width: 30%; /* Đảm bảo tự điều chỉnh theo container */
+        }
+
     </style>
 </head>
 <body>
@@ -70,28 +97,28 @@ $conn->close();
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="CustomerName" class="form-label">Tên khách hàng</label>
-                        <input type="text" class="form-control" id="CustomerName" name="CustomerName" required>
+                        <input type="text" class="form-control-1 form-control-sm" id="CustomerName" name="CustomerName" required>
                     </div>
                     <div class="mb-3">
                         <label for="Gender" class="form-label">Giới tính</label>
-                        <select class="form-select" id="Gender" name="Gender" required>
-                            <option value="Male" <?php echo isset($_POST['Gender']) && $_POST['Gender'] == 'Male' ? 'selected' : ''; ?>>Nam</option>
-                            <option value="Female" <?php echo isset($_POST['Gender']) && $_POST['Gender'] == 'Female' ? 'selected' : ''; ?>>Nữ</option>
+                        <select class="form-select form-control-sm" id="Gender" name="Gender" required>
+                            <option value="Male">Nam</option>
+                            <option value="Female">Nữ</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="Address" class="form-label">Địa chỉ</label>
-                        <textarea class="form-control" id="Address" name="Address" rows="3" required></textarea>
+                        <textarea class="form-control-1 form-control-sm" id="Address" name="Address" rows="3" required></textarea>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="PhoneNumber" class="form-label">Số điện thoại</label>
-                        <input type="text" class="form-control" id="PhoneNumber" name="PhoneNumber" required>
+                        <input type="text" class="form-control-1 form-control-sm" id="PhoneNumber" name="PhoneNumber" required>
                     </div>
                     <div class="mb-3">
                         <label for="Email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="Email" name="Email" required>
+                        <input type="email" class="form-control-1 form-control-sm" id="Email" name="Email" required>
                     </div>
                     <div class="mb-3">
                         <label for="Offer" class="form-label">Thành viên</label>
@@ -106,6 +133,8 @@ $conn->close();
                     </div>
                 </div>
             </div>
+
+
             <div class="text-center">
                 <button type="submit" class="btn btn-primary">Thêm</button>
             </div>
