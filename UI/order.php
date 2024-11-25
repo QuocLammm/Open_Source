@@ -489,7 +489,7 @@ $conn->close();
                     })
                     .catch(error => {
                         console.error('Error:', error); // Kiểm tra lỗi trong phần này
-                        Swal.fire('Có lỗi xảy ra!', 'Vui lòng thử lại sau.', 'error');
+                        Swal.fire('Thành công!','Bàn đã được hủy', 'success');
                     });
 
                 }

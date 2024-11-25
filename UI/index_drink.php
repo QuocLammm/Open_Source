@@ -1,9 +1,6 @@
 <?php
-
 include("includes/Pager.php");
 require_once("includes/session_user.php");
-
-
 // Handle search/filter request
 $searchDrink = isset($_GET['drinkName']) ? $_GET['drinkName'] : '';
 $searchCategory = isset($_GET['category']) ? $_GET['category'] : '';
@@ -38,8 +35,8 @@ $result = $conn->query($sql);
 $drinks = $result->fetch_all(MYSQLI_ASSOC);
 
 // Tạo đối tượng Pager với dữ liệu và số lượng sản phẩm mỗi trang
-$pager = new Pager($drinks, 3); // 3 sản phẩm mỗi trang
-$currentDrinks = $pager->getDataForCurrentPage(3); // Lấy dữ liệu cho trang hiện tại
+$pager = new Pager($drinks, 4); // 4 sản phẩm mỗi trang
+$currentDrinks = $pager->getDataForCurrentPage(4); // Lấy dữ liệu cho trang hiện tại
 $conn->close();
 ?>
 <!DOCTYPE html>

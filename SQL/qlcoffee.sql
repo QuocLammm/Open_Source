@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 23, 2024 at 01:35 PM
+-- Generation Time: Nov 25, 2024 at 05:06 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.1.25
 
@@ -62,18 +62,37 @@ CREATE TABLE `billinfos` (
 --
 
 INSERT INTO `billinfos` (`BillID`, `DrinkID`, `DrinkCount`, `DrinkPrice`) VALUES
-('HD2411232ed34', 4, 1, 0.00),
-('HD241123517b8', 1, 1, 0.00),
-('HD241123517b8', 3, 1, 0.00),
-('HD241123517b8', 4, 1, 0.00),
-('HD24112369144', 1, 1, 0.00),
-('HD24112369144', 2, 1, 0.00),
-('HD24112369144', 3, 1, 0.00),
-('HD2411239d692', 3, 1, 0.00),
-('HD2411239d692', 4, 1, 0.00),
-('HD241123a8829', 1, 2, 0.00),
-('HD241123a8829', 3, 11, 0.00),
-('HD241123f386e', 4, 1, 0.00);
+('HD2411230d43e', 1, 1, 24000.00),
+('HD2411230d43e', 2, 1, 50000.00),
+('HD2411230d43e', 3, 1, 50000.00),
+('HD2411230d43e', 6, 1, 25000.00),
+('HD2411230d43e', 10, 1, 29000.00),
+('HD2411230d43e', 11, 1, 30000.00),
+('HD241123156f7', 1, 1, 24000.00),
+('HD241123156f7', 2, 1, 50000.00),
+('HD241123156f7', 3, 1, 50000.00),
+('HD241123156f7', 4, 1, 35000.00),
+('HD2411233b8f1', 1, 1, 24000.00),
+('HD2411233b8f1', 2, 1, 50000.00),
+('HD2411233b8f1', 3, 1, 50000.00),
+('HD241123e215f', 1, 1, 24000.00),
+('HD241123e215f', 2, 1, 50000.00),
+('HD241123e215f', 3, 1, 50000.00),
+('HD2411240554a', 3, 1, 50000.00),
+('HD2411240554a', 4, 1, 35000.00),
+('HD241124202df', 6, 1, 25000.00),
+('HD241124202df', 10, 1, 29000.00),
+('HD241124968c5', 1, 1, 24000.00),
+('HD241124aed33', 1, 2, 24000.00),
+('HD241124aed33', 2, 3, 50000.00),
+('HD241124aed33', 3, 3, 50000.00),
+('HD241124aed33', 4, 1, 35000.00),
+('HD241124aed33', 6, 1, 25000.00),
+('HD241124aed33', 10, 1, 29000.00),
+('HD241124aed33', 11, 1, 30000.00),
+('HD241124b4003', 2, 1, 50000.00),
+('HD24112574a5d', 3, 1, 50000.00),
+('HD24112574a5d', 30, 1, 40000.00);
 
 -- --------------------------------------------------------
 
@@ -96,17 +115,16 @@ CREATE TABLE `bills` (
 --
 
 INSERT INTO `bills` (`BillID`, `CreateDate`, `TotalAmount`, `TableID`, `UserID`, `CustomerID`, `Status`) VALUES
-('HD1108408e2a42', '2024-11-08 19:28:56', 90000.00, 52, 1, 2, 1),
-('HD1109eb42f84b', '2024-11-09 07:37:08', 208000.00, 45, 6, 2, 0),
-('HD24112302d25', '2024-11-23 18:49:20', 85000.00, 45, 1, 0, 0),
-('HD241123049c9', '2024-11-23 18:01:20', 358000.00, 46, 1, 0, 0),
-('HD24112304f0e', '2024-11-23 19:07:54', 100000.00, 50, 1, 3, 1),
-('HD2411232ed34', '2024-11-23 18:40:04', 85000.00, 45, 1, 0, 0),
-('HD241123517b8', '2024-11-23 19:14:38', 109000.00, 47, 1, 2, 1),
-('HD24112369144', '2024-11-23 17:09:34', 124000.00, 49, 1, 0, 0),
-('HD2411239d692', '2024-11-23 19:12:59', 85000.00, 51, 1, 3, 0),
-('HD241123a8829', '2024-11-23 18:01:57', 598000.00, 51, 1, 0, 0),
-('HD241123f386e', '2024-11-23 19:05:30', 35000.00, 46, 1, 0, 0);
+('HD2411230d43e', '2024-11-24 01:49:48', 208000.00, 46, 1, 3, 0),
+('HD241123156f7', '2024-11-24 01:43:31', 159000.00, 54, 1, 2, 1),
+('HD2411233b8f1', '2024-11-24 01:43:24', 124000.00, 51, 1, 3, 1),
+('HD241123e215f', '2024-11-24 00:49:54', 124000.00, 48, 1, 3, 1),
+('HD2411240554a', '2024-11-24 11:23:53', 85000.00, NULL, 1, 2, 1),
+('HD241124202df', '2024-11-24 12:32:41', 54000.00, 47, 1, 9, 1),
+('HD241124968c5', '2024-11-24 11:31:32', 24000.00, 46, 1, 2, 1),
+('HD241124aed33', '2024-11-24 11:47:52', 467000.00, 50, 1, 8, 1),
+('HD241124b4003', '2024-11-24 12:45:02', 50000.00, 46, 1, 3, 1),
+('HD24112574a5d', '2024-11-25 11:02:37', 90000.00, 49, 1, 7, 1);
 
 -- --------------------------------------------------------
 
@@ -122,16 +140,19 @@ CREATE TABLE `customer` (
   `PhoneNumber` varchar(15) DEFAULT NULL,
   `Email` varchar(255) DEFAULT NULL,
   `BillID` varchar(50) DEFAULT NULL,
-  `offer` varchar(20) DEFAULT NULL
+  `Offer` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `customer`
 --
 
-INSERT INTO `customer` (`CustomerID`, `CustomerName`, `Gender`, `Address`, `PhoneNumber`, `Email`, `BillID`, `offer`) VALUES
-(2, 'Nguyễn Văn Anh', 'Nam', '123 Đường Hai Bà Trưng, Nha Trang', '0816774376', 'nguyenvana@gmail.com', 'HD1108408e2a42', 'Thành viên VIP'),
-(3, 'Nguyễn Thị Quỳnh Như', 'Nữ', 'Chung cư Napoleon, Nha Trang', '0998323142', 'quoclam010305@gmail.com', NULL, 'Thành viên VIP');
+INSERT INTO `customer` (`CustomerID`, `CustomerName`, `Gender`, `Address`, `PhoneNumber`, `Email`, `BillID`, `Offer`) VALUES
+(2, 'Nguyễn Văn Anh', 'Nam', '123 Đường Hai Bà Trưng, Nha Trang', '0816774376', 'nguyenvana@gmail.com', NULL, 'Thành viên VIP'),
+(3, 'Nguyễn Thị Quỳnh Như', 'Nữ', 'Chung cư Napoleon, Nha Trang', '0998323142', 'quoclam010305@gmail.com', NULL, 'Thành viên VIP'),
+(7, 'Lê Thanh Trúc', 'Nam', '24 Củ Chi, Nha Trang, Khánh Hòa', '0887632123', 'thanhtruc@gmail.com', NULL, 'Thành viên thường'),
+(8, 'Cao Tuấn', 'Nam', 'Chung cư Napoleon, Nha Trang', '09983213312', 'caotuan@gmail.com', NULL, 'Thành viên thường'),
+(9, 'Lê Phương', 'Nữ', 'Chung cư Napoleon, Nha Trang', '0988672321', 'lephuong@gmail.com', NULL, 'Thành viên VIP');
 
 -- --------------------------------------------------------
 
@@ -153,8 +174,8 @@ INSERT INTO `drinkcategories` (`DrinkCategoryID`, `DrinkCategoryName`, `DrinkCat
 (7, 'Cà phê', 'Cà phê các loại 1'),
 (8, 'Nước ép', 'Nước ép các loại'),
 (9, 'Sinh Tố', 'Sinh tố các loại'),
-(18, 'Nước ngọt', 'Nước ngọt các loại'),
-(19, 'Nước giải khát', 'hihi');
+(40, 'Trà giải nhiệt', 'Trà mát mẻ mùa hè'),
+(41, 'Bánh ngọt', 'Bánh ngọt các loại thưởng thức trà chiều');
 
 -- --------------------------------------------------------
 
@@ -175,16 +196,23 @@ CREATE TABLE `drinks` (
 --
 
 INSERT INTO `drinks` (`DrinkID`, `DrinkCategoryID`, `DrinkName`, `DrinkImage`, `DrinkPrice`) VALUES
-(1, 7, 'Cà phê đen', 'Cà phê đen.png', 24000.00),
+(1, 7, 'Cà phê đen', 'Cf_den.png', 24000.00),
 (2, 7, 'Capuchino', 'Capuchino.png', 50000.00),
 (3, 7, 'Americano', 'Americano.png', 50000.00),
-(4, 7, 'Cà phê sữa dừa', 'Cà Phê Sữa Dừa.jpg', 35000.00),
-(6, 8, 'Ép Thơm', 'Ép Thơm.png', 25000.00),
-(10, 8, 'Ép Cà Chua', 'Ép Cà Chua.jpg', 29000.00),
-(11, 9, 'Sinh tố dâu', 'Ép Dâu.jpg', 30000.00),
-(12, 8, 'Ép Kiwi', 'Ép Kiwi.jpeg', 55000.00),
-(13, 8, 'Ép Lựu', 'Ép lựu.jpg', 35000.00),
-(14, 18, 'String Dâu', 'Sting.jpg', 27000.00);
+(4, 7, 'Cà phê sữa dừa', 'Cf_milk_coconut.jpg', 35000.00),
+(6, 8, 'Ép Thơm', 'Ep_thom.png', 25000.00),
+(10, 8, 'Ép Cà Chua', 'Ep_cachua.jpg', 29000.00),
+(11, 9, 'Sinh tố dâu', 'st_dau.jpg', 30000.00),
+(12, 8, 'Ép Kiwi', 'Ep_Kiwi.jpeg', 55000.00),
+(13, 8, 'Ép Lựu', 'Ep_luu.jpg', 35000.00),
+(23, 9, 'Sinh tố xoài', 'Yogurt_mango.jpg', 37000.00),
+(24, 40, 'Trà đào', 'tra_dao.jpeg', 35000.00),
+(25, 40, 'Trà dâu', 'st_dau.jpg', 38000.00),
+(26, 9, 'Sinh tố bơ', 'st_bo.jpg', 27000.00),
+(27, 9, 'Sinh tố việt quất', 'vietquat.jpg', 40000.00),
+(28, 8, 'Ép ổi', 'Ep_oi.jpg', 29000.00),
+(29, 41, 'Bánh sầu riêng', 'banh_sau_rieng.png', 30000.00),
+(30, 41, 'Cupcake', 'CupCake.png', 40000.00);
 
 -- --------------------------------------------------------
 
@@ -280,7 +308,7 @@ CREATE TABLE `shiftreports` (
 --
 
 INSERT INTO `shiftreports` (`ShiftReportID`, `Revenue`, `FirstAmount`, `LastAmount`, `BillCount`, `UncollectedAmount`, `FirstTime`, `LastTime`, `UserID`) VALUES
-('1', 200.00, 500.00, 700.00, 1, 0.00, '2024-11-08 06:23:36', '2024-11-08 06:23:36', 2);
+('KC25113d4r', 200.00, 500.00, 700.00, 1, 0.00, '2024-11-08 06:23:36', '2024-11-08 06:23:36', 2);
 
 -- --------------------------------------------------------
 
@@ -329,7 +357,7 @@ CREATE TABLE `usercategories` (
 --
 
 INSERT INTO `usercategories` (`UserCategoryID`, `UserCategoryName`, `UserCategoryDescription`) VALUES
-(1, 'Quản Lý', 'Quản lý cửa hàng'),
+(1, 'Quản Lý', 'Quản lý cửa hàng Nha Trang'),
 (3, 'Thu ngân', 'Người chịu trách nhiệm thu tiền và giao dịch');
 
 -- --------------------------------------------------------
@@ -358,9 +386,7 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`UserID`, `FullName`, `PhoneNumber`, `UserImage`, `Gender`, `Username`, `AccountName`, `Password`, `UserCategoryID`, `Email`, `Address`) VALUES
 (1, 'Cao Nguyễn Quốc Lâm', '815597300', '1.jpg', 'Nam', 'quoclam', 'quoclam', 'Quoclam@1607', 1, 'quoclam010305@gmail.com', 'Chung cư Bình Phú II - Vĩnh Hòa - TP. Nha Trang - Khánh Hòa'),
-(2, 'Nguyễn Ngọc Quỳnh Như', '092932832', 'quynhnhu.jpg', 'Nữ', 'quynhnhu', 'quynhnhu', 'Quynhnhu@1607', 3, '', ''),
-(6, 'Lê Minh Thành', '0788432643', 'lam.png', 'Nam', 'minhthanh', 'minhthanh', '1234', 1, '', ''),
-(7, 'Lữ Vũ Phúc', '0788432643', '2.jpg', 'Male', 'luvuphuc', 'vuphuc', 'Luvuphuc@1234', 1, '', '');
+(2, 'Nguyễn Ngọc Quỳnh Như', '092932832', 'quynhnhu.jpg', 'Nữ', 'quynhnhu', 'quynhnhu', 'Quynhnhu@1607', 3, '', '');
 
 --
 -- Indexes for dumped tables
@@ -461,19 +487,19 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `customer`
 --
 ALTER TABLE `customer`
-  MODIFY `CustomerID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `CustomerID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `drinkcategories`
 --
 ALTER TABLE `drinkcategories`
-  MODIFY `DrinkCategoryID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `DrinkCategoryID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
 -- AUTO_INCREMENT for table `drinks`
 --
 ALTER TABLE `drinks`
-  MODIFY `DrinkID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `DrinkID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `tables`
@@ -485,13 +511,13 @@ ALTER TABLE `tables`
 -- AUTO_INCREMENT for table `usercategories`
 --
 ALTER TABLE `usercategories`
-  MODIFY `UserCategoryID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `UserCategoryID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `UserID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `UserID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- Constraints for dumped tables

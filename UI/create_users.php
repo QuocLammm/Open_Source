@@ -140,7 +140,7 @@ if (!empty($error)) {
         <form action="" method="POST" enctype="multipart/form-data" class="form-section">
             <h3>Thêm người dùng mới</h3>
             <a href="index_users.php" class="btn btn-primary mb-2">
-                <i class="ti-arrow-right"></i> Quay lại
+                <i class="ti-arrow-left"></i> Quay lại
             </a>
             <div class="row">
                 <div class="col-md-6">
