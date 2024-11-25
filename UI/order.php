@@ -495,8 +495,6 @@ $conn->close();
                 }
             });
         }
-
-
     </script>
 </head>
 <body>
