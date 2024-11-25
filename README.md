@@ -11,7 +11,7 @@ Cách 2: Download file zip
 
 2. Extract the file and copy Open_Source folder
 
-3.Paste inside root directory(for xampp xampp/htdocs, for wamp wamp/www, for lamp var/www/html)
+3. Paste inside root directory(for xampp xampp/htdocs, for wamp wamp/www, for lamp var/www/html)
 
 II. Open PHPMyAdmin (http://localhost/phpmyadmin)
 
@@ -19,11 +19,11 @@ II. Open PHPMyAdmin (http://localhost/phpmyadmin)
 
 2. Import qlcoffee.sql file(given inside the zip package in SQL file folder)
 
-3.Run the script http://localhost/Open_Source/UI/login.php   (frontend)
+3. Run the script http://localhost/Open_Source/UI/login.php   (frontend)
 
 Credential for admin panel :
 
 Admin
 Username: quoclam
-Password: 1234
+Password: Quoclam@1607
 
