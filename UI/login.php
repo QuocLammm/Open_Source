@@ -1,42 +1,56 @@
 <?php
 include("includes/connectSQL.php");
+
 if (isset($_POST['login'])) {
     $adminuser = $_POST['username'];
     $password = $_POST['password'];
 
-    // Password validation
-    if (strlen($password) < 10) {
-        $errorMessage = "Mật khẩu không được ngắn quá 10 ký tự!";
-    } elseif (!preg_match('/[A-Z]/', $password)) {
-        $errorMessage = "Mật khẩu phải có ít nhất một chữ cái viết hoa!";
-    } elseif (!preg_match('/[\W_]/', $password)) {
-        $errorMessage = "Mật khẩu phải có ít nhất một kí tự đặc biệt!";
+    // Kiểm tra CAPTCHA
+    $secretKey = "6Lcl14kqAAAAALLGdKil_qiIKaUJiSm9yXBaE4FU";
+    $responseKey = $_POST['g-recaptcha-response'];
+    $userIP = $_SERVER['REMOTE_ADDR'];
+
+    $verifyUrl = "https://www.google.com/recaptcha/api/siteverify?secret=$secretKey&response=$responseKey&remoteip=$userIP";
+    $response = file_get_contents($verifyUrl);
+    $responseKeys = json_decode($response, true);
+
+    if (!$responseKeys["success"]) {
+        $errorMessage = "Vui lòng xác minh CAPTCHA!";
     } else {
-        $query = mysqli_query($conn, "SELECT UserID FROM users WHERE AccountName='$adminuser' AND Password='$password'");
-        $num_rows = mysqli_num_rows($query);
-
-        if ($num_rows > 0) {
-            $ret = mysqli_fetch_array($query);
-
-            // Kiểm tra nếu UserID khác 1
-            if ($ret['UserID'] != 1) {
-                // Nếu UserID không phải là 1, chuyển hướng về trang dashboard
-                setcookie('UserID', $ret['UserID'], time() + 36000, "/");
-                header('location:dashboard.php');
-                exit();
-            } else {
-                // Nếu UserID là 1, chuyển hướng về trang quản trị
-                setcookie('UserID', $ret['UserID'], time() + 36000, "/");
-                header('location:index_admin.php');
-                exit();
-            }
+        // Kiểm tra mật khẩu
+        if (strlen($password) < 10) {
+            $errorMessage = "Mật khẩu không được ngắn quá 10 ký tự!";
+        } elseif (!preg_match('/[A-Z]/', $password)) {
+            $errorMessage = "Mật khẩu phải có ít nhất một chữ cái viết hoa!";
+        } elseif (!preg_match('/[\W_]/', $password)) {
+            $errorMessage = "Mật khẩu phải có ít nhất một kí tự đặc biệt!";
         } else {
-            $errorMessage = "Tên đăng nhập hoặc mật khẩu không đúng!";
+            // Truy vấn cơ sở dữ liệu
+            $query = mysqli_query($conn, "SELECT UserID FROM users WHERE AccountName='$adminuser' AND Password='$password'");
+            $num_rows = mysqli_num_rows($query);
+
+            if ($num_rows > 0) {
+                $ret = mysqli_fetch_array($query);
+
+                // Chuyển hướng tùy thuộc UserID
+                if ($ret['UserID'] != 1) {
+                    setcookie('UserID', $ret['UserID'], time() + 36000, "/");
+                    header('location:dashboard.php');
+                    exit();
+                } else {
+                    setcookie('UserID', $ret['UserID'], time() + 36000, "/");
+                    header('location:index_admin.php');
+                    exit();
+                }
+            } else {
+                $errorMessage = "Tên đăng nhập hoặc mật khẩu không đúng!";
+            }
         }
     }
 }
 
 $conn->close();
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -46,6 +60,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập</title>
     <link rel="stylesheet" href="css/login.css">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         @import url("https://font.googleapis.com/css2?family=Poppons:wght@400;500;500&display=swap");
 
@@ -72,7 +87,7 @@ $conn->close();
         .box{
             position: relative;
             width: 480px;
-            height: 620px;
+            height: 720px;
             background: #1c1c1c;
             border-radius: 8px;
             overflow: hidden;
@@ -200,7 +215,15 @@ $conn->close();
             color: white;
             text-transform: uppercase;
         }
-
+        .alert-danger {
+            color: #f44336; /* Màu đỏ */
+            background-color: #ffe6e6; /* Nền nhạt hơn */
+            border: 1px solid #f44336;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -229,6 +252,8 @@ $conn->close();
                         <span>Password</span>
                         <i></i>
                     </div>
+                    <br>
+                    <div class="g-recaptcha" data-sitekey="6Lcl14kqAAAAACOoIungM8WeSnOh9t7jIU2C_okM"></div>
                     <div class="links">
                         <a href="forgot_password.php">Forgot password?</a>
                     </div>
